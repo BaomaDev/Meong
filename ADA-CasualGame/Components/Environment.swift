@@ -95,6 +95,50 @@ extension GameScene {
         let waitAction = SKAction.wait(forDuration: 5.0)
         run(SKAction.repeatForever(SKAction.sequence([spawnAction, waitAction])))
     }
+    
+    func spawnObstacle() {
+        let obstacleY = Constants.groundHeight + 40 // Position slightly above ground
+        let position = CGPoint(x: self.size.width + 50, y: obstacleY)
+        
+        // Randomly choose between NoTouch, Stepable, and Duckable obstacles
+        let randomChoice = Int.random(in: 0...3)
+        
+        switch randomChoice {
+        case 0:
+            let obstacle = NoTouch.create()
+            obstacle.position = position
+            self.addChild(obstacle)
+            obstacle.startMoving(across: self)
+            
+        case 1:
+            let obstacle = Stepable.create()
+            obstacle.position = position
+            self.addChild(obstacle)
+            obstacle.startMoving(across: self)
+            
+        case 2:
+            let obstacle = Duckable.create()
+            obstacle.position = position
+            self.addChild(obstacle)
+            obstacle.startMoving(across: self)
+            
+        case 3:
+            let obstacle = Moving.create()
+            obstacle.position = position
+            self.addChild(obstacle)
+            obstacle.startMoving(across: self)
+            
+        default:
+            break
+        }
+    }
+    
+    func startSpawningObstacles() {
+        let spawnAction = SKAction.run(spawnObstacle)
+        let waitAction = SKAction.wait(forDuration: 4.0, withRange: 1.5) // Spawn setiap 2.5-5.5 detik
+        
+        run(SKAction.repeatForever(SKAction.sequence([spawnAction, waitAction])))
+    }
 }
 
 //func spawnObstacle(in scene: SKScene) {

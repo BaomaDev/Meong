@@ -77,7 +77,7 @@ class PlayerEntity: SKSpriteNode {
         physicsBody?.linearDamping = Constants.airResistance
         physicsBody?.categoryBitMask = PhysicsCategory.player
         physicsBody?.collisionBitMask = PhysicsCategory.ground | PhysicsCategory.semiSolidPlatform | PhysicsCategory.solidPlatform
-        physicsBody?.contactTestBitMask = PhysicsCategory.projectile
+        physicsBody?.contactTestBitMask = PhysicsCategory.projectile | PhysicsCategory.obstacle
     }
     
     // MARK: - State Management
@@ -309,5 +309,38 @@ class PlayerEntity: SKSpriteNode {
         self.run(SKAction.sequence([wait, reset]))
 
         print("Player was hit by a projectile!")
+    }
+    
+    func handleObstacleHit() {
+        guard !isInvincible else { return }
+
+        hearts -= 1
+        distance -= 1
+        updateDistance(distance)
+        isInvincible = true
+
+        // Nonaktifkan kontak sementara dengan obstacle
+        physicsBody?.contactTestBitMask &= ~PhysicsCategory.obstacle
+        physicsBody?.collisionBitMask &= ~PhysicsCategory.obstacle
+
+        // Blink effect (sama seperti projectile hit)
+        let blink = SKAction.sequence([
+            SKAction.fadeAlpha(to: 0.2, duration: 0.1),
+            SKAction.fadeAlpha(to: 1.0, duration: 0.1)
+        ])
+        let repeatBlink = SKAction.repeat(blink, count: 5)
+        self.run(repeatBlink)
+
+        // Waktu invincibility
+        let wait = SKAction.wait(forDuration: 1.0)
+        let reset = SKAction.run { [weak self] in
+            guard let self = self else { return }
+            self.isInvincible = false
+            self.setupPhysics() // Kembalikan bitmask ke default
+        }
+
+        self.run(SKAction.sequence([wait, reset]))
+
+        print("Player was hit by an obstacle!")
     }
 }

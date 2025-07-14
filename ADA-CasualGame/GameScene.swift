@@ -33,6 +33,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         setupSwipeRecognizers()
         startSpawningPlatforms()
         startSpawningProjectiles()
+        startSpawningObstacles()
 //        startSpawningObstacles(in: self)
     }
     
@@ -91,6 +92,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             }
         }
         
+        self.enumerateChildNodes(withName: "NoTouch") { (node, stop) in
+            if node.position.x < -50 {
+                node.removeFromParent()
+            }
+        }
+        
         heartLabel?.text = "❤️: \(player?.hearts ?? 0)"
         distanceLabel?.text = "📏: \(player?.distance ?? 0)m"
     }
@@ -114,6 +121,33 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             player?.handleProjectileHit()
             secondBody.node?.removeFromParent()
             checkGameOver()
+        }
+        
+        // Check for collision between player and obstacle
+        if firstBody.categoryBitMask == PhysicsCategory.player && secondBody.categoryBitMask == PhysicsCategory.obstacle {
+            // Check what type of obstacle zone was hit
+            if let obstacleNode = secondBody.node {
+                if obstacleNode.name == "damageZone" {
+                    // This is a damage zone from stepable obstacle
+                    if let parentStepable = obstacleNode.parent as? Stepable {
+                        player?.handleObstacleHit()
+                        parentStepable.removeFromParent() // Remove the entire stepable obstacle
+                        checkGameOver()
+                    }
+                } else if obstacleNode.name == "collisionZone" {
+                    // This is a collision zone from duckable obstacle
+                    if let parentDuckable = obstacleNode.parent as? Duckable {
+                        player?.handleObstacleHit()
+                        parentDuckable.removeFromParent() // Remove the entire duckable obstacle
+                        checkGameOver()
+                    }
+                } else {
+                    // This is a regular obstacle (like NoTouch)
+                    player?.handleObstacleHit()
+                    secondBody.node?.removeFromParent()
+                    checkGameOver()
+                }
+            }
         }
     }
     

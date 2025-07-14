@@ -11,9 +11,9 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		2C4EABDC2E1E0CCB007E8D71 /* Test-SpriteKit */ = {
+		2C4EABDC2E1E0CCB007E8D71 /* ADA-CasualGame */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = "Test-SpriteKit";
+			path = "ADA-CasualGame";
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -32,7 +32,7 @@
 		2C4EABD12E1E0CCB007E8D71 = {
 			isa = PBXGroup;
 			children = (
-				2C4EABDC2E1E0CCB007E8D71 /* Test-SpriteKit */,
+				2C4EABDC2E1E0CCB007E8D71 /* ADA-CasualGame */,
 				2C4EABDB2E1E0CCB007E8D71 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -61,7 +61,7 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				2C4EABDC2E1E0CCB007E8D71 /* Test-SpriteKit */,
+				2C4EABDC2E1E0CCB007E8D71 /* ADA-CasualGame */,
 			);
 			name = "ADA-CasualGame";
 			packageProductDependencies = (

@@ -58,7 +58,7 @@ class SolidPlatform: SKSpriteNode {
 }
 
 extension GameScene {
-    // Initializer
+    // Ground creation
     func createGround() {
         let groundSize = CGSize(width: self.size.width, height: Constants.groundHeight)
         let ground = SKSpriteNode(color: .gray, size: groundSize)
@@ -68,17 +68,6 @@ extension GameScene {
         ground.physicsBody?.categoryBitMask = PhysicsCategory.ground
         ground.physicsBody?.collisionBitMask = PhysicsCategory.player
         self.addChild(ground)
-    }
-
-    // Initializer (2)
-    func createPlayer() {
-        let playerSize = CGSize(width: Constants.playerHitboxWidth, height: Constants.playerHitboxHeight)
-        player = SKSpriteNode(color: .yellow, size: playerSize)
-        // Spawn point
-        player?.position = CGPoint(x: 150, y: 125)
-        player?.physicsBody = SKPhysicsBody(rectangleOf: player!.size)
-        reapplyPlayerPhysics()
-        self.addChild(player!)
     }
     
     func spawnPlatform() {
@@ -91,11 +80,11 @@ extension GameScene {
         if Bool.random() {
             let platform = SemiSolidPlatform.create(at: platformPosition, size: platformSize)
             self.addChild(platform)
-            platform.startMoving(across: self) // **MODIFIED**
+            platform.startMoving(across: self)
         } else {
             let platform = SolidPlatform.create(at: platformPosition, size: platformSize)
             self.addChild(platform)
-            platform.startMoving(across: self) // **MODIFIED**
+            platform.startMoving(across: self)
         }
     }
     
@@ -106,29 +95,40 @@ extension GameScene {
         let waitAction = SKAction.wait(forDuration: 5.0)
         run(SKAction.repeatForever(SKAction.sequence([spawnAction, waitAction])))
     }
-    
-    // Ray cast directly below player to identify surface type
-    func getSurfaceType() -> SurfaceType {
-        guard let player = player else { return .none }
-        
-        let playerHeight = player.size.height
-        let rayStart = player.position
-        let rayEnd = CGPoint(x: player.position.x, y: player.position.y - playerHeight / 2 - 5)
-    
-        var surfaceType: SurfaceType = .none
-        physicsWorld.enumerateBodies(alongRayStart: rayStart, end: rayEnd) { (body, point, normal, stop) in
-            let category = body.categoryBitMask
-            if category == PhysicsCategory.ground {
-                surfaceType = .ground
-                stop.pointee = true
-            } else if category == PhysicsCategory.semiSolidPlatform {
-                surfaceType = .semiSolidPlatform
-                stop.pointee = true
-            } else if category == PhysicsCategory.solidPlatform {
-                surfaceType = .solidPlatform
-                stop.pointee = true
-            }
-        }
-        return surfaceType
-    }
 }
+
+//func spawnObstacle(in scene: SKScene) {
+//    let obstacleY = Constants.groundHeight + 20
+//    let position = CGPoint(x: scene.size.width + 100, y: obstacleY)
+//    
+//    switch Int.random(in: 0...3) {
+//    case 0:
+//        let obstacle = NoTouchObstacle.create(at: position)
+//        scene.addChild(obstacle)
+//        obstacle.startMoving(across: scene)
+//        
+//    case 1:
+//        let obstacle = StepableObstacle.create(at: position)
+//        scene.addChild(obstacle)
+//        obstacle.startMoving(across: scene)
+//        
+//    case 2:
+//        let obstacle = DuckableObstacle.create(at: position)
+//        scene.addChild(obstacle)
+//        obstacle.startMoving(across: scene)
+//        
+//    case 3:
+//        let obstacle = MovingObstacle.create(at: position)
+//        scene.addChild(obstacle)
+//        obstacle.startMoving(across: scene)
+//        
+//    default: break
+//    }
+//}
+//
+//func startSpawningObstacles(in scene: SKScene) {
+//    let spawn = SKAction.run { spawnObstacle(in: scene) }
+//    let wait = SKAction.wait(forDuration: 3.0, withRange: 1.5)
+//    let sequence = SKAction.sequence([spawn, wait])
+//    scene.run(SKAction.repeatForever(sequence), withKey: "spawnObstacles")
+//}

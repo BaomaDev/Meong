@@ -34,6 +34,9 @@ struct PhysicsCategory {
     static let semiSolidPlatform: UInt32 = 0b100 // 4
     static let solidPlatform: UInt32 = 0b1000    // 8
     static let projectile: UInt32 = 0b10000      // 16
+    static let obstacle: UInt32 = 0b100000       // 32
+    static let safeZone: UInt32 = 0b1000000      // 64
+    static let enemy: UInt32 = 0b10000000
 }
 
 enum SurfaceType {

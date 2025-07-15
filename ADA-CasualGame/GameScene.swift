@@ -98,8 +98,19 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             }
         }
         
-        heartLabel?.text = "❤️: \(player?.hearts ?? 0)"
-        distanceLabel?.text = "📏: \(player?.distance ?? 0)m"
+        heartLabel?.text = "❤️ : \(player?.hearts ?? 0)"
+        distanceLabel?.text = "📏 : \(player?.distance ?? 0)m"
+        
+        // as player gets further, scaling factor gets higher (speed increase gets more gradual)
+        if Constants.gameSpeed > 400 {
+            Constants.speedScalingFactor = 4.0
+        } else if Constants.gameSpeed > 600 {
+            Constants.speedScalingFactor = 8.0
+        }
+        
+        let calculatedGameSpeed = 200 + 10 * Double(internalScore) / Constants.speedScalingFactor
+        Constants.gameSpeed = min(calculatedGameSpeed, 800.0)
+        print("current game speed: \(Constants.gameSpeed)")
     }
 
     // MARK: - SKPhysicsContactDelegate

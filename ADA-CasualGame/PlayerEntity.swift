@@ -143,22 +143,81 @@ class PlayerEntity: SKSpriteNode {
     }
     
     // MARK: - Actions
-    func jump(targetPlatform: SKNode? = nil) -> Bool {
-        guard canPerformJump else { return false }
+    func jump(targetPlatform: SKNode? = nil) {
+        // 1. Check if the player can perform an action.
+        guard currentSurface.isGrounded && canJump else { return }
         
         canJump = false
-        let jumpVelocity: CGFloat
+        self.color = .yellow // Player is airborne
+        
+        // --- 2. Determine Jump Parameters ---
+        
+        var jumpHeight: CGFloat
+        var horizontalDistance: CGFloat
         
         if let targetPlatform = targetPlatform {
-            jumpVelocity = calculateJumpForce(to: targetPlatform)
+//            
+//            let playerPos = self.position
+//            let targetPos = targetPlatform.position
+//            
+//            // Calculate the platform's horizontal edges.
+//            let platformSize = targetPlatform.frame.size
+//            let platformLeftEdge = targetPos.x - (platformSize.width / 2)
+//            let platformRightEdge = targetPos.x + (platformSize.width / 2)
+//
+//            // Check if the player is horizontally within the platform's span.
+//            if playerPos.x >= platformLeftEdge && playerPos.x <= platformRightEdge {
+//            }
+            
+            let playerHeight = self.frame.height
+            let platformHeight = Constants.platformHeight + playerHeight
+            
+            // The vertical distance from the top of the player to the top of the platform.
+            jumpHeight = targetPlatform.position.y + platformHeight - self.position.y + playerHeight
+            // The horizontal distance determines the duration of the jump.
+            horizontalDistance = max(Constants.defaultJumpDistance, targetPlatform.position.x - self.position.x)
+            
         } else {
-            jumpVelocity = Constants.jumpForce
+            jumpHeight = Constants.defaultJumpHeight
+            // A fixed horizontal distance for the default jump's timing.
+            horizontalDistance = Constants.defaultJumpDistance
         }
         
-        physicsBody?.velocity = CGVector(dx: 0, dy: 0)
-        physicsBody?.applyImpulse(CGVector(dx: 0, dy: jumpVelocity))
+        // Failsafe: Don't allow jumping down or if the target is behind.
+        guard jumpHeight > 0 && horizontalDistance > 0 else {
+            canJump = true // Abort jump, allow jumping again.
+            self.color = .orange
+            return
+        }
+
+        // --- 3. Create and Run the Scripted Jump Action ---
         
-        return true
+        let startY = self.position.y
+        // The duration of our vertical animation is timed to the world's horizontal movement.
+        let duration = horizontalDistance / 4 / Constants.gameSpeed
+        
+        // Temporarily disable gravity while the scripted action is running.
+        self.physicsBody?.affectedByGravity = false
+        
+        // Create the custom action.
+        let jumpAction = SKAction.customAction(withDuration: duration) { (node, elapsedTime) in
+            // 't' is the progress of the action from 0.0 to 1.0.
+            let t = elapsedTime / duration
+            
+            // Apply an ease-out function to 't' to make the jump start fast and slow down at the top.
+//            let easingT = sin(t * .pi / 2)
+            let easingT = 1 - pow(1 - t, 3) // Cubic ease-out
+            
+            // Calculate the new Y position.
+            node.position.y = startY + (jumpHeight * easingT)
+        }
+        
+        // When the action is complete, re-enable gravity to let the player fall.
+        let completion = SKAction.run {
+            self.physicsBody?.affectedByGravity = true
+        }
+        
+        self.run(SKAction.sequence([jumpAction, completion]))
     }
     
     func duck() {
@@ -227,7 +286,7 @@ class PlayerEntity: SKSpriteNode {
         setupPhysics()
         
         // Restore after duration
-        let wait = SKAction.wait(forDuration: 0.5)
+        let wait = SKAction.wait(forDuration: 0.75)
         let restore = SKAction.run { [weak self] in
             self?.restoreFromDuck(adjustY: adjustY)
         }

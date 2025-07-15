@@ -5,12 +5,14 @@ struct Constants {
     static let groundHeight: CGFloat = 60
     static let playerHitboxWidth: CGFloat = 50
     static let playerHitboxHeight: CGFloat = 50
-    static let jumpForce: CGFloat = 150
+    static let defaultJumpHeight: CGFloat = 120
+    static let defaultJumpDistance: CGFloat = 300
     static let airResistance: CGFloat = 5
     
     static let jumpSnapRayLength: CGFloat = 240.0
     static let throwVelocity: CGFloat = -10.0
-    static var gameSpeed: CGFloat = 400.0
+    static var gameSpeed: CGFloat = 200.0
+    static var speedScalingFactor: CGFloat = 2.0
     static let platformHeight = 10.0
     static let projectileSpeed = 450.0
     

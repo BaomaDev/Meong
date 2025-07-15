@@ -24,7 +24,7 @@ class SemiSolidPlatform: SKSpriteNode {
         // Controls game speed!
         // TODO: Use a more clearly defined game speed metric (i.e. Meters)
         let distance = scene.size.width + self.size.width * 2
-        let duration = distance / Constants.gameSpeed * 2
+        let duration = distance / Constants.gameSpeed
         
         let moveAction = SKAction.moveBy(x: -distance, y: 0, duration: duration)
         let removeAction = SKAction.removeFromParent()
@@ -49,7 +49,7 @@ class SolidPlatform: SKSpriteNode {
         // Controls game speed!
         // TODO: Use a more clearly defined game speed metric (i.e. Meters)
         let distance = scene.size.width + self.size.width * 2
-        let duration = distance / Constants.gameSpeed * 2
+        let duration = distance / Constants.gameSpeed
         
         let moveAction = SKAction.moveBy(x: -distance, y: 0, duration: duration)
         let removeAction = SKAction.removeFromParent()

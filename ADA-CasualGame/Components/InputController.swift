@@ -57,17 +57,7 @@ extension GameScene {
         
         // Find jump target using existing logic
         let targetPlatform = findJumpTarget()
-        
-        // Attempt jump
-        let jumpSuccess = player.jump(targetPlatform: targetPlatform)
-        
-        if jumpSuccess {
-            if targetPlatform != nil {
-                print("Performing calculated trajectory jump.")
-            } else {
-                print("No target found, performing default jump.")
-            }
-        }
+        player.jump(targetPlatform: targetPlatform)
     }
     
     func duck() {
@@ -136,7 +126,7 @@ extension GameScene {
         return closestHit
     }
     
-    func findJumpTarget() -> SKNode? {
+    private func findJumpTarget() -> SKNode? {
         guard let player = player else { return nil }
         
         let verticalHitResult = getVerticalHit()

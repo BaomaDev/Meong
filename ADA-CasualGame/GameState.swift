@@ -1,13 +1,5 @@
 //
 //  GameState.swift
-//  ADA-CasualGame
-//
-//  Created by Jesse Robinson Junior Simanjuntak on 15/07/25.
-//
-
-
-//
-//  GameState.swift
 //  GamePlayKitTest
 //
 //  Created by Jesse Robinson Junior Simanjuntak on 14/07/25.

@@ -40,7 +40,7 @@ class Duckable: SKSpriteNode {
 extension Duckable {
     func startMoving(across scene: SKScene) {
         let distance = scene.size.width + self.size.width * 2
-        let duration = distance / Constants.gameSpeed * 2
+        let duration = distance / Constants.gameSpeed
         
         let moveAction = SKAction.moveBy(x: -distance, y: 0, duration: duration)
         let removeAction = SKAction.removeFromParent()

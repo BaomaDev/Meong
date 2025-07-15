@@ -24,7 +24,7 @@ class SemiSolidPlatform: SKSpriteNode {
         // Controls game speed!
         // TODO: Use a more clearly defined game speed metric (i.e. Meters)
         let distance = scene.size.width + self.size.width * 2
-        let duration = distance / Constants.gameSpeed
+        let duration = distance / gameSpeed
         
         let moveAction = SKAction.moveBy(x: -distance, y: 0, duration: duration)
         let removeAction = SKAction.removeFromParent()
@@ -49,7 +49,7 @@ class SolidPlatform: SKSpriteNode {
         // Controls game speed!
         // TODO: Use a more clearly defined game speed metric (i.e. Meters)
         let distance = scene.size.width + self.size.width * 2
-        let duration = distance / Constants.gameSpeed
+        let duration = distance / gameSpeed
         
         let moveAction = SKAction.moveBy(x: -distance, y: 0, duration: duration)
         let removeAction = SKAction.removeFromParent()
@@ -60,7 +60,7 @@ class SolidPlatform: SKSpriteNode {
 extension GameScene {
     // Ground creation
     func createGround() {
-        let groundSize = CGSize(width: self.size.width, height: Constants.groundHeight)
+        let groundSize = CGSize(width: self.size.width, height: groundHeight)
         let ground = SKSpriteNode(color: .gray, size: groundSize)
         ground.position = CGPoint(x: self.size.width / 2, y: groundSize.height / 2)
         ground.physicsBody = SKPhysicsBody(rectangleOf: ground.size)
@@ -73,7 +73,7 @@ extension GameScene {
     func spawnPlatform() {
         // Fixed spawn height and platform width for now
         // TODO: Procedurally generate platforms
-        let platformSize = CGSize(width: 500, height: Constants.platformHeight)
+        let platformSize = CGSize(width: 500, height: platformHeight)
         let platformY = 240.0
         let platformPosition = CGPoint(x: self.size.width + platformSize.width, y: platformY)
         
@@ -97,7 +97,7 @@ extension GameScene {
     }
     
     func spawnObstacle() {
-        let obstacleY = Constants.groundHeight + 40 // Position slightly above ground
+        let obstacleY = groundHeight + 40 // Position slightly above ground
         let position = CGPoint(x: self.size.width + 50, y: obstacleY)
         
         // Randomly choose between NoTouch, Stepable, and Duckable obstacles
@@ -140,39 +140,3 @@ extension GameScene {
         run(SKAction.repeatForever(SKAction.sequence([spawnAction, waitAction])))
     }
 }
-
-//func spawnObstacle(in scene: SKScene) {
-//    let obstacleY = Constants.groundHeight + 20
-//    let position = CGPoint(x: scene.size.width + 100, y: obstacleY)
-//    
-//    switch Int.random(in: 0...3) {
-//    case 0:
-//        let obstacle = NoTouchObstacle.create(at: position)
-//        scene.addChild(obstacle)
-//        obstacle.startMoving(across: scene)
-//        
-//    case 1:
-//        let obstacle = StepableObstacle.create(at: position)
-//        scene.addChild(obstacle)
-//        obstacle.startMoving(across: scene)
-//        
-//    case 2:
-//        let obstacle = DuckableObstacle.create(at: position)
-//        scene.addChild(obstacle)
-//        obstacle.startMoving(across: scene)
-//        
-//    case 3:
-//        let obstacle = MovingObstacle.create(at: position)
-//        scene.addChild(obstacle)
-//        obstacle.startMoving(across: scene)
-//        
-//    default: break
-//    }
-//}
-//
-//func startSpawningObstacles(in scene: SKScene) {
-//    let spawn = SKAction.run { spawnObstacle(in: scene) }
-//    let wait = SKAction.wait(forDuration: 3.0, withRange: 1.5)
-//    let sequence = SKAction.sequence([spawn, wait])
-//    scene.run(SKAction.repeatForever(sequence), withKey: "spawnObstacles")
-//}

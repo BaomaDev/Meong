@@ -1,21 +1,14 @@
-//
-//  PlayerEntity.swift
-//  ADA-CasualGame
-//
-//  Created by Jesse Robinson Junior Simanjuntak on 14/07/25.
-//
-
-
 import Foundation
 import SpriteKit
 
 class PlayerEntity: SKSpriteNode {
     // MARK: - Properties
-    private var currentState: PlayerState = .falling
+    var currentState: PlayerState = .airborne
+    
     private var currentSurface: SurfaceType = .none
     private var canJump = true
-    private var isDropping = false
-    private var isDucking = false
+    private var canDuck = true
+    private var canDive = false
     private var isParrying = false
     
     // Parry system
@@ -23,7 +16,7 @@ class PlayerEntity: SKSpriteNode {
     private var parryStartTime: TimeInterval = 0
     
     // Original dimensions for ducking
-    private let originalSize = CGSize(width: Constants.playerHitboxWidth, height: Constants.playerHitboxHeight)
+    private let originalSize = CGSize(width: playerHitboxWidth, height: playerHitboxHeight)
     
     // Taking hits
     var distance: Int = 3
@@ -35,9 +28,7 @@ class PlayerEntity: SKSpriteNode {
         return currentState
     }
     
-    var surfaceType: SurfaceType {
-        return currentSurface
-    }
+    var surfaceType: SurfaceType = .none
     
     var isGrounded: Bool {
         return currentSurface.isGrounded
@@ -47,17 +38,9 @@ class PlayerEntity: SKSpriteNode {
         return isParrying && (CACurrentMediaTime() - parryStartTime < 0.3)
     }
     
-    var canPerformJump: Bool {
-        return currentSurface.isGrounded && canJump
-    }
-    
-    var isInDropState: Bool {
-        return isDropping
-    }
-    
     // MARK: - Initialization
     static func create(at position: CGPoint) -> PlayerEntity {
-        let playerSize = CGSize(width: Constants.playerHitboxWidth, height: Constants.playerHitboxHeight)
+        let playerSize = CGSize(width: playerHitboxWidth, height: playerHitboxHeight)
         let player = PlayerEntity(color: .yellow, size: playerSize)
         player.position = position
         player.name = "Player"
@@ -74,47 +57,45 @@ class PlayerEntity: SKSpriteNode {
         physicsBody?.isDynamic = true
         physicsBody?.allowsRotation = false
         physicsBody?.restitution = 0.0
-        physicsBody?.linearDamping = Constants.airResistance
+        physicsBody?.linearDamping = airResistance
         physicsBody?.categoryBitMask = PhysicsCategory.player
         physicsBody?.collisionBitMask = PhysicsCategory.ground | PhysicsCategory.semiSolidPlatform | PhysicsCategory.solidPlatform
         physicsBody?.contactTestBitMask = PhysicsCategory.projectile | PhysicsCategory.obstacle
     }
     
     // MARK: - State Management
-    func updateState(surfaceType: SurfaceType, velocity: CGVector) {
-        let previousSurface = currentSurface
-        currentSurface = surfaceType
+    func updateState(currentSurface: SurfaceType) {
+        guard self.currentState != .landing else {return}
+        let previousState = self.currentState
+        let previousSurface = self.surfaceType
         
-        // Update player state based on surface and velocity
-        if surfaceType.isGrounded {
-            if isDucking {
-                currentState = .ducking
+        if currentSurface.isGrounded && !previousSurface.isGrounded {
+            // Check HOW we landed.
+            if previousState == .diving {
+                restoreOriginalShape()
+                // If we landed from a dive, enter the .landing state via an action.
+                self.currentState = .landing
+                
+                let wait = SKAction.wait(forDuration: landingDuration)
+                let transitionToRunning = SKAction.run {
+                    if self.currentState == .landing {
+                        self.currentState = .running
+                    }
+                }
+                
+                self.run(SKAction.sequence([wait, transitionToRunning]))
+                
             } else {
-                currentState = .running
+                // It was a normal landing, so we can run immediately.
+                self.currentState = .running
             }
-        } else {
-            currentState = velocity.dy > 0 ? .jumping : .falling
+        } else if !currentSurface.isGrounded && previousSurface.isGrounded {
+            // Falling or jumping
+            self.currentState = .airborne
+            self.canDive = true
         }
+        self.surfaceType = currentSurface
         
-        // Handle state transitions
-        handleStateTransition(from: previousSurface, to: surfaceType)
-        updateVisualState()
-        updatePhysicsForMovement(velocity: velocity)
-    }
-    
-    private func handleStateTransition(from previousSurface: SurfaceType, to newSurface: SurfaceType) {
-        // Landing transition
-        if !previousSurface.isGrounded && newSurface.isGrounded {
-            canJump = true
-        }
-        
-        // Takeoff transition
-        if previousSurface.isGrounded && !newSurface.isGrounded {
-            // Player left the ground
-        }
-    }
-    
-    private func updateVisualState() {
         if isParrying {
             color = .green
             return
@@ -123,32 +104,31 @@ class PlayerEntity: SKSpriteNode {
         switch currentState {
         case .running:
             color = .orange
-        case .jumping, .falling:
-            color = .yellow
+        case .airborne:
+            color = .orange
         case .ducking:
             color = .red
-        }
-    }
-    
-    private func updatePhysicsForMovement(velocity: CGVector) {
-        guard !isDropping else { return }
-        
-        if velocity.dy > 0 {
-            // Moving up - only collide with ground and solid platforms
-            physicsBody?.collisionBitMask = PhysicsCategory.ground | PhysicsCategory.solidPlatform
-        } else {
-            // Moving down - collide with everything
-            physicsBody?.collisionBitMask = PhysicsCategory.ground | PhysicsCategory.semiSolidPlatform | PhysicsCategory.solidPlatform
+        case .diving:
+            color = .orange
+        case .landing:
+            color = .red
+        default:
+            color = .orange
         }
     }
     
     // MARK: - Actions
     func jump(targetPlatform: SKNode? = nil) {
         // 1. Check if the player can perform an action.
-        guard currentSurface.isGrounded && canJump else { return }
+        guard self.currentState != .landing else {return}
+        guard self.currentState == .running && canJump else { return }
+//        print("trying to jump! -> state:\(self.currentState); canJump: \(self.canJump)")
         
         canJump = false
-        self.color = .yellow // Player is airborne
+        self.currentState = .airborne
+        
+        let adjustY = playerHitboxHeight * -0.125
+        applyVerticalMovementTransformation(withYAdjustment: adjustY)
         
         // --- 2. Determine Jump Parameters ---
         
@@ -156,45 +136,25 @@ class PlayerEntity: SKSpriteNode {
         var horizontalDistance: CGFloat
         
         if let targetPlatform = targetPlatform {
-//            
-//            let playerPos = self.position
-//            let targetPos = targetPlatform.position
-//            
-//            // Calculate the platform's horizontal edges.
-//            let platformSize = targetPlatform.frame.size
-//            let platformLeftEdge = targetPos.x - (platformSize.width / 2)
-//            let platformRightEdge = targetPos.x + (platformSize.width / 2)
-//
-//            // Check if the player is horizontally within the platform's span.
-//            if playerPos.x >= platformLeftEdge && playerPos.x <= platformRightEdge {
-//            }
-            
             let playerHeight = self.frame.height
-            let platformHeight = Constants.platformHeight + playerHeight
+            let platformHeight = platformHeight + playerHeight/2
             
             // The vertical distance from the top of the player to the top of the platform.
             jumpHeight = targetPlatform.position.y + platformHeight - self.position.y + playerHeight
             // The horizontal distance determines the duration of the jump.
-            horizontalDistance = max(Constants.defaultJumpDistance, targetPlatform.position.x - self.position.x)
+            let minJumpDistance = max(gameSpeed/3 , defaultJumpDistance)
+            horizontalDistance = max(minJumpDistance, targetPlatform.position.x - self.position.x)
             
         } else {
-            jumpHeight = Constants.defaultJumpHeight
+            jumpHeight = defaultJumpHeight
             // A fixed horizontal distance for the default jump's timing.
-            horizontalDistance = Constants.defaultJumpDistance
+            horizontalDistance = defaultJumpDistance
         }
-        
-        // Failsafe: Don't allow jumping down or if the target is behind.
-        guard jumpHeight > 0 && horizontalDistance > 0 else {
-            canJump = true // Abort jump, allow jumping again.
-            self.color = .orange
-            return
-        }
-
         // --- 3. Create and Run the Scripted Jump Action ---
         
         let startY = self.position.y
         // The duration of our vertical animation is timed to the world's horizontal movement.
-        let duration = horizontalDistance / 4 / Constants.gameSpeed
+        let duration = horizontalDistance / 4 / gameSpeed
         
         // Temporarily disable gravity while the scripted action is running.
         self.physicsBody?.affectedByGravity = false
@@ -204,7 +164,6 @@ class PlayerEntity: SKSpriteNode {
             // 't' is the progress of the action from 0.0 to 1.0.
             let t = elapsedTime / duration
             
-            // Apply an ease-out function to 't' to make the jump start fast and slow down at the top.
 //            let easingT = sin(t * .pi / 2)
             let easingT = 1 - pow(1 - t, 3) // Cubic ease-out
             
@@ -215,28 +174,31 @@ class PlayerEntity: SKSpriteNode {
         // When the action is complete, re-enable gravity to let the player fall.
         let completion = SKAction.run {
             self.physicsBody?.affectedByGravity = true
+            self.restoreOriginalShape()
+            self.canJump = true
         }
         
         self.run(SKAction.sequence([jumpAction, completion]))
     }
     
     func duck() {
-        guard currentSurface.isGrounded else { return }
+        guard self.currentState != .landing else {return}
         
-        switch currentSurface {
+        switch surfaceType {
         case .semiSolidPlatform:
             dropThroughPlatform()
         case .ground, .solidPlatform:
             performDuck()
         case .none:
-            break
+            performDive()
         }
     }
     
     func parry(currentTime: TimeInterval) -> Bool {
+        guard self.currentState != .landing else {return false}
         let timeSinceLastParry = currentTime - lastParryTime
-        guard timeSinceLastParry > Constants.parryCooldown else {
-            print("Parry on cooldown: \(timeSinceLastParry) / \(Constants.parryCooldown)")
+        guard timeSinceLastParry > parryCooldown else {
+//            print("Parry on cooldown: \(timeSinceLastParry) / \(parryCooldown)")
             return false
         }
         
@@ -244,7 +206,7 @@ class PlayerEntity: SKSpriteNode {
         isParrying = true
         parryStartTime = currentTime
         
-        print("Parry activated!")
+//        print("Parry activated!")
         
         // Visual feedback with SKAction
         let scaleUp = SKAction.scale(to: 1.2, duration: 0.1)
@@ -260,75 +222,90 @@ class PlayerEntity: SKSpriteNode {
     
     // MARK: - Private Action Helpers
     private func dropThroughPlatform() {
-        isDropping = true
         physicsBody?.collisionBitMask = PhysicsCategory.ground | PhysicsCategory.solidPlatform
         
-        let wait = SKAction.wait(forDuration: 0.5)
-        let restoreCollision = SKAction.run { [weak self] in
-            self?.physicsBody?.collisionBitMask = PhysicsCategory.ground | PhysicsCategory.semiSolidPlatform | PhysicsCategory.solidPlatform
-            self?.isDropping = false
+        let wait = SKAction.wait(forDuration: 0.33)
+        let restoreCollision = SKAction.run {
+            self.setupPhysics()
         }
         
         run(SKAction.sequence([wait, restoreCollision]))
     }
     
+    private func performDive() {
+        self.currentState = .diving
+        self.canDive = false
+        
+        let adjustY = playerHitboxHeight * -0.125
+        applyVerticalMovementTransformation(withYAdjustment: adjustY)
+        
+        // 3. Apply a sharp downward impulse.
+        // Resetting vertical velocity first makes the dive feel consistent.
+        self.physicsBody?.velocity.dy = 0
+        self.physicsBody?.applyImpulse(CGVector(dx: 0, dy: -diveForce))
+    }
+    
     private func performDuck() {
-        isDucking = true
+        self.currentState = .ducking
+        self.canDuck = false
         
-        let duckSize = CGSize(width: Constants.playerHitboxWidth + (Constants.playerHitboxHeight / 2),
-                              height: Constants.playerHitboxHeight / 2)
-        let adjustY = CGFloat(Constants.playerHitboxHeight / 4)
-        
-        // Apply duck transformation
-        size = duckSize
-        position.y -= adjustY
-        physicsBody = SKPhysicsBody(rectangleOf: duckSize)
-        setupPhysics()
+        let adjustY = CGFloat(-playerHitboxHeight / 4)
+        applyHorizontalMovementTransformation(withYAdjustment: adjustY)
         
         // Restore after duration
         let wait = SKAction.wait(forDuration: 0.75)
         let restore = SKAction.run { [weak self] in
-            self?.restoreFromDuck(adjustY: adjustY)
+            guard let self = self else { return }
+            self.restoreOriginalShape(withYAdjustment: adjustY)
+            self.currentState = .running
+            self.canDuck = true
         }
         
         run(SKAction.sequence([wait, restore]))
     }
     
-    private func restoreFromDuck(adjustY: CGFloat) {
-        isDucking = false
-        size = originalSize
-        position.y += adjustY
-        physicsBody = SKPhysicsBody(rectangleOf: originalSize)
+    private func applyHorizontalMovementTransformation(withYAdjustment adjustY: CGFloat = 0) {
+        // Define the new shape: wider and shorter (the "duck" shape).
+        let duckSize = CGSize(width: playerHitboxWidth + (playerHitboxHeight / 2),
+                              height: playerHitboxHeight / 2)
+        
+        // Apply the new size and Y-position adjustment.
+        self.size = duckSize
+        self.position.y += adjustY
+        
+        // Create an inset physics body for the new "duck" shape to prevent snagging on edges.
+        let physicsSize = CGSize(width: duckSize.width * 0.9, height: duckSize.height)
+        self.physicsBody = SKPhysicsBody(rectangleOf: physicsSize)
+        
+        setupPhysics() // Assuming this is your function to re-apply physics properties
+    }
+
+    private func applyVerticalMovementTransformation(withYAdjustment adjustY: CGFloat = 0) {
+        // Define the new shape: narrower and taller.
+        let jumpSize = CGSize(width: playerHitboxWidth * 0.67,
+                              height: playerHitboxHeight * 1.33)
+        
+        // Apply the new size and Y-position adjustment.
+        self.size = jumpSize
+        self.position.y += adjustY
+        
+        // Create an inset physics body for the new "jump" shape.
+        let physicsSize = CGSize(width: jumpSize.width, height: jumpSize.height)
+        self.physicsBody = SKPhysicsBody(rectangleOf: physicsSize)
+        
         setupPhysics()
     }
-    
-    private func calculateJumpForce(to targetPlatform: SKNode) -> CGFloat {
-        let playerX = position.x
-        let platformSize = targetPlatform.frame.size
-        let targetPos = targetPlatform.position
-        let platformLeftEdge = targetPos.x - (platformSize.width / 2)
-        let platformRightEdge = targetPos.x + (platformSize.width / 2)
+
+    private func restoreOriginalShape(withYAdjustment adjustY: CGFloat = 0) {
+        let originalSize = CGSize(width: playerHitboxWidth, height: playerHitboxHeight)
+        self.size = originalSize
+        self.position.y += adjustY
         
-        let isUnderPlatform = (playerX >= platformLeftEdge && playerX <= platformRightEdge)
+        // Create an inset physics body for the original shape
+        let physicsSize = CGSize(width: originalSize.width, height: originalSize.height)
+        self.physicsBody = SKPhysicsBody(rectangleOf: physicsSize)
         
-        if isUnderPlatform {
-            return 1.5 * (targetPos.y - position.y)
-        } else {
-            return calculateMinimumJumpForce(to: targetPos.y, distanceX: platformLeftEdge - playerX)
-        }
-    }
-    
-    private func calculateMinimumJumpForce(to targetY: CGFloat, distanceX: CGFloat) -> CGFloat {
-        let startY = position.y + Constants.playerHitboxHeight
-        let distanceY = targetY - startY
-        
-        let idealVelocity = sqrt(-2 * Constants.gravity * distanceY)
-        
-        let minJumpDistance = Constants.jumpSnapRayLength / 4
-        let xyRatio = min(1.9, max(1.4, distanceX / minJumpDistance))
-        let resistanceCompensation: CGFloat = sqrt(Constants.airResistance) * xyRatio
-        
-        return idealVelocity * resistanceCompensation
+        setupPhysics()
     }
     
     // MARK: - Collision Handling
@@ -367,7 +344,7 @@ class PlayerEntity: SKSpriteNode {
 
         self.run(SKAction.sequence([wait, reset]))
 
-        print("Player was hit by a projectile!")
+//        print("Player was hit by a projectile!")
     }
     
     func handleObstacleHit() {
@@ -400,6 +377,6 @@ class PlayerEntity: SKSpriteNode {
 
         self.run(SKAction.sequence([wait, reset]))
 
-        print("Player was hit by an obstacle!")
+//        print("Player was hit by an obstacle!")
     }
 }

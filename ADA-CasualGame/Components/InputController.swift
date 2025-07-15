@@ -44,8 +44,8 @@ extension GameScene {
         self.enumerateChildNodes(withName: "Projectile") { (node, stop) in
             let distance = hypot(node.position.x - player.position.x, node.position.y - player.position.y)
             
-            if distance < Constants.parryRadius {
-                print("Parry successful!")
+            if distance < parryRadius {
+//                print("Parry successful!")
                 node.removeFromParent()
                 stop.pointee = true
             }
@@ -62,21 +62,6 @@ extension GameScene {
     
     func duck() {
         guard let player = player else { return }
-        
-        // Disable gestures during duck on ground/solid platforms
-        if player.surfaceType == .ground || player.surfaceType == .solidPlatform {
-            swipeUpRecognizer?.isEnabled = false
-            swipeDownRecognizer?.isEnabled = false
-            
-            // Re-enable after duck duration
-            let wait = SKAction.wait(forDuration: 0.5)
-            let restore = SKAction.run { [weak self] in
-                self?.swipeUpRecognizer?.isEnabled = true
-                self?.swipeDownRecognizer?.isEnabled = true
-            }
-            self.run(SKAction.sequence([wait, restore]))
-        }
-        
         player.duck()
     }
     
@@ -90,7 +75,7 @@ extension GameScene {
         var closestDistance: CGFloat = .infinity
         
         let rayStart = player.position
-        let rayEnd = CGPoint(x: player.position.x, y: player.position.y + Constants.jumpSnapRayLength)
+        let rayEnd = CGPoint(x: player.position.x, y: player.position.y + jumpSnapRayLength)
         
         physicsWorld.enumerateBodies(alongRayStart: rayStart, end: rayEnd) { (body, hitPoint, _, _) in
             if let node = body.node, (node.name == "SemiSolidPlatform" || node.name == "SolidPlatform") {
@@ -112,7 +97,7 @@ extension GameScene {
         var closestDistance: CGFloat = .infinity
 
         let rayStart = player.position
-        let rayEnd = CGPoint(x: player.position.x + Constants.jumpSnapRayLength, y: player.position.y + Constants.jumpSnapRayLength)
+        let rayEnd = CGPoint(x: player.position.x + jumpSnapRayLength, y: player.position.y + jumpSnapRayLength)
         
         physicsWorld.enumerateBodies(alongRayStart: rayStart, end: rayEnd) { (body, hitPoint, _, _) in
             if let node = body.node, (node.name == "SemiSolidPlatform" || node.name == "SolidPlatform") {
@@ -145,7 +130,7 @@ extension GameScene {
                 let platformLeftEdgeX = dHit.node.position.x - (platformWidth / 2)
 
                 let distanceToLeftEdge = platformLeftEdgeX - player.position.x
-                if distanceToLeftEdge < Constants.jumpSnapRayLength / 4 {
+                if distanceToLeftEdge < jumpSnapRayLength / 4 {
                     return nil // Too close to the edge
                 }
             }

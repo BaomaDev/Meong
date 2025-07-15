@@ -1,30 +1,32 @@
 import Foundation
 
-struct Constants {
-    static let gravity: CGFloat = -24
-    static let groundHeight: CGFloat = 60
-    static let playerHitboxWidth: CGFloat = 50
-    static let playerHitboxHeight: CGFloat = 50
-    static let defaultJumpHeight: CGFloat = 120
-    static let defaultJumpDistance: CGFloat = 300
-    static let airResistance: CGFloat = 5
+let customGravity: CGFloat = -24
+let groundHeight: CGFloat = 60
+let playerHitboxWidth: CGFloat = 50
+let playerHitboxHeight: CGFloat = 50
+let defaultJumpHeight: CGFloat = 120
+let defaultJumpDistance: CGFloat = 300
+let airResistance: CGFloat = 5
+let diveForce: CGFloat = 60
+let landingDuration: CGFloat = 0.5
     
-    static let jumpSnapRayLength: CGFloat = 240.0
-    static let throwVelocity: CGFloat = -10.0
-    static var gameSpeed: CGFloat = 200.0
-    static var speedScalingFactor: CGFloat = 2.0
-    static let platformHeight = 10.0
-    static let projectileSpeed = 450.0
-    
-    static let parryRadius: CGFloat = 100.0 // The area around the player to check for projectiles
-    static let parryCooldown: TimeInterval = 2.0 // 2 seconds
-}
+let jumpSnapRayLength: CGFloat = 240.0
+let throwVelocity: CGFloat = -10.0
+var gameSpeed: CGFloat = 300.0
+var speedScalingFactor: CGFloat = 2.0
+let platformHeight = 10.0
+let projectileSpeed = 450.0
+
+let parryRadius: CGFloat = 100.0 // The area around the player to check for projectiles
+let parryCooldown: TimeInterval = 2.0 // 2 seconds
 
 enum PlayerState {
     case running
-    case jumping
-    case falling
+    case airborne
     case ducking
+    case diving
+    case parrying
+    case landing
 }
 
 struct PhysicsCategory {

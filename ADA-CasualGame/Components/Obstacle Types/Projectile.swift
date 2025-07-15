@@ -21,7 +21,7 @@ extension GameScene {
     func spawnProjectile() {
         let projectile = Projectile.create()
         
-        let projectileSpeed: CGFloat = min(Constants.gameSpeed * 2, 800)
+        let projectileSpeed: CGFloat = min(gameSpeed * 2, 800)
         
         // Calculate a parabolic arc in which the projectile will travel
         var startPoint: CGPoint

@@ -23,7 +23,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     // MARK: - Scene Lifecycle (Initializers)
     override func didMove(to view: SKView) {
         backgroundColor = SKColor(white: 0.1, alpha: 1.0)
-        physicsWorld.gravity = CGVector(dx: 0, dy: Constants.gravity)
+        physicsWorld.gravity = CGVector(dx: 0, dy: customGravity)
         physicsWorld.contactDelegate = self
 
         createGround()
@@ -76,14 +76,14 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
     
     override func update(_ currentTime: TimeInterval) {
+        guard let player = player else { return }
         self.lastUpdateTime = currentTime
         
         // Update player state
-        if let player = player {
-            let currentSurface = getSurfaceType()
-            let velocity = player.physicsBody?.velocity ?? CGVector.zero
-            player.updateState(surfaceType: currentSurface, velocity: velocity)
-        }
+        let currentSurface = getSurfaceType()
+        player.updateState(currentSurface: currentSurface)
+        
+//        print("player state: \(String(describing: player.currentState))")
         
         // Remove projectiles that are off screen
         self.enumerateChildNodes(withName: "Projectile") { (node, stop) in
@@ -98,19 +98,19 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             }
         }
         
-        heartLabel?.text = "❤️ : \(player?.hearts ?? 0)"
-        distanceLabel?.text = "📏 : \(player?.distance ?? 0)m"
+        heartLabel?.text = "❤️ : \(player.hearts)"
+        distanceLabel?.text = "📏 : \(player.distance)m"
         
         // as player gets further, scaling factor gets higher (speed increase gets more gradual)
-        if Constants.gameSpeed > 400 {
-            Constants.speedScalingFactor = 4.0
-        } else if Constants.gameSpeed > 600 {
-            Constants.speedScalingFactor = 8.0
+        if gameSpeed > 400 {
+            speedScalingFactor = 4.0
+        } else if gameSpeed > 600 {
+            speedScalingFactor = 8.0
         }
         
-        let calculatedGameSpeed = 200 + 10 * Double(internalScore) / Constants.speedScalingFactor
-        Constants.gameSpeed = min(calculatedGameSpeed, 800.0)
-        print("current game speed: \(Constants.gameSpeed)")
+        let calculatedGameSpeed = 300 + 10 * Double(internalScore) / speedScalingFactor
+        gameSpeed = min(calculatedGameSpeed, 800.0)
+//        print("current game speed: \(Constants.gameSpeed)")
     }
 
     // MARK: - SKPhysicsContactDelegate
@@ -170,7 +170,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
     
     func gameOver() {
-        print("Matek")
+//        print("Matek")
         scoreTimer?.invalidate()
 
         let newScene = GameScene(size: self.size)

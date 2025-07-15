@@ -310,7 +310,7 @@ class PlayerEntity: SKSpriteNode {
     
     // MARK: - Collision Handling
     func updateDistance(_ newDistance: Int) {
-        distance = newDistance
+        distance = min(newDistance, 3)
         GameState.shared.playerDistance = newDistance
     }
     

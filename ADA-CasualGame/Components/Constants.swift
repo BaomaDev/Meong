@@ -2,7 +2,7 @@ import Foundation
 
 struct Constants {
     static let gravity: CGFloat = -24
-    static let groundHeight: CGFloat = 60
+    static let groundHeight: CGFloat = 50
     static let playerHitboxWidth: CGFloat = 50
     static let playerHitboxHeight: CGFloat = 50
     static let jumpForce: CGFloat = 150
@@ -37,6 +37,8 @@ struct PhysicsCategory {
     static let obstacle: UInt32 = 0b100000       // 32
     static let safeZone: UInt32 = 0b1000000      // 64
     static let enemy: UInt32 = 0b10000000
+    static let powerUp: UInt32 = 0b100000000
+    static let coin: UInt32 = 0b1000000000
 }
 
 enum SurfaceType {

@@ -10,6 +10,8 @@ import Foundation
 import SpriteKit
 
 class PlayerEntity: SKSpriteNode {
+    var textures: [SKTexture] = []
+
     // MARK: - Properties
     private var currentState: PlayerState = .falling
     private var currentSurface: SurfaceType = .none
@@ -22,8 +24,8 @@ class PlayerEntity: SKSpriteNode {
     private var lastParryTime: TimeInterval = 0
     private var parryStartTime: TimeInterval = 0
     
-    // Original dimensions for ducking
-    private let originalSize = CGSize(width: Constants.playerHitboxWidth, height: Constants.playerHitboxHeight)
+    // Original dimensions
+    private let playerSize = CGSize(width: Constants.playerHitboxWidth, height: Constants.playerHitboxHeight)
     
     // Taking hits
     var distance: Int = 3
@@ -56,28 +58,59 @@ class PlayerEntity: SKSpriteNode {
     }
     
     // MARK: - Initialization
-    static func create(at position: CGPoint) -> PlayerEntity {
-        let playerSize = CGSize(width: Constants.playerHitboxWidth, height: Constants.playerHitboxHeight)
-        let player = PlayerEntity(color: .yellow, size: playerSize)
-        player.position = position
-        player.name = "Player"
+    init(position: CGPoint)  {
+        let texture = SKTexture(imageNamed: "cat")
+        super.init(texture: texture, color: .clear, size: texture.size())
+        self.size = playerSize
+        self.position = position
+        self.name = "Player"
         
-        // Setup physics
-        player.physicsBody = SKPhysicsBody(rectangleOf: playerSize)
-        player.setupPhysics()
-        
-        return player
+        setupPhysics()
+        loadTextures()
+    }
+    
+    required init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    private func loadTextures() {
+        let spriteSheet = SKTexture(imageNamed: "cat")
+        let rows = 3, columns = 3
+        let frameWidth = 1.0 / CGFloat(columns)
+        let frameHeight = 1.0 / CGFloat(rows)
+
+        for row in 0..<rows {
+            for column in 0..<columns {
+                let rect = CGRect(
+                    x: CGFloat(column) * frameWidth,
+                    y: CGFloat(rows - 1 - row) * frameHeight,
+                    width: frameWidth,
+                    height: frameHeight
+                )
+                let frameTexture = SKTexture(rect: rect, in: spriteSheet)
+                textures.append(frameTexture)
+            }
+        }
+        playRunAnimation(speed: 0.1)
+    }
+    
+    func playRunAnimation(speed: Double){
+        self.removeAction(forKey: "characterRun")
+        let animation = SKAction.animate(with: textures, timePerFrame: speed)
+        self.run(SKAction.repeatForever(animation), withKey: "characterRun")
     }
     
     // MARK: - Physics Setup
     private func setupPhysics() {
-        physicsBody?.isDynamic = true
-        physicsBody?.allowsRotation = false
-        physicsBody?.restitution = 0.0
-        physicsBody?.linearDamping = Constants.airResistance
-        physicsBody?.categoryBitMask = PhysicsCategory.player
-        physicsBody?.collisionBitMask = PhysicsCategory.ground | PhysicsCategory.semiSolidPlatform | PhysicsCategory.solidPlatform
-        physicsBody?.contactTestBitMask = PhysicsCategory.projectile | PhysicsCategory.obstacle
+        // Setup physics
+        self.physicsBody = SKPhysicsBody(rectangleOf: playerSize)
+        self.physicsBody?.isDynamic = true
+        self.physicsBody?.allowsRotation = false
+        self.physicsBody?.restitution = 0.0
+        self.physicsBody?.linearDamping = Constants.airResistance
+        self.physicsBody?.categoryBitMask = PhysicsCategory.player
+        self.physicsBody?.collisionBitMask = PhysicsCategory.ground | PhysicsCategory.semiSolidPlatform | PhysicsCategory.solidPlatform
+        self.physicsBody?.contactTestBitMask = PhysicsCategory.projectile | PhysicsCategory.obstacle
     }
     
     // MARK: - State Management
@@ -193,8 +226,9 @@ class PlayerEntity: SKSpriteNode {
         let endParry = SKAction.run { [weak self] in
             self?.isParrying = false
         }
-        
+
         run(SKAction.sequence([scaleUp, scaleDown, endParry]))
+
         
         return true
     }
@@ -237,9 +271,9 @@ class PlayerEntity: SKSpriteNode {
     
     private func restoreFromDuck(adjustY: CGFloat) {
         isDucking = false
-        size = originalSize
+        size = playerSize
         position.y += adjustY
-        physicsBody = SKPhysicsBody(rectangleOf: originalSize)
+        physicsBody = SKPhysicsBody(rectangleOf: playerSize)
         setupPhysics()
     }
     
@@ -342,5 +376,18 @@ class PlayerEntity: SKSpriteNode {
         self.run(SKAction.sequence([wait, reset]))
 
         print("Player was hit by an obstacle!")
+    }
+    
+    func applyPowerUp() {
+        self.removeAction(forKey: "characterRun")
+        self.playRunAnimation(speed: 0.01)
+        
+        let wait = SKAction.wait(forDuration: 5.0)
+        let reset = SKAction.run {
+            self.removeAction(forKey: "characterRun")
+            self.playRunAnimation(speed: 0.1)
+        }
+        
+        self.run(SKAction.sequence([wait, reset]))
     }
 }

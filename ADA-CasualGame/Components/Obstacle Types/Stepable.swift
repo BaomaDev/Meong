@@ -3,7 +3,10 @@ import SpriteKit
 
 class Stepable: SKSpriteNode {
     static func create() -> Stepable {
-        let stepable = Stepable(color: .blue, size: CGSize(width: 60, height: 30))
+        let textureName = Bool.random() ? "gerobak-1" : "gerobak-2"
+        let texture = SKTexture(imageNamed: textureName)
+        let desiredSize = CGSize(width: 200, height: 200) // adjust as needed
+        let stepable = Stepable(texture: texture, color: .clear, size: desiredSize)
         stepable.name = "Stepable"
         
         // Setup the complex physics for stepable obstacle
@@ -19,7 +22,7 @@ class Stepable: SKSpriteNode {
         
         // Create safe zone on top (acts as ground for stepping)
         let safeZoneHeight: CGFloat = 15
-        let safeZone = SKSpriteNode(color: .clear, size: CGSize(width: self.size.width, height: safeZoneHeight))
+        let safeZone = SKSpriteNode(color: .green, size: CGSize(width: self.size.width, height: safeZoneHeight))
         safeZone.position = CGPoint(x: 0, y: self.size.height/2 - safeZoneHeight/2)
         safeZone.physicsBody = SKPhysicsBody(rectangleOf: safeZone.size)
         safeZone.physicsBody?.isDynamic = false
@@ -34,7 +37,7 @@ class Stepable: SKSpriteNode {
         let damageZoneHeight = self.size.height - safeZoneHeight // Exclude top safe area
         
         // Left damage zone
-        let leftDamageZone = SKSpriteNode(color: .clear, size: CGSize(width: damageZoneWidth, height: damageZoneHeight))
+        let leftDamageZone = SKSpriteNode(color: .red, size: CGSize(width: damageZoneWidth, height: damageZoneHeight))
         leftDamageZone.position = CGPoint(x: -self.size.width/2 + damageZoneWidth/2, y: -safeZoneHeight/2)
         leftDamageZone.physicsBody = SKPhysicsBody(rectangleOf: leftDamageZone.size)
         leftDamageZone.physicsBody?.isDynamic = false
@@ -45,7 +48,7 @@ class Stepable: SKSpriteNode {
         self.addChild(leftDamageZone)
         
         // Right damage zone
-        let rightDamageZone = SKSpriteNode(color: .clear, size: CGSize(width: damageZoneWidth, height: damageZoneHeight))
+        let rightDamageZone = SKSpriteNode(color: .red, size: CGSize(width: damageZoneWidth, height: damageZoneHeight))
         rightDamageZone.position = CGPoint(x: self.size.width/2 - damageZoneWidth/2, y: -safeZoneHeight/2)
         rightDamageZone.physicsBody = SKPhysicsBody(rectangleOf: rightDamageZone.size)
         rightDamageZone.physicsBody?.isDynamic = false
@@ -57,7 +60,7 @@ class Stepable: SKSpriteNode {
         
         // Bottom collision zone (prevents player from going through bottom)
         let bottomZoneHeight: CGFloat = 10
-        let bottomZone = SKSpriteNode(color: .clear, size: CGSize(width: self.size.width - 30, height: bottomZoneHeight))
+        let bottomZone = SKSpriteNode(color: .red, size: CGSize(width: self.size.width - 30, height: bottomZoneHeight))
         bottomZone.position = CGPoint(x: 0, y: -self.size.height/2 + bottomZoneHeight/2)
         bottomZone.physicsBody = SKPhysicsBody(rectangleOf: bottomZone.size)
         bottomZone.physicsBody?.isDynamic = false

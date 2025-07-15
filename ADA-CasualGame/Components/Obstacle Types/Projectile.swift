@@ -3,7 +3,9 @@ import SpriteKit
 
 class Projectile: SKSpriteNode {
     static func create() -> Projectile {
-        let projectile = Projectile(color: .red, size: CGSize(width: 20, height: 20))
+        let texture = SKTexture(imageNamed: "sendal") // Your image asset
+        let size = CGSize(width: 40, height: 40) // Adjust size as needed
+        let projectile = Projectile(texture: texture, color: .clear, size: size)
         projectile.name = "Projectile"
         
         projectile.physicsBody = SKPhysicsBody(circleOfRadius: 10)
@@ -11,6 +13,11 @@ class Projectile: SKSpriteNode {
         projectile.physicsBody?.affectedByGravity = false       // Exclude from gravity; projectiles have more predictable parabolic trajectories.
         projectile.physicsBody?.contactTestBitMask = PhysicsCategory.player // Detect contact with player
         projectile.physicsBody?.collisionBitMask = PhysicsCategory.none     // Can move through air
+        
+        // Add spin animation
+        let rotate = SKAction.rotate(byAngle: .pi, duration: 0.2)
+        let spinForever = SKAction.repeatForever(rotate)
+        projectile.run(spinForever)
         
         return projectile
     }

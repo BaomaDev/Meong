@@ -3,7 +3,9 @@ import SpriteKit
 
 class Duckable: SKSpriteNode {
     static func create() -> Duckable {
-        let duckable = Duckable(color: .purple, size: CGSize(width: 20, height: 60))
+        let texture = SKTexture(imageNamed: "barrier") // Your image asset
+        let size = CGSize(width: 140, height: 140) // Adjust size as needed
+        let duckable = Duckable(texture: texture, color: .clear, size: size)
         duckable.name = "Duckable"
         
         duckable.setupDuckablePhysics()
@@ -17,7 +19,7 @@ class Duckable: SKSpriteNode {
         
         // Create collision zone only on upper portion (60% of the obstacle)
         let collisionHeight = self.size.height * 0.4
-        let collisionZone = SKSpriteNode(color: .clear, size: CGSize(width: self.size.width, height: collisionHeight))
+        let collisionZone = SKSpriteNode(color: .red, size: CGSize(width: self.size.width, height: collisionHeight))
         collisionZone.position = CGPoint(x: 0, y: self.size.height/2 - collisionHeight/2)
         collisionZone.physicsBody = SKPhysicsBody(rectangleOf: collisionZone.size)
         collisionZone.physicsBody?.isDynamic = false
@@ -28,7 +30,7 @@ class Duckable: SKSpriteNode {
         self.addChild(collisionZone)
         
         // Create visual indicator for duck zone (safe area)
-        let duckZoneHeight = self.size.height * 0.6
+        let duckZoneHeight = self.size.height * 0.3
         let duckZone = SKSpriteNode(color: .green, size: CGSize(width: self.size.width, height: duckZoneHeight))
         duckZone.position = CGPoint(x: 0, y: -self.size.height/2 + duckZoneHeight/2)
         duckZone.alpha = 0.3 // Make it semi-transparent to indicate it's a safe zone

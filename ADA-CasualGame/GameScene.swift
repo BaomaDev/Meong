@@ -4,79 +4,76 @@ import GameplayKit
 class GameScene: SKScene, SKPhysicsContactDelegate {
     // MARK: - Properties
     var player: PlayerEntity?
+    var chaser: ChaserEntity?
+    var backgrounds: [SKSpriteNode] = []
+    
     var swipeUpRecognizer: UISwipeGestureRecognizer?
     var swipeDownRecognizer: UISwipeGestureRecognizer?
     
     // Timers to implement cooldown
     var lastUpdateTime: TimeInterval = 0
     
-    var heartLabel: SKLabelNode!
-    var distanceLabel: SKLabelNode!
-    
     // Score label
     var scoreLabel: SKLabelNode!
     private var scoreTimer: Timer?
     private var internalScore: Int = 0
+    var coinCount = 0
+    var health = 9
+    
+    var scoreUpdateHandler: ((Int) -> Void)?
+    var coinUpdateHandler: ((Int) -> Void)?
+    var healthUpdateHandler: ((Int) -> Void)?
     
     private var lastDistanceBonusScore = 0
-
+    
     // MARK: - Scene Lifecycle (Initializers)
     override func didMove(to view: SKView) {
-        backgroundColor = SKColor(white: 0.1, alpha: 1.0)
         physicsWorld.gravity = CGVector(dx: 0, dy: Constants.gravity)
         physicsWorld.contactDelegate = self
+        
+        // Setup backgrounds
+        for i in 0..<2 {
+            let background = SKSpriteNode(imageNamed: "background")
+            background.name = "background"
+            background.zPosition = -1
+            background.size = size
+            background.anchorPoint = CGPoint.zero
+            background.position = CGPoint(x: CGFloat(i) * size.width, y: 0)
+            backgrounds.append(background)
+            addChild(background)
+        }
 
         createGround()
-        setupHUD()
         startScoreTimer()
         createPlayer()
         setupSwipeRecognizers()
         startSpawningPlatforms()
         startSpawningProjectiles()
         startSpawningObstacles()
-//        startSpawningObstacles(in: self)
-    }
-    
-    func setupHUD() {
-        heartLabel = SKLabelNode(text: "❤️: \(player?.hearts ?? 0)")
-        heartLabel.fontSize = 20
-        heartLabel.position = CGPoint(x: 80, y: size.height - 50)
-        heartLabel.zPosition = 100
-        addChild(heartLabel)
-
-        distanceLabel = SKLabelNode(text: "📏: \(player?.distance ?? 0)m")
-        distanceLabel.fontSize = 20
-        distanceLabel.position = CGPoint(x: 250, y: size.height - 50)
-        distanceLabel.zPosition = 100
-        addChild(distanceLabel)
-        
-        scoreLabel = SKLabelNode(text: "🏆: 0")
-        scoreLabel.fontSize = 20
-        scoreLabel.position = CGPoint(x: size.width - 100, y: size.height - 50)
-        scoreLabel.zPosition = 100
-        addChild(scoreLabel)
+        startSpawningCoinsAndPowerUps()
     }
     
     func startScoreTimer() {
         scoreTimer?.invalidate()
         internalScore = 0
-        lastDistanceBonusScore = 0
         
         scoreTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
-            guard let self = self, let player = self.player else { return }
-            
+            guard let self = self else { return }
             self.internalScore += 1
-            self.scoreLabel.text = "🏆: \(self.internalScore)"
-            
-            if self.internalScore % 50 == 0 && self.internalScore > self.lastDistanceBonusScore {
-                player.updateDistance(player.distance + 1)
-                self.lastDistanceBonusScore = self.internalScore
-            }
+            self.scoreUpdateHandler?(self.internalScore)
         }
     }
     
     override func update(_ currentTime: TimeInterval) {
         self.lastUpdateTime = currentTime
+        
+        // Scroll background
+        for bg in backgrounds {
+            bg.position.x -= 3.3
+            if bg.position.x <= -bg.size.width {
+                bg.position.x += bg.size.width * 2
+            }
+        }
         
         // Update player state
         if let player = player {
@@ -98,8 +95,23 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             }
         }
         
-        heartLabel?.text = "❤️: \(player?.hearts ?? 0)"
-        distanceLabel?.text = "📏: \(player?.distance ?? 0)m"
+        self.enumerateChildNodes(withName: "Stepable") { (node, stop) in
+            if node.position.x < -50 {
+                node.removeFromParent()
+            }
+        }
+        
+        self.enumerateChildNodes(withName: "Moving") { (node, stop) in
+            if node.position.x < -50 {
+                node.removeFromParent()
+            }
+        }
+        
+        self.enumerateChildNodes(withName: "Duckable") { (node, stop) in
+            if node.position.x < -50 {
+                node.removeFromParent()
+            }
+        }
     }
 
     // MARK: - SKPhysicsContactDelegate
@@ -149,6 +161,26 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 }
             }
         }
+        
+        // MARK: - Character and Coin Contact
+        if (firstBody.categoryBitMask == PhysicsCategory.player && secondBody.categoryBitMask == PhysicsCategory.coin) ||
+            (firstBody.categoryBitMask == PhysicsCategory.coin && secondBody.categoryBitMask == PhysicsCategory.player) {
+            
+            let coinBody = firstBody.categoryBitMask == PhysicsCategory.coin ? firstBody : secondBody
+            coinBody.node?.removeFromParent()
+            
+            coinCount += 1
+            coinUpdateHandler?(coinCount)
+        }
+        
+        // MARK: - Character and Power-Up Contact
+        if (firstBody.categoryBitMask == PhysicsCategory.player && secondBody.categoryBitMask == PhysicsCategory.powerUp) ||
+            (firstBody.categoryBitMask == PhysicsCategory.powerUp && secondBody.categoryBitMask == PhysicsCategory.player) {
+            let powerUpNode = firstBody.categoryBitMask == PhysicsCategory.powerUp ? firstBody.node : secondBody.node
+            powerUpNode?.removeFromParent()
+            
+            player?.applyPowerUp()
+        }
     }
     
     func checkGameOver() {
@@ -161,9 +193,20 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     func gameOver() {
         print("Matek")
         scoreTimer?.invalidate()
+        internalScore = 0
+        coinCount = 0
+        health = 9
+        
+        scoreUpdateHandler?(internalScore)
+        coinUpdateHandler?(coinCount)
+        healthUpdateHandler?(health)
 
         let newScene = GameScene(size: self.size)
         newScene.scaleMode = self.scaleMode
+        
+        newScene.scoreUpdateHandler = self.scoreUpdateHandler
+        newScene.coinUpdateHandler = self.coinUpdateHandler
+        newScene.healthUpdateHandler = self.healthUpdateHandler
 
         let transition = SKTransition.fade(withDuration: 0.5)
         self.view?.presentScene(newScene, transition: transition)
@@ -173,8 +216,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     // MARK: - Player Creation
     func createPlayer() {
-        let spawnPoint = CGPoint(x: 150, y: 125)
-        player = PlayerEntity.create(at: spawnPoint)
+        let spawnPoint = CGPoint(x: 150, y: 80)
+        player = PlayerEntity(position: spawnPoint)
         self.addChild(player!)
     }
     

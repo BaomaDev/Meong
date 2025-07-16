@@ -76,6 +76,7 @@ class PlayerEntity: SKSpriteNode {
                 restoreOriginalShape()
                 // If we landed from a dive, enter the .landing state via an action.
                 self.currentState = .landing
+                EffectsFactory.shared.screenShake(strength: 0.5)
                 
                 let wait = SKAction.wait(forDuration: landingDuration)
                 let transitionToRunning = SKAction.run {
@@ -119,85 +120,113 @@ class PlayerEntity: SKSpriteNode {
     }
     
     // MARK: - Actions
-        func jump(targetPlatform: SKNode? = nil) {
-            guard self.currentState != .landing else { return }
-            guard self.surfaceType.isGrounded && canJump else { return }
-            
-            switch currentState {
-            case .ducking:
-                if let target = targetPlatform {
-                    highJump(to: target)
-                } else {
-                    normalJump()
-                }
-            default:
+    func panContolledJump(swipeDistance: Double, target: SKNode? = nil) {
+        guard self.currentState != .landing else { return }
+        guard self.surfaceType.isGrounded && canJump else { return }
+        
+        // --- Call the appropriate jump based on the swipe distance ---
+        if swipeDistance < 100 {
+            // Short Swipe: Perform a normal jump.
+            print("Short swipe detected (\(swipeDistance)). Performing Normal Jump.")
+            normalJump()
+        } else {
+            // Long Swipe: Try to find a target for a high jump.
+            print("Long swipe detected (\(swipeDistance)). Performing High Jump.")
+            if let target = target {
+                highJump(to: target)
+            } else {
+                // If no target is found for a high jump, fall back to a normal jump.
                 normalJump()
             }
         }
-
-        private func normalJump() {
-            canJump = false
-            self.currentState = .airborne
-            
-            let adjustY = playerHitboxHeight * -0.125
-            applyVerticalMovementTransformation(withYAdjustment: adjustY)
-            
-            // --- Define Jump Parameters ---
-            let jumpHeight = defaultJumpHeight
-            let horizontalDistance = defaultJumpDistance
-            
-            // --- Create and Run the Scripted Jump Action ---
-            let startY = self.position.y
-            let duration = horizontalDistance / 4 / gameSpeed
-            
-            self.physicsBody?.affectedByGravity = false
-            
-            let jumpAction = SKAction.customAction(withDuration: duration) { (node, elapsedTime) in
-                let t = elapsedTime / duration
-                let easingT = 1 - pow(1 - t, 3) // Cubic ease-out
-                node.position.y = startY + (jumpHeight * easingT)
+    }
+    
+    func jump(targetPlatform: SKNode? = nil) {
+        guard self.currentState != .landing else { return }
+        guard self.surfaceType.isGrounded && canJump else { return }
+        
+        switch currentState {
+        case .ducking:
+            if let target = targetPlatform {
+                highJump(to: target)
+            } else {
+                normalJump()
             }
-            
-            let completion = SKAction.run {
-                self.physicsBody?.affectedByGravity = true
-                self.restoreOriginalShape()
-                self.canJump = true
-            }
-            
-            self.run(SKAction.sequence([jumpAction, completion]))
+        default:
+            normalJump()
         }
+    }
 
-        private func highJump(to targetPlatform: SKNode) {
-            // Calculate jump parameters based on the target
-            let jumpHeight = targetPlatform.position.y - self.position.y + playerHitboxHeight*2
-            let horizontalDistance = max(defaultJumpDistance + gameSpeed/2, targetPlatform.position.x + playerHitboxWidth*2 - self.position.x)
-            
-            canJump = false
-            self.currentState = .airborne
-            
-            let adjustY = playerHitboxHeight * -0.125
-            applyVerticalMovementTransformation(withYAdjustment: adjustY)
-            
-            // --- Create and Run the Scripted Jump Action ---
-            let startY = self.position.y
-            let duration = horizontalDistance / 4 / gameSpeed
-            
-            self.physicsBody?.affectedByGravity = false
-            
-            let jumpAction = SKAction.customAction(withDuration: duration) { (node, elapsedTime) in
-                let t = elapsedTime / duration
-                let easingT = 1 - pow(1 - t, 3) // Cubic ease-out
-                node.position.y = startY + (jumpHeight * easingT)
-            }
-            
-            let completion = SKAction.run {
-                self.physicsBody?.affectedByGravity = true
-                self.restoreOriginalShape()
-                self.canJump = true
-            }
-            
-            self.run(SKAction.sequence([jumpAction, completion]))
+    private func normalJump() {
+        canJump = false
+        self.currentState = .airborne
+        
+        let adjustY = playerHitboxHeight * -0.125
+        applyVerticalMovementTransformation(withYAdjustment: adjustY)
+        
+        // --- Define Jump Parameters ---
+        let jumpHeight = defaultJumpHeight
+        let horizontalDistance = defaultJumpDistance
+        
+        // --- Create and Run the Scripted Jump Action ---
+        let startY = self.position.y
+        let duration = horizontalDistance / 4 / gameSpeed
+        
+        self.physicsBody?.affectedByGravity = false
+        
+        EffectsFactory.shared.playSound(soundKey: "jump.mp3")
+        EffectsFactory.shared.playHaptic(strength: 0.5)
+        
+        let jumpAction = SKAction.customAction(withDuration: duration) { (node, elapsedTime) in
+            let t = elapsedTime / duration
+            let easingT = 1 - pow(1 - t, 3) // Cubic ease-out
+            node.position.y = startY + (jumpHeight * easingT)
         }
+        
+        let completion = SKAction.run {
+            self.physicsBody?.affectedByGravity = true
+            self.restoreOriginalShape()
+            self.canJump = true
+        }
+        
+        self.run(SKAction.sequence([jumpAction, completion]))
+    }
+
+    private func highJump(to targetPlatform: SKNode) {
+        // Calculate jump parameters based on the target
+        let jumpHeight = targetPlatform.position.y - self.position.y + playerHitboxHeight*2
+        let horizontalDistance = max(defaultJumpDistance + gameSpeed/2, targetPlatform.position.x + playerHitboxWidth*2 - self.position.x)
+        
+        canJump = false
+        self.currentState = .airborne
+        
+        let adjustY = playerHitboxHeight * -0.125
+        applyVerticalMovementTransformation(withYAdjustment: adjustY)
+        
+        // --- Create and Run the Scripted Jump Action ---
+        let startY = self.position.y
+        let duration = horizontalDistance / 4 / gameSpeed
+        
+        self.physicsBody?.affectedByGravity = false
+        
+        // High jump
+        EffectsFactory.shared.playSound(soundKey: "jump.mp3")
+        EffectsFactory.shared.playHaptic(strength: 1.0)
+        
+        let jumpAction = SKAction.customAction(withDuration: duration) { (node, elapsedTime) in
+            let t = elapsedTime / duration
+            let easingT = 1 - pow(1 - t, 3) // Cubic ease-out
+            node.position.y = startY + (jumpHeight * easingT)
+        }
+        
+        let completion = SKAction.run {
+            self.physicsBody?.affectedByGravity = true
+            self.restoreOriginalShape()
+            self.canJump = true
+        }
+        
+        self.run(SKAction.sequence([jumpAction, completion]))
+    }
     
     func duck() {
         guard self.currentState != .landing else {return}
@@ -278,6 +307,8 @@ class PlayerEntity: SKSpriteNode {
         
         let adjustY = CGFloat(-playerHitboxHeight / 4)
         applyHorizontalMovementTransformation(withYAdjustment: adjustY)
+        
+        EffectsFactory.shared.playSound(soundKey: "duck.wav")
         
         // Restore after duration
         let wait = SKAction.wait(forDuration: 0.75)

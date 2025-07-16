@@ -17,6 +17,7 @@ let jumpSnapRayLength: CGFloat = 240.0
 let throwVelocity: CGFloat = -10.0
 let baseGameSpeed: CGFloat = 300.0
 var gameSpeed: CGFloat = baseGameSpeed
+let maxGameSpeed: CGFloat = 600.0
 var speedScalingFactor: CGFloat = 20.0   // Speed increases every N seconds
 let platformHeight = 10.0
 let projectileSpeed = 450.0

@@ -3,7 +3,10 @@ import SpriteKit
 
 class Moving: SKSpriteNode {
     static func create() -> Moving {
-        let moving = Moving(color: .purple, size: CGSize(width: 60, height: 30))
+        let textureName = Bool.random() ? "bajaj" : "gojek"
+        let texture = SKTexture(imageNamed: textureName)
+        let desiredSize = CGSize(width: 80, height: 80) // adjust as needed
+        let moving = Moving(texture: texture, color: .clear, size: desiredSize)
         moving.name = "Moving"
         
         // Setup physics body
@@ -14,19 +17,19 @@ class Moving: SKSpriteNode {
         moving.physicsBody?.collisionBitMask = PhysicsCategory.none // No collision, only contact
         
         // Add visual elements to make it look more like a motorcycle
-        let wheel1 = SKSpriteNode(color: .black, size: CGSize(width: 8, height: 8))
-        wheel1.position = CGPoint(x: -moving.size.width/3, y: -moving.size.height/2)
-        moving.addChild(wheel1)
-        
-        let wheel2 = SKSpriteNode(color: .black, size: CGSize(width: 8, height: 8))
-        wheel2.position = CGPoint(x: moving.size.width/3, y: -moving.size.height/2)
-        moving.addChild(wheel2)
-        
-        // Add wheel rotation animation
-        let rotateAction = SKAction.rotate(byAngle: .pi * 2, duration: 0.5)
-        let repeatRotation = SKAction.repeatForever(rotateAction)
-        wheel1.run(repeatRotation)
-        wheel2.run(repeatRotation)
+//        let wheel1 = SKSpriteNode(color: .black, size: CGSize(width: 8, height: 8))
+//        wheel1.position = CGPoint(x: -moving.size.width/3, y: -moving.size.height/2)
+//        moving.addChild(wheel1)
+//        
+//        let wheel2 = SKSpriteNode(color: .black, size: CGSize(width: 8, height: 8))
+//        wheel2.position = CGPoint(x: moving.size.width/3, y: -moving.size.height/2)
+//        moving.addChild(wheel2)
+//        
+//        // Add wheel rotation animation
+//        let rotateAction = SKAction.rotate(byAngle: .pi * 2, duration: 0.5)
+//        let repeatRotation = SKAction.repeatForever(rotateAction)
+//        wheel1.run(repeatRotation)
+//        wheel2.run(repeatRotation)
         
         return moving
     }

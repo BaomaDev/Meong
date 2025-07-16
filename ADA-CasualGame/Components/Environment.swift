@@ -124,7 +124,7 @@ extension GameScene {
             
         case 3:
             let obstacle = Moving.create()
-            obstacle.position = position
+            obstacle.position = CGPoint(x: self.size.width + 50, y: groundHeight + 30)
             self.addChild(obstacle)
             obstacle.startMoving(across: self)
             

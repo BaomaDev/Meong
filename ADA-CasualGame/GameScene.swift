@@ -10,6 +10,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     var swipeUpRecognizer: UISwipeGestureRecognizer?
     var swipeDownRecognizer: UISwipeGestureRecognizer?
+    var panStartPoint: CGPoint?
     
     // Timers to implement cooldown
     var lastUpdateTime: TimeInterval = 0
@@ -31,6 +32,14 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         physicsWorld.gravity = CGVector(dx: 0, dy: customGravity)
         physicsWorld.contactDelegate = self
         
+        let cameraNode = SKCameraNode()
+        cameraNode.position = CGPoint(x: self.size.width / 2, y: self.size.height / 2)
+        self.addChild(cameraNode)
+        self.camera = cameraNode
+        
+        EffectsFactory.shared.initialize(with: self)
+//        EffectsFactory.shared.playBgm()
+        
         createGround()
         setupHUD()
         startScoreTimer()
@@ -41,7 +50,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         startSpawningObstacles()
         startSpawningCoinsAndPowerUps()
         createChaser()
-        //        startSpawningObstacles(in: self)
     }
     
     func setupHUD() {
@@ -117,7 +125,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         let speedIncrement = 40.0
         let calculatedGameSpeed = baseGameSpeed + speedIncrement * max(Double(internalScore) / speedScalingFactor, 1.0)
-        gameSpeed = min(calculatedGameSpeed, 800.0)
+        gameSpeed = min(calculatedGameSpeed, maxGameSpeed)
 //        print("current game speed: \(gameSpeed)")
         
         if let chaser = chaser {

@@ -3,16 +3,63 @@ import SpriteKit
 
 extension GameScene {
     func setupSwipeRecognizers() {
-        swipeUpRecognizer = UISwipeGestureRecognizer(target: self, action: #selector(handleSwipes(_:)))
-        swipeUpRecognizer?.direction = .up
-        self.view?.addGestureRecognizer(swipeUpRecognizer!)
-        
-        swipeDownRecognizer = UISwipeGestureRecognizer(target: self, action: #selector(handleSwipes(_:)))
-        swipeDownRecognizer?.direction = .down
-        self.view?.addGestureRecognizer(swipeDownRecognizer!)
+//        swipeUpRecognizer = UISwipeGestureRecognizer(target: self, action: #selector(handleSwipes(_:)))
+//        swipeUpRecognizer?.direction = .up
+//        self.view?.addGestureRecognizer(swipeUpRecognizer!)
+//        
+//        swipeDownRecognizer = UISwipeGestureRecognizer(target: self, action: #selector(handleSwipes(_:)))
+//        swipeDownRecognizer?.direction = .down
+//        self.view?.addGestureRecognizer(swipeDownRecognizer!)
         
         let tapRecognizer = UITapGestureRecognizer(target: self, action: #selector(handleTap(_:)))
         self.view?.addGestureRecognizer(tapRecognizer)
+        
+        let panRecognizer = UIPanGestureRecognizer(target: self, action: #selector(handlePan(_:)))
+        self.view?.addGestureRecognizer(panRecognizer)
+    }
+
+    @objc func handlePan(_ sender: UIPanGestureRecognizer) {
+        guard let player = player else { return }
+        
+        switch sender.state {
+        case .began:
+            // Record the start point when the player first touches down.
+            panStartPoint = sender.location(in: self.view)
+            
+        case .ended:
+            // When the player lifts their finger, determine the swipe's direction and distance.
+            guard let startPoint = panStartPoint else { return }
+            let endPoint = sender.location(in: self.view)
+            
+            // Calculate the vertical and horizontal distance of the swipe.
+            let deltaY = endPoint.y - startPoint.y
+            let deltaX = endPoint.x - startPoint.x
+            
+            // We only care about swipes that are primarily vertical.
+            guard abs(deltaY) > abs(deltaX) else {
+                panStartPoint = nil
+                return
+            }
+
+            // A small threshold to prevent accidental taps from registering as swipes.
+            let swipeThreshold: CGFloat = 30.0
+            
+            if deltaY < -swipeThreshold { // Negative deltaY means finger moved UP.
+                let swipeDistance = -deltaY // Make the distance positive
+                let targetPlatform = findJumpTarget()
+    
+                player.panContolledJump(swipeDistance: swipeDistance, target: targetPlatform)
+            } else if deltaY > swipeThreshold { // Positive deltaY means finger moved DOWN.
+//                print("Swipe DOWN detected. Performing Duck.")
+                duck()
+            }
+            
+            // Reset the start point for the next pan.
+            panStartPoint = nil
+            
+        default:
+            break
+        }
     }
     
     @objc func handleTap(_ sender: UITapGestureRecognizer) {
@@ -62,7 +109,11 @@ extension GameScene {
     
     func duck() {
         guard let player = player else { return }
-        player.duck()
+        if player.currentState == .ducking {
+            return
+        } else {
+            player.duck()
+        }
     }
     
     // MARK: - Jump Target Finding (existing logic)

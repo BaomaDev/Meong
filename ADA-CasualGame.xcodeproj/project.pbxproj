@@ -10,9 +10,22 @@
 		2C4EABDA2E1E0CCB007E8D71 /* ADA-CasualGame.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "ADA-CasualGame.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		2CB86E092E27E40600330A41 /* Exceptions for "ADA-CasualGame" folder in "ADA-CasualGame" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 2C4EABD92E1E0CCB007E8D71 /* ADA-CasualGame */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		2C4EABDC2E1E0CCB007E8D71 /* ADA-CasualGame */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				2CB86E092E27E40600330A41 /* Exceptions for "ADA-CasualGame" folder in "ADA-CasualGame" target */,
+			);
 			path = "ADA-CasualGame";
 			sourceTree = "<group>";
 		};
@@ -256,6 +269,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 54XZ73U5GW;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "ADA-CasualGame/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = Meong;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.games";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -288,6 +302,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 54XZ73U5GW;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "ADA-CasualGame/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = Meong;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.games";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;

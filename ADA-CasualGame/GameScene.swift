@@ -15,12 +15,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     // Timers to implement cooldown
     var lastUpdateTime: TimeInterval = 0
     
-    var heartLabel: SKLabelNode!
-    var distanceLabel: SKLabelNode!
-    var coinLabel: SKLabelNode!
-    
-    // Score label
-    var scoreLabel: SKLabelNode!
+    var scoreUpdateHandler: ((Int) -> Void)?
+    var coinUpdateHandler: ((Int) -> Void)?
+    var healthUpdateHandler: ((Int) -> Void)?
+    var distanceUpdateHandler: ((Int) -> Void)?  // Optional, if you want distance too
+
     private var scoreTimer: Timer?
     private var internalScore: Int = 0
     
@@ -41,7 +40,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 //        EffectsFactory.shared.playBgm()
         
         createGround()
-        setupHUD()
         startScoreTimer()
         createPlayer()
         setupSwipeRecognizers()
@@ -50,32 +48,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         startSpawningObstacles()
         startSpawningCoinsAndPowerUps()
         createChaser()
-    }
-    
-    func setupHUD() {
-        heartLabel = SKLabelNode(text: "❤️: \(player?.hearts ?? 0)")
-        heartLabel.fontSize = 20
-        heartLabel.position = CGPoint(x: 80, y: size.height - 50)
-        heartLabel.zPosition = 100
-        addChild(heartLabel)
-        
-        distanceLabel = SKLabelNode(text: "📏: \(player?.distance ?? 0)m")
-        distanceLabel.fontSize = 20
-        distanceLabel.position = CGPoint(x: 250, y: size.height - 50)
-        distanceLabel.zPosition = 100
-        addChild(distanceLabel)
-        
-        coinLabel = SKLabelNode(text: "💰: \(player?.coins ?? 0)")
-        coinLabel.fontSize = 20
-        coinLabel.position = CGPoint(x: size.width - 300, y: size.height - 50)
-        coinLabel.zPosition = 100
-        addChild(coinLabel)
-        
-        scoreLabel = SKLabelNode(text: "🏆: 0")
-        scoreLabel.fontSize = 20
-        scoreLabel.position = CGPoint(x: size.width - 100, y: size.height - 50)
-        scoreLabel.zPosition = 100
-        addChild(scoreLabel)
     }
     
     func startScoreTimer() {
@@ -87,7 +59,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             guard let self = self, let player = self.player else { return }
             
             self.internalScore += 1
-            self.scoreLabel.text = "🏆: \(self.internalScore)"
+            self.scoreUpdateHandler?(self.internalScore)
             
             if self.internalScore % 50 == 0 && self.internalScore > self.lastDistanceBonusScore {
                 player.updateDistance(player.distance + 1)
@@ -118,10 +90,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 node.removeFromParent()
             }
         }
-        
-        heartLabel?.text = "❤️ : \(player.hearts)"
-        distanceLabel?.text = "📏 : \(player.distance)m"
-        coinLabel?.text = "💰 : \(player.coins)"
         
         let speedIncrement = 40.0
         let calculatedGameSpeed = baseGameSpeed + speedIncrement * max(Double(internalScore) / speedScalingFactor, 1.0)
@@ -174,6 +142,13 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                     if let parentStepable = obstacleNode.parent as? Stepable {
                         player?.handleObstacleHit()
                         parentStepable.removeFromParent() // Remove the entire stepable obstacle
+                        
+                        // ✅ Notify UI about health change
+                        if let updatedHealth = player?.hearts {
+                            print("Health decreased to: \(updatedHealth)")
+                            healthUpdateHandler?(updatedHealth)
+                        }
+
                         checkGameOver()
                     }
                 } else if obstacleNode.name == "collisionZone" {
@@ -181,12 +156,25 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                     if let parentDuckable = obstacleNode.parent as? Duckable {
                         player?.handleObstacleHit()
                         parentDuckable.removeFromParent() // Remove the entire duckable obstacle
+                        
+                        // ✅ Notify UI about health change
+                        if let updatedHealth = player?.hearts {
+                            print("Health decreased to: \(updatedHealth)")
+                            healthUpdateHandler?(updatedHealth)
+                        }
+
                         checkGameOver()
                     }
                 } else {
                     // This is a regular obstacle (like NoTouch)
                     player?.handleObstacleHit()
                     secondBody.node?.removeFromParent()
+                    
+                    // ✅ Notify UI about health change
+                    if let updatedHealth = player?.hearts {
+                        print("Health decreased to: \(updatedHealth)")
+                        healthUpdateHandler?(updatedHealth)
+                    }
                     checkGameOver()
                 }
             }
@@ -200,6 +188,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             coinBody.node?.removeFromParent()
             
             player?.coins += 1
+            coinUpdateHandler?(player?.coins ?? 0)
         }
         
         // MARK: - Character and Power-Up Contact
@@ -222,9 +211,24 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     func gameOver() {
         //        print("Matek")
         scoreTimer?.invalidate()
+        internalScore = 0
+        player?.coins = 0
+        player?.hearts = 9
+        player?.distance = 3
+        
+        scoreUpdateHandler?(internalScore)
+        coinUpdateHandler?(player?.coins ?? 0)
+        healthUpdateHandler?(player?.hearts ?? 9)
+        distanceUpdateHandler?(player?.distance ?? 3)
         
         let newScene = GameScene(size: self.size)
         newScene.scaleMode = self.scaleMode
+
+        // ✅ Pass current update handlers to the new scene
+        newScene.scoreUpdateHandler = self.scoreUpdateHandler
+        newScene.coinUpdateHandler = self.coinUpdateHandler
+        newScene.healthUpdateHandler = self.healthUpdateHandler
+        newScene.distanceUpdateHandler = self.distanceUpdateHandler
         
         let transition = SKTransition.fade(withDuration: 0.5)
         self.view?.presentScene(newScene, transition: transition)

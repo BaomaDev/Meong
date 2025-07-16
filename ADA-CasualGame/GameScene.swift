@@ -115,16 +115,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         distanceLabel?.text = "📏 : \(player.distance)m"
         coinLabel?.text = "💰 : \(player.coins)"
         
-        // as player gets further, scaling factor gets higher (speed increase gets more gradual)
-        if gameSpeed > 400 {
-            speedScalingFactor = 6.0
-        } else if gameSpeed > 600 {
-            speedScalingFactor = 9.0
-        }
-        
-        let calculatedGameSpeed = 300 + 10 * Double(internalScore) / speedScalingFactor
+        let speedIncrement = 40.0
+        let calculatedGameSpeed = baseGameSpeed + speedIncrement * max(Double(internalScore) / speedScalingFactor, 1.0)
         gameSpeed = min(calculatedGameSpeed, 800.0)
-        //        print("current game speed: \(Constants.gameSpeed)")
+//        print("current game speed: \(gameSpeed)")
         
         if let chaser = chaser {
             let followDistance = CGFloat(player.distance) * 40.0 // Adjust multiplier as needed

@@ -240,14 +240,23 @@ class PlayerEntity: SKSpriteNode {
     
     // MARK: - Private Action Helpers
     private func dropThroughPlatform() {
+        // This line makes the player ignore semi-solid platforms.
         physicsBody?.collisionBitMask = PhysicsCategory.ground | PhysicsCategory.solidPlatform
         
+        // **NEW**: Create an action to move the player down quickly.
+        let moveAction = SKAction.moveBy(x: 0, y: -platformHeight*2, duration: 0.05)
+        
+        // This is the existing action that restores the collision rules after a delay.
         let wait = SKAction.wait(forDuration: 0.33)
         let restoreCollision = SKAction.run {
             self.setupPhysics()
         }
+        let restoreSequence = SKAction.sequence([wait, restoreCollision])
         
-        run(SKAction.sequence([wait, restoreCollision]))
+        // Use a group to run both the downward movement and the restoration timer simultaneously.
+        let groupAction = SKAction.group([moveAction, restoreSequence])
+        
+        run(groupAction)
     }
     
     private func performDive() {

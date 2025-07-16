@@ -254,7 +254,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 66M6DFCL2S;
+				DEVELOPMENT_TEAM = 54XZ73U5GW;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = Meong;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.games";
@@ -286,7 +286,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 66M6DFCL2S;
+				DEVELOPMENT_TEAM = 54XZ73U5GW;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = Meong;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.games";

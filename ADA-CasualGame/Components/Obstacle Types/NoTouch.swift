@@ -20,7 +20,7 @@ extension NoTouch {
     func startMoving(across scene: SKScene) {
         // Menggunakan game speed yang sama dengan platform
         let distance = worldMoveDistance
-        let duration = round(distance / gameSpeed / speedScalingStep) * speedScalingStep
+        let duration = floor(distance/gameSpeed)
         
         let moveAction = SKAction.moveBy(x: -distance, y: 0, duration: duration)
         let removeAction = SKAction.removeFromParent()

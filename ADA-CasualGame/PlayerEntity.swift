@@ -119,68 +119,85 @@ class PlayerEntity: SKSpriteNode {
     }
     
     // MARK: - Actions
-    func jump(targetPlatform: SKNode? = nil) {
-        // 1. Check if the player can perform an action.
-        guard self.currentState != .landing else {return}
-        guard self.currentState == .running && canJump else { return }
-        //        print("trying to jump! -> state:\(self.currentState); canJump: \(self.canJump)")
-        
-        canJump = false
-        self.currentState = .airborne
-        
-        let adjustY = playerHitboxHeight * -0.125
-        applyVerticalMovementTransformation(withYAdjustment: adjustY)
-        
-        // --- 2. Determine Jump Parameters ---
-        
-        var jumpHeight: CGFloat
-        var horizontalDistance: CGFloat
-        
-        if let targetPlatform = targetPlatform {
-            let playerHeight = self.frame.height
-            let platformHeight = platformHeight + playerHeight/2
+        func jump(targetPlatform: SKNode? = nil) {
+            guard self.currentState != .landing else { return }
+            guard self.surfaceType.isGrounded && canJump else { return }
             
-            // The vertical distance from the top of the player to the top of the platform.
-            jumpHeight = targetPlatform.position.y + platformHeight - self.position.y + playerHeight
-            // The horizontal distance determines the duration of the jump.
-            let minJumpDistance = max(gameSpeed/3 , defaultJumpDistance)
-            horizontalDistance = max(minJumpDistance, targetPlatform.position.x - self.position.x)
-            
-        } else {
-            jumpHeight = defaultJumpHeight
-            // A fixed horizontal distance for the default jump's timing.
-            horizontalDistance = defaultJumpDistance
+            switch currentState {
+            case .ducking:
+                if let target = targetPlatform {
+                    highJump(to: target)
+                } else {
+                    normalJump()
+                }
+            default:
+                normalJump()
+            }
         }
-        // --- 3. Create and Run the Scripted Jump Action ---
-        
-        let startY = self.position.y
-        // The duration of our vertical animation is timed to the world's horizontal movement.
-        let duration = horizontalDistance / 4 / gameSpeed
-        
-        // Temporarily disable gravity while the scripted action is running.
-        self.physicsBody?.affectedByGravity = false
-        
-        // Create the custom action.
-        let jumpAction = SKAction.customAction(withDuration: duration) { (node, elapsedTime) in
-            // 't' is the progress of the action from 0.0 to 1.0.
-            let t = elapsedTime / duration
+
+        private func normalJump() {
+            canJump = false
+            self.currentState = .airborne
             
-            //            let easingT = sin(t * .pi / 2)
-            let easingT = 1 - pow(1 - t, 3) // Cubic ease-out
+            let adjustY = playerHitboxHeight * -0.125
+            applyVerticalMovementTransformation(withYAdjustment: adjustY)
             
-            // Calculate the new Y position.
-            node.position.y = startY + (jumpHeight * easingT)
+            // --- Define Jump Parameters ---
+            let jumpHeight = defaultJumpHeight
+            let horizontalDistance = defaultJumpDistance
+            
+            // --- Create and Run the Scripted Jump Action ---
+            let startY = self.position.y
+            let duration = horizontalDistance / 4 / gameSpeed
+            
+            self.physicsBody?.affectedByGravity = false
+            
+            let jumpAction = SKAction.customAction(withDuration: duration) { (node, elapsedTime) in
+                let t = elapsedTime / duration
+                let easingT = 1 - pow(1 - t, 3) // Cubic ease-out
+                node.position.y = startY + (jumpHeight * easingT)
+            }
+            
+            let completion = SKAction.run {
+                self.physicsBody?.affectedByGravity = true
+                self.restoreOriginalShape()
+                self.canJump = true
+            }
+            
+            self.run(SKAction.sequence([jumpAction, completion]))
         }
-        
-        // When the action is complete, re-enable gravity to let the player fall.
-        let completion = SKAction.run {
-            self.physicsBody?.affectedByGravity = true
-            self.restoreOriginalShape()
-            self.canJump = true
+
+        private func highJump(to targetPlatform: SKNode) {
+            // Calculate jump parameters based on the target
+            let jumpHeight = targetPlatform.position.y - self.position.y + playerHitboxHeight*2
+            let horizontalDistance = max(defaultJumpDistance + gameSpeed/2, targetPlatform.position.x + playerHitboxWidth*2 - self.position.x)
+            
+            canJump = false
+            self.currentState = .airborne
+            
+            let adjustY = playerHitboxHeight * -0.125
+            applyVerticalMovementTransformation(withYAdjustment: adjustY)
+            
+            // --- Create and Run the Scripted Jump Action ---
+            let startY = self.position.y
+            let duration = horizontalDistance / 4 / gameSpeed
+            
+            self.physicsBody?.affectedByGravity = false
+            
+            let jumpAction = SKAction.customAction(withDuration: duration) { (node, elapsedTime) in
+                let t = elapsedTime / duration
+                let easingT = 1 - pow(1 - t, 3) // Cubic ease-out
+                node.position.y = startY + (jumpHeight * easingT)
+            }
+            
+            let completion = SKAction.run {
+                self.physicsBody?.affectedByGravity = true
+                self.restoreOriginalShape()
+                self.canJump = true
+            }
+            
+            self.run(SKAction.sequence([jumpAction, completion]))
         }
-        
-        self.run(SKAction.sequence([jumpAction, completion]))
-    }
     
     func duck() {
         guard self.currentState != .landing else {return}
@@ -237,7 +254,7 @@ class PlayerEntity: SKSpriteNode {
         self.currentState = .diving
         self.canDive = false
         
-        let adjustY = playerHitboxHeight * -0.125
+        let adjustY = self.size.height * (0.34/2)
         applyVerticalMovementTransformation(withYAdjustment: adjustY)
         
         // 3. Apply a sharp downward impulse.
@@ -266,47 +283,59 @@ class PlayerEntity: SKSpriteNode {
     }
     
     private func applyHorizontalMovementTransformation(withYAdjustment adjustY: CGFloat = 0) {
-        // Define the new shape: wider and shorter (the "duck" shape).
+        // Define the target shape: wider and shorter (the "duck" shape).
         let duckSize = CGSize(width: playerHitboxWidth + (playerHitboxHeight / 2),
                               height: playerHitboxHeight / 2)
         
-        // Apply the new size and Y-position adjustment.
-        self.size = duckSize
-        self.position.y += adjustY
-        
-        // Create an inset physics body for the new "duck" shape to prevent snagging on edges.
+        // 1. **Instantly** update the physics body to the final duck shape.
         let physicsSize = CGSize(width: duckSize.width * 0.9, height: duckSize.height)
         self.physicsBody = SKPhysicsBody(rectangleOf: physicsSize)
+        setupPhysics()
         
-        setupPhysics() // Assuming this is your function to re-apply physics properties
+        // 2. **Animate** the visual change smoothly over a short duration.
+        let resizeAction = SKAction.resize(toWidth: duckSize.width,
+                                           height: duckSize.height,
+                                           duration: transformDuration)
+        let moveAction = SKAction.moveBy(x: 0, y: adjustY, duration: transformDuration)
+        
+        // Run the visual animations together.
+        self.run(SKAction.group([resizeAction, moveAction]))
     }
-    
+
     private func applyVerticalMovementTransformation(withYAdjustment adjustY: CGFloat = 0) {
-        // Define the new shape: narrower and taller.
+        // Define the target shape: narrower and taller.
         let jumpSize = CGSize(width: playerHitboxWidth * 0.67,
                               height: playerHitboxHeight * 1.33)
         
-        // Apply the new size and Y-position adjustment.
-        self.size = jumpSize
-        self.position.y += adjustY
-        
-        // Create an inset physics body for the new "jump" shape.
-        let physicsSize = CGSize(width: jumpSize.width, height: jumpSize.height)
+        // 1. **Instantly** update the physics body to the final jump shape.
+        let physicsSize = CGSize(width: jumpSize.width * 0.9, height: jumpSize.height)
         self.physicsBody = SKPhysicsBody(rectangleOf: physicsSize)
-        
         setupPhysics()
+        
+        // 2. **Animate** the visual change smoothly.
+        let resizeAction = SKAction.resize(toWidth: jumpSize.width,
+                                           height: jumpSize.height,
+                                           duration: transformDuration)
+        let moveAction = SKAction.moveBy(x: 0, y: adjustY, duration: transformDuration)
+        
+        self.run(SKAction.group([resizeAction, moveAction]))
     }
-    
+
     private func restoreOriginalShape(withYAdjustment adjustY: CGFloat = 0) {
         let originalSize = CGSize(width: playerHitboxWidth, height: playerHitboxHeight)
-        self.size = originalSize
-        self.position.y += adjustY
-        
-        // Create an inset physics body for the original shape
-        let physicsSize = CGSize(width: originalSize.width, height: originalSize.height)
+
+        // 1. **Instantly** restore the physics body to the original shape.
+        let physicsSize = CGSize(width: originalSize.width * 0.9, height: originalSize.height)
         self.physicsBody = SKPhysicsBody(rectangleOf: physicsSize)
-        
         setupPhysics()
+
+        // 2. **Animate** the visual restoration smoothly.
+        let resizeAction = SKAction.resize(toWidth: originalSize.width,
+                                           height: originalSize.height,
+                                           duration: transformDuration)
+        let moveAction = SKAction.moveBy(x: 0, y: adjustY, duration: transformDuration)
+        
+        self.run(SKAction.group([resizeAction, moveAction]))
     }
     
     // MARK: - Collision Handling

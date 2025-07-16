@@ -90,14 +90,14 @@ extension GameScene {
     }
     
     // Diagonal ray to detect incoming platforms
-    private func getDiagonalHit() -> (node: SKNode, distance: CGFloat)? {
+    private func getDiagonalHit() -> (node: SKNode, distance: CGFloat )? {
         guard let player = player else { return nil }
 
         var closestHit: (node: SKNode, distance: CGFloat)?
         var closestDistance: CGFloat = .infinity
 
         let rayStart = player.position
-        let rayEnd = CGPoint(x: player.position.x + jumpSnapRayLength, y: player.position.y + jumpSnapRayLength)
+        let rayEnd = CGPoint(x: player.position.x + hypot(jumpSnapRayLength, jumpSnapRayLength), y: player.position.y + jumpSnapRayLength)
         
         physicsWorld.enumerateBodies(alongRayStart: rayStart, end: rayEnd) { (body, hitPoint, _, _) in
             if let node = body.node, (node.name == "SemiSolidPlatform" || node.name == "SolidPlatform") {
@@ -130,7 +130,7 @@ extension GameScene {
                 let platformLeftEdgeX = dHit.node.position.x - (platformWidth / 2)
 
                 let distanceToLeftEdge = platformLeftEdgeX - player.position.x
-                if distanceToLeftEdge < jumpSnapRayLength / 4 {
+                if distanceToLeftEdge < jumpSnapRayLength/4 {
                     return nil // Too close to the edge
                 }
             }
@@ -141,9 +141,15 @@ extension GameScene {
         // If both rays detect the same platform, check its type
         if let vHit = verticalHitResult, let dHit = diagonalHitResult, vHit.node == dHit.node {
             if vHit.node.name == "SemiSolidPlatform" {
-                return vHit.node
-            } else if vHit.node.name == "SolidPlatform" {
-                return nil
+                let platformWidth = dHit.node.frame.size.width
+                let platformRightEdgeX = dHit.node.position.x + platformWidth/2
+
+                let distanceToRightEdge = platformRightEdgeX - player.position.x
+                if distanceToRightEdge < gameSpeed/2 {
+                    return nil // Too close to the edge
+                } else {
+                    return vHit.node
+                }
             }
         }
 

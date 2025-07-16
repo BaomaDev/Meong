@@ -8,15 +8,16 @@ let playerHitboxHeight: CGFloat = 50
 let defaultJumpHeight: CGFloat = 120
 let defaultJumpDistance: CGFloat = 300
 let airResistance: CGFloat = 5
-let diveForce: CGFloat = 80
-let landingDuration: CGFloat = 0.5
-var worldMoveDistance: CGFloat = UIScreen.main.bounds.width * 2
+let diveForce: CGFloat = 100
+let landingDuration: CGFloat = 0.25
+let transformDuration: TimeInterval = 0.05
+let worldMoveDistance: CGFloat = UIScreen.main.bounds.width * 2
     
 let jumpSnapRayLength: CGFloat = 240.0
 let throwVelocity: CGFloat = -10.0
-var gameSpeed: CGFloat = 300.0
-var speedScalingFactor: CGFloat = 3.0
-let speedScalingStep: CGFloat = 5.0
+let baseGameSpeed: CGFloat = 300.0
+var gameSpeed: CGFloat = baseGameSpeed
+var speedScalingFactor: CGFloat = 20.0   // Speed increases every N seconds
 let platformHeight = 10.0
 let projectileSpeed = 450.0
 

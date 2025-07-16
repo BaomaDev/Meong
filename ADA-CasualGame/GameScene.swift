@@ -113,15 +113,16 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         coinLabel?.text = "💰 : \(player.coins)"
         
         // as player gets further, scaling factor gets higher (speed increase gets more gradual)
-        if gameSpeed > 400 {
-            speedScalingFactor = 6.0
+        if gameSpeed > 500 {
+            speedScalingFactor = 30.0
         } else if gameSpeed > 600 {
-            speedScalingFactor = 9.0
+            speedScalingFactor = 40.0
         }
         
-        let calculatedGameSpeed = 300 + 10 * Double(internalScore) / speedScalingFactor
-        gameSpeed = min(calculatedGameSpeed, 800.0)
-        //        print("current game speed: \(Constants.gameSpeed)")
+        let speedIncreaseRate = 40.0
+        let calculatedGameSpeed = baseGameSpeed + speedIncreaseRate * max(Double(internalScore) / speedScalingFactor, 1.0)
+        gameSpeed = min(calculatedGameSpeed, 750.0)
+//                print("current game speed: \(gameSpeed)")
     }
     
     // MARK: - SKPhysicsContactDelegate

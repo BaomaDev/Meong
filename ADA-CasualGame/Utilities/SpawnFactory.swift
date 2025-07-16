@@ -22,7 +22,7 @@ class SpawnFactory {
         coin.physicsBody?.collisionBitMask = 0
         
         let moveDistance = worldMoveDistance
-        let moveSpeed = round(moveDistance / gameSpeed / speedScalingStep) * speedScalingStep
+        let moveSpeed = floor(moveDistance / gameSpeed)
         let move = SKAction.moveBy(x: -moveDistance, y: 0, duration: TimeInterval(moveSpeed))
         let remove = SKAction.removeFromParent()
         coin.run(SKAction.sequence([move, remove]))
@@ -43,7 +43,7 @@ class SpawnFactory {
         powerUp.physicsBody?.collisionBitMask = 0
         
         let moveDistance = worldMoveDistance
-        let moveSpeed = round(moveDistance / gameSpeed / speedScalingStep) * speedScalingStep
+        let moveSpeed = floor(moveDistance / gameSpeed)
         let move = SKAction.moveBy(x: -moveDistance, y: 0, duration: TimeInterval(moveSpeed))
         let remove = SKAction.removeFromParent()
         powerUp.run(SKAction.sequence([move, remove]))

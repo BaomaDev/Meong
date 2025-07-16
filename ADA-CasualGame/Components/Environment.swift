@@ -24,7 +24,7 @@ class SemiSolidPlatform: SKSpriteNode {
         // Controls game speed!
         // TODO: Use a more clearly defined game speed metric (i.e. Meters)
         let distance = worldMoveDistance
-        let duration = round(distance / gameSpeed / speedScalingStep) * speedScalingStep
+        let duration = floor(worldMoveDistance/gameSpeed)
         
         let moveAction = SKAction.moveBy(x: -distance, y: 0, duration: duration)
         let removeAction = SKAction.removeFromParent()
@@ -49,7 +49,7 @@ class SolidPlatform: SKSpriteNode {
         // Controls game speed!
         // TODO: Use a more clearly defined game speed metric (i.e. Meters)
         let distance = worldMoveDistance
-        let duration = round(distance / gameSpeed / speedScalingStep) * speedScalingStep
+        let duration = floor(distance/gameSpeed)
         
         let moveAction = SKAction.moveBy(x: -distance, y: 0, duration: duration)
         let removeAction = SKAction.removeFromParent()
@@ -134,8 +134,6 @@ extension GameScene {
     }
     
     func spawnCoinsAndPowerUps() {
-            guard let player = self.player else { return }
-
             // Get all obstacle frames to avoid overlapping
             let obstacleNodes = self.children.compactMap {
                 $0.physicsBody?.categoryBitMask == PhysicsCategory.obstacle ? $0 as? SKSpriteNode : nil

@@ -21,8 +21,9 @@ class SpawnFactory {
         coin.physicsBody?.contactTestBitMask = characterCategory
         coin.physicsBody?.collisionBitMask = 0
         
-        let moveDistance = UIScreen.main.bounds.width + 100
-        let move = SKAction.moveBy(x: -moveDistance, y: 0, duration: TimeInterval(moveDistance / gameSpeed))
+        let moveDistance = worldMoveDistance
+        let moveSpeed = round(moveDistance / gameSpeed / speedScalingStep) * speedScalingStep
+        let move = SKAction.moveBy(x: -moveDistance, y: 0, duration: TimeInterval(moveSpeed))
         let remove = SKAction.removeFromParent()
         coin.run(SKAction.sequence([move, remove]))
 
@@ -41,8 +42,9 @@ class SpawnFactory {
         powerUp.physicsBody?.contactTestBitMask = characterCategory
         powerUp.physicsBody?.collisionBitMask = 0
         
-        let moveDistance = UIScreen.main.bounds.width + 100
-        let move = SKAction.moveBy(x: -moveDistance, y: 0, duration: TimeInterval(moveDistance / gameSpeed))
+        let moveDistance = worldMoveDistance
+        let moveSpeed = round(moveDistance / gameSpeed / speedScalingStep) * speedScalingStep
+        let move = SKAction.moveBy(x: -moveDistance, y: 0, duration: TimeInterval(moveSpeed))
         let remove = SKAction.removeFromParent()
         powerUp.run(SKAction.sequence([move, remove]))
 

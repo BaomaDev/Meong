@@ -83,7 +83,7 @@ extension GameScene {
     // Initializer
     func startSpawningProjectiles() {
         let spawnAction = SKAction.run(spawnProjectile)
-        let waitAction = SKAction.wait(forDuration: 3.0, withRange: 1.0)    // Spawn every 2 ~ 4 seconds
+        let waitAction = SKAction.wait(forDuration: 5.0, withRange: 2.0)    // Spawn every 2 ~ 4 seconds
         
         run(SKAction.repeatForever(SKAction.sequence([spawnAction, waitAction])))
     }

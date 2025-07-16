@@ -112,9 +112,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         // as player gets further, scaling factor gets higher (speed increase gets more gradual)
         if gameSpeed > 400 {
-            speedScalingFactor = 4.0
+            speedScalingFactor = 6.0
         } else if gameSpeed > 600 {
-            speedScalingFactor = 8.0
+            speedScalingFactor = 9.0
         }
         
         let calculatedGameSpeed = 300 + 10 * Double(internalScore) / speedScalingFactor
@@ -124,6 +124,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     // MARK: - SKPhysicsContactDelegate
     func didBegin(_ contact: SKPhysicsContact) {
+//        worldMoveDistance = self.size.width * 2
+        
         var firstBody: SKPhysicsBody
         var secondBody: SKPhysicsBody
         

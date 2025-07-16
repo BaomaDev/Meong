@@ -19,8 +19,8 @@ class NoTouch: SKSpriteNode {
 extension NoTouch {
     func startMoving(across scene: SKScene) {
         // Menggunakan game speed yang sama dengan platform
-        let distance = scene.size.width + self.size.width * 2
-        let duration = distance / gameSpeed
+        let distance = worldMoveDistance
+        let duration = round(distance / gameSpeed / speedScalingStep) * speedScalingStep
         
         let moveAction = SKAction.moveBy(x: -distance, y: 0, duration: duration)
         let removeAction = SKAction.removeFromParent()

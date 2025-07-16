@@ -1,4 +1,5 @@
 import Foundation
+import SwiftUI
 
 let customGravity: CGFloat = -24
 let groundHeight: CGFloat = 60
@@ -7,13 +8,15 @@ let playerHitboxHeight: CGFloat = 50
 let defaultJumpHeight: CGFloat = 120
 let defaultJumpDistance: CGFloat = 300
 let airResistance: CGFloat = 5
-let diveForce: CGFloat = 60
+let diveForce: CGFloat = 80
 let landingDuration: CGFloat = 0.5
+var worldMoveDistance: CGFloat = UIScreen.main.bounds.width * 2
     
 let jumpSnapRayLength: CGFloat = 240.0
 let throwVelocity: CGFloat = -10.0
 var gameSpeed: CGFloat = 300.0
-var speedScalingFactor: CGFloat = 2.0
+var speedScalingFactor: CGFloat = 3.0
+let speedScalingStep: CGFloat = 5.0
 let platformHeight = 10.0
 let projectileSpeed = 450.0
 

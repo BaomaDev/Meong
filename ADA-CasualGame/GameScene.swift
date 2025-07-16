@@ -4,6 +4,8 @@ import GameplayKit
 class GameScene: SKScene, SKPhysicsContactDelegate {
     // MARK: - Properties
     var player: PlayerEntity?
+    var chaser: SKSpriteNode?
+
     var backgrounds: [SKSpriteNode] = []
     
     var swipeUpRecognizer: UISwipeGestureRecognizer?
@@ -38,6 +40,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         startSpawningProjectiles()
         startSpawningObstacles()
         startSpawningCoinsAndPowerUps()
+        createChaser()
         //        startSpawningObstacles(in: self)
     }
     
@@ -122,6 +125,19 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         let calculatedGameSpeed = 300 + 10 * Double(internalScore) / speedScalingFactor
         gameSpeed = min(calculatedGameSpeed, 800.0)
         //        print("current game speed: \(Constants.gameSpeed)")
+        
+        if let chaser = chaser {
+            let followDistance = CGFloat(player.distance) * 40.0 // Adjust multiplier as needed
+            let targetX = player.position.x - followDistance
+            let targetY = player.position.y
+
+            let currentPosition = chaser.position
+            let lerpFactor: CGFloat = 0.05 // Smooth following
+            let newX = currentPosition.x + (targetX - currentPosition.x) * lerpFactor
+            let newY = currentPosition.y + (targetY - currentPosition.y) * lerpFactor
+
+            chaser.position = CGPoint(x: newX, y: newY)
+        }
     }
     
     // MARK: - SKPhysicsContactDelegate
@@ -245,4 +261,20 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
         return surfaceType
     }
+    func createChaser() {
+        let texture = SKTexture(imageNamed: "akmal")
+        let chaserNode = SKSpriteNode(texture: texture)
+        chaserNode.name = "Chaser"
+        chaserNode.zPosition = 1
+        chaserNode.size = CGSize(width: 80, height: 80) // Adjust as needed
+
+        if let player = player {
+            let initialDistance = max(CGFloat(player.distance) * 40.0, 800) // Increased multiplier and fallback
+            chaserNode.position = CGPoint(x: player.position.x - initialDistance, y: player.position.y)
+        }
+
+        addChild(chaserNode)
+        chaser = chaserNode
+    }
+
 }

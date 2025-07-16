@@ -133,10 +133,75 @@ extension GameScene {
         }
     }
     
+    func spawnCoinsAndPowerUps() {
+            guard let player = self.player else { return }
+
+            // Get all obstacle frames to avoid overlapping
+            let obstacleNodes = self.children.compactMap {
+                $0.physicsBody?.categoryBitMask == PhysicsCategory.obstacle ? $0 as? SKSpriteNode : nil
+            }
+            let obstacleRects = obstacleNodes.map { $0.calculateAccumulatedFrame() }
+
+            let coinSpacing: CGFloat = 40.0
+            let coinChunkSize = Int.random(in: 1...3)
+            var attempts = 0
+
+            while attempts < 10 {
+                attempts += 1
+                let coinY = CGFloat.random(in: self.size.height / 3.2 ... self.size.height / 1.5)
+
+                var coinChunkRects: [CGRect] = []
+                var allValid = true
+
+                for i in 0..<coinChunkSize {
+                    let coinX = self.size.width + 30 + CGFloat(i) * coinSpacing
+                    let coinRect = CGRect(x: coinX - 15, y: coinY - 15, width: 30, height: 30)
+                    coinChunkRects.append(coinRect)
+
+                    if obstacleRects.contains(where: { $0.intersects(coinRect.insetBy(dx: -10, dy: -10)) }) {
+                        allValid = false
+                        break
+                    }
+                }
+
+                if allValid {
+                    for rect in coinChunkRects {
+                        let coin = SpawnFactory.createCoin(at: CGPoint(x: rect.midX, y: rect.midY), characterCategory: PhysicsCategory.player, coinCategory: PhysicsCategory.coin)
+                        self.addChild(coin)
+                    }
+                    break
+                }
+            }
+
+            // Power-up spawning with 25% chance
+            if Int.random(in: 0..<4) == 0 {
+                attempts = 0
+                while attempts < 10 {
+                    attempts += 1
+                    let powerUpY = CGFloat.random(in: self.size.height / 3.2 ... self.size.height / 1.5)
+                    let powerUpX = self.size.width + CGFloat.random(in: 20...60)
+                    let powerUpRect = CGRect(x: powerUpX - 20, y: powerUpY - 20, width: 40, height: 40)
+
+                    if !obstacleRects.contains(where: { $0.intersects(powerUpRect.insetBy(dx: -10, dy: -10)) }) {
+                        let powerUp = SpawnFactory.createPowerUp(at: CGPoint(x: powerUpX, y: powerUpY), characterCategory: PhysicsCategory.player, powerUpCategory: PhysicsCategory.powerUp)
+                        self.addChild(powerUp)
+                        break
+                    }
+                }
+            }
+        }
+    
     func startSpawningObstacles() {
         let spawnAction = SKAction.run(spawnObstacle)
         let waitAction = SKAction.wait(forDuration: 4.0, withRange: 1.5) // Spawn setiap 2.5-5.5 detik
         
         run(SKAction.repeatForever(SKAction.sequence([spawnAction, waitAction])))
+    }
+    
+    func startSpawningCoinsAndPowerUps() {
+        let spawnCoinsAndPower = SKAction.run(spawnCoinsAndPowerUps)
+        let wait = SKAction.wait(forDuration: 5.0, withRange: 2.0)
+
+        run(SKAction.repeatForever(SKAction.sequence([spawnCoinsAndPower, wait])))
     }
 }

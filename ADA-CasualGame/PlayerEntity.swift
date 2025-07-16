@@ -21,6 +21,7 @@ class PlayerEntity: SKSpriteNode {
     // Taking hits
     var distance: Int = 3
     var hearts: Int = 9
+    var coins: Int = 0
     var isInvincible: Bool = false
     
     // MARK: - Computed Properties
@@ -122,7 +123,7 @@ class PlayerEntity: SKSpriteNode {
         // 1. Check if the player can perform an action.
         guard self.currentState != .landing else {return}
         guard self.currentState == .running && canJump else { return }
-//        print("trying to jump! -> state:\(self.currentState); canJump: \(self.canJump)")
+        //        print("trying to jump! -> state:\(self.currentState); canJump: \(self.canJump)")
         
         canJump = false
         self.currentState = .airborne
@@ -164,7 +165,7 @@ class PlayerEntity: SKSpriteNode {
             // 't' is the progress of the action from 0.0 to 1.0.
             let t = elapsedTime / duration
             
-//            let easingT = sin(t * .pi / 2)
+            //            let easingT = sin(t * .pi / 2)
             let easingT = 1 - pow(1 - t, 3) // Cubic ease-out
             
             // Calculate the new Y position.
@@ -198,7 +199,7 @@ class PlayerEntity: SKSpriteNode {
         guard self.currentState != .landing else {return false}
         let timeSinceLastParry = currentTime - lastParryTime
         guard timeSinceLastParry > parryCooldown else {
-//            print("Parry on cooldown: \(timeSinceLastParry) / \(parryCooldown)")
+            //            print("Parry on cooldown: \(timeSinceLastParry) / \(parryCooldown)")
             return false
         }
         
@@ -206,7 +207,7 @@ class PlayerEntity: SKSpriteNode {
         isParrying = true
         parryStartTime = currentTime
         
-//        print("Parry activated!")
+        //        print("Parry activated!")
         
         // Visual feedback with SKAction
         let scaleUp = SKAction.scale(to: 1.2, duration: 0.1)
@@ -279,7 +280,7 @@ class PlayerEntity: SKSpriteNode {
         
         setupPhysics() // Assuming this is your function to re-apply physics properties
     }
-
+    
     private func applyVerticalMovementTransformation(withYAdjustment adjustY: CGFloat = 0) {
         // Define the new shape: narrower and taller.
         let jumpSize = CGSize(width: playerHitboxWidth * 0.67,
@@ -295,7 +296,7 @@ class PlayerEntity: SKSpriteNode {
         
         setupPhysics()
     }
-
+    
     private func restoreOriginalShape(withYAdjustment adjustY: CGFloat = 0) {
         let originalSize = CGSize(width: playerHitboxWidth, height: playerHitboxHeight)
         self.size = originalSize
@@ -316,16 +317,16 @@ class PlayerEntity: SKSpriteNode {
     
     func handleProjectileHit() {
         guard !isInvincible else { return }
-
+        
         hearts -= 1
         distance -= 1
         updateDistance(distance)  // ✅ Implementasikan updateDistance sesuai kebutuhan
         isInvincible = true
-
+        
         // Nonaktifkan kontak sementara dengan projectile
         physicsBody?.contactTestBitMask &= ~PhysicsCategory.projectile
         physicsBody?.collisionBitMask &= ~PhysicsCategory.projectile
-
+        
         // Blink effect
         let blink = SKAction.sequence([
             SKAction.fadeAlpha(to: 0.2, duration: 0.1),
@@ -333,7 +334,7 @@ class PlayerEntity: SKSpriteNode {
         ])
         let repeatBlink = SKAction.repeat(blink, count: 5)
         self.run(repeatBlink)
-
+        
         // Waktu invincibility
         let wait = SKAction.wait(forDuration: 1.0)
         let reset = SKAction.run { [weak self] in
@@ -341,24 +342,24 @@ class PlayerEntity: SKSpriteNode {
             self.isInvincible = false
             self.setupPhysics() // Kembalikan bitmask ke default
         }
-
+        
         self.run(SKAction.sequence([wait, reset]))
-
-//        print("Player was hit by a projectile!")
+        
+        //        print("Player was hit by a projectile!")
     }
     
     func handleObstacleHit() {
         guard !isInvincible else { return }
-
+        
         hearts -= 1
         distance -= 1
         updateDistance(distance)
         isInvincible = true
-
+        
         // Nonaktifkan kontak sementara dengan obstacle
         physicsBody?.contactTestBitMask &= ~PhysicsCategory.obstacle
         physicsBody?.collisionBitMask &= ~PhysicsCategory.obstacle
-
+        
         // Blink effect (sama seperti projectile hit)
         let blink = SKAction.sequence([
             SKAction.fadeAlpha(to: 0.2, duration: 0.1),
@@ -366,7 +367,7 @@ class PlayerEntity: SKSpriteNode {
         ])
         let repeatBlink = SKAction.repeat(blink, count: 5)
         self.run(repeatBlink)
-
+        
         // Waktu invincibility
         let wait = SKAction.wait(forDuration: 1.0)
         let reset = SKAction.run { [weak self] in
@@ -374,9 +375,14 @@ class PlayerEntity: SKSpriteNode {
             self.isInvincible = false
             self.setupPhysics() // Kembalikan bitmask ke default
         }
-
+        
         self.run(SKAction.sequence([wait, reset]))
-
-//        print("Player was hit by an obstacle!")
+        
+        //        print("Player was hit by an obstacle!")
+    }
+    
+    func applyPowerUp() {
+        distance += 1
+        updateDistance(distance)
     }
 }

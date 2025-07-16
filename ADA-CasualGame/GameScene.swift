@@ -4,6 +4,8 @@ import GameplayKit
 class GameScene: SKScene, SKPhysicsContactDelegate {
     // MARK: - Properties
     var player: PlayerEntity?
+    var backgrounds: [SKSpriteNode] = []
+    
     var swipeUpRecognizer: UISwipeGestureRecognizer?
     var swipeDownRecognizer: UISwipeGestureRecognizer?
     

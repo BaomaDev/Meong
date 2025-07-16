@@ -7,7 +7,7 @@ let playerHitboxHeight: CGFloat = 50
 let defaultJumpHeight: CGFloat = 120
 let defaultJumpDistance: CGFloat = 300
 let airResistance: CGFloat = 5
-let diveForce: CGFloat = 60
+let diveForce: CGFloat = 80
 let landingDuration: CGFloat = 0.5
     
 let jumpSnapRayLength: CGFloat = 240.0

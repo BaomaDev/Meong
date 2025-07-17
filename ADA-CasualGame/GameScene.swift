@@ -5,6 +5,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     // MARK: - Properties
     var player: PlayerEntity?
     var chaser: SKSpriteNode?
+    
+    // This class will now handle all the spawning logic
+    var worldGenerator: WorldGenerator?
 
     var backgrounds: [SKSpriteNode] = []
     
@@ -18,7 +21,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     var scoreUpdateHandler: ((Int) -> Void)?
     var coinUpdateHandler: ((Int) -> Void)?
     var healthUpdateHandler: ((Int) -> Void)?
-    var distanceUpdateHandler: ((Int) -> Void)?  // Optional, if you want distance too
+    var distanceUpdateHandler: ((Int) -> Void)?
 
     private var scoreTimer: Timer?
     private var internalScore: Int = 0
@@ -37,16 +40,14 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         self.camera = cameraNode
         
         EffectsFactory.shared.initialize(with: self)
-//        EffectsFactory.shared.playBgm()
         
-        createGround()
+        // Initialize and set up the world using the generator
+        worldGenerator = WorldGenerator(scene: self)
+        worldGenerator?.setupEnvironment()
+        
         startScoreTimer()
         createPlayer()
         setupSwipeRecognizers()
-        startSpawningPlatforms()
-        startSpawningProjectiles()
-        startSpawningObstacles()
-        startSpawningCoinsAndPowerUps()
         createChaser()
     }
     

@@ -280,4 +280,41 @@ class SpawnFactory {
         
         return projectile
     }
+    
+    // MARK: - Platform
+    static func createSolidPlatform(at position: CGPoint, size: CGSize) -> SKSpriteNode {
+        let platform = SKSpriteNode(color: .white, size: size)
+        platform.position = position
+        platform.name = "SolidPlatform"
+        platform.physicsBody = SKPhysicsBody(rectangleOf: platform.size)
+        platform.physicsBody?.isDynamic = false
+        platform.physicsBody?.categoryBitMask = PhysicsCategory.solidPlatform
+        platform.physicsBody?.collisionBitMask = PhysicsCategory.player
+        
+        // Apply movement action directly from the factory
+        platform.run(createMovementAction(distance: worldMoveDistance, speed: gameSpeed))
+        
+        return platform
+    }
+    
+    static func createSemiSolidPlatform(at position: CGPoint, size: CGSize) -> SKSpriteNode {
+        let platform = SKSpriteNode(color: .blue, size: size)
+        platform.position = position
+        platform.name = "SemiSolidPlatform"
+        
+        // Create an edge-based body for the top surface only
+        let topEdge = SKPhysicsBody(edgeFrom: CGPoint(x: -size.width / 2, y: size.height / 2),
+                                    to: CGPoint(x: size.width / 2, y: size.height / 2))
+        platform.physicsBody = topEdge
+        platform.physicsBody?.isDynamic = false
+        
+        platform.physicsBody?.categoryBitMask = PhysicsCategory.semiSolidPlatform
+        platform.physicsBody?.collisionBitMask = PhysicsCategory.player
+        
+        // Apply movement action directly from the factory
+        platform.run(createMovementAction(distance: worldMoveDistance, speed: gameSpeed))
+        
+        return platform
+    }
 }
+

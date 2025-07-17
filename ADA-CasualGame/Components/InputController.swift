@@ -109,11 +109,7 @@ extension GameScene {
     
     func duck() {
         guard let player = player else { return }
-        if player.currentState == .ducking {
-            return
-        } else {
-            player.duck()
-        }
+        player.duck()
     }
     
     // MARK: - Jump Target Finding (existing logic)
@@ -162,7 +158,7 @@ extension GameScene {
         return closestHit
     }
     
-    private func findJumpTarget() -> SKNode? {
+    func findJumpTarget() -> SKNode? {
         guard let player = player else { return nil }
         
         let verticalHitResult = getVerticalHit()

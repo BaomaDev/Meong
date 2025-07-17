@@ -21,6 +21,7 @@ let maxGameSpeed: CGFloat = 600.0
 var speedScalingFactor: CGFloat = 20.0   // Speed increases every N seconds
 let platformHeight = 10.0
 let projectileSpeed = 450.0
+let longSwipeTreshold = 150.0
 
 let parryRadius: CGFloat = 100.0 // The area around the player to check for projectiles
 let parryCooldown: TimeInterval = 2.0 // 2 seconds
@@ -32,6 +33,10 @@ enum PlayerState {
     case diving
     case parrying
     case landing
+}
+
+enum MovementAction {
+    case normalJump, highJump, duck
 }
 
 struct PhysicsCategory {

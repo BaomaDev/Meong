@@ -116,7 +116,6 @@ class EffectsFactory {
     }
     
     // MARK: - Private Helpers
-    
     /// Prepares the haptic engine for use to reduce latency on the first tap.
     private func prepareHaptics() {
         guard CHHapticEngine.capabilitiesForHardware().supportsHaptics else { return }
@@ -138,5 +137,59 @@ class EffectsFactory {
         } catch {
             print("There was an error creating the haptic engine: \(error.localizedDescription)")
         }
+    }
+    
+    // MARK: - Particle Handler
+    /// - Parameters:
+    ///   - at: The position where the effect should spawn.
+    ///   - surfaceType: The type of surface, used to determine the particle color.
+    ///   - amount: The number of particles to emit.
+    func playParticleEffect(at position: CGPoint, for surfaceType: SurfaceType, amount: Int) {
+        guard let scene = scene else { return }
+        
+        let particleTexture = SKTexture(imageNamed: "particle")
+        let emitter = SKEmitterNode()
+        
+        // --- Core Properties ---
+        emitter.position = position
+        emitter.particleTexture = particleTexture
+        emitter.numParticlesToEmit = amount
+        
+        // --- Color Logic ---
+        // The particles are tinted based on the surface type.
+        switch surfaceType {
+        case .ground:
+            emitter.particleColor = .lightGray // Dust color
+            emitter.particleColorBlendFactor = 0.8
+        case .semiSolidPlatform, .solidPlatform:
+            emitter.particleColor = .cyan // Tech/magic color
+            emitter.particleColorBlendFactor = 1.0
+        case .none:
+            return // Don't make particles in mid-air
+        }
+        
+        // --- Particle Behavior ---
+        // These values create a small, quick "poof" effect.
+        emitter.particleLifetime = 0.5
+        emitter.particleBirthRate = 200
+        emitter.particleSpeed = 100
+        emitter.particleSpeedRange = 50
+        emitter.emissionAngle = .pi / 2 // Straight up
+        emitter.emissionAngleRange = .pi * 2 // 360 degrees
+        emitter.xAcceleration = 0
+        emitter.yAcceleration = -200 // A little bit of gravity on the particles
+        
+        // --- Fading and Scaling ---
+        emitter.particleAlpha = 0.8
+        emitter.particleAlphaSequence = SKKeyframeSequence(keyframeValues: [0.8, 0], times: [0, 1])
+        emitter.particleScaleSequence = SKKeyframeSequence(keyframeValues: [0.1, 0.01], times: [0, 1])
+
+        // --- Cleanup ---
+        // Add an action to remove the emitter from the scene after it's finished.
+        let waitAction = SKAction.wait(forDuration: 1.0)
+        let removeAction = SKAction.removeFromParent()
+        
+        scene.addChild(emitter)
+        emitter.run(SKAction.sequence([waitAction, removeAction]))
     }
 }

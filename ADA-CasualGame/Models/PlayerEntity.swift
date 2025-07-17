@@ -10,6 +10,7 @@ class PlayerEntity: SKSpriteNode {
     private var canDuck = true
     private var canDive = false
     private var isParrying = false
+    private var queuedAction: MovementAction?
     
     // Parry system
     private var lastParryTime: TimeInterval = 0
@@ -70,6 +71,17 @@ class PlayerEntity: SKSpriteNode {
         let previousState = self.currentState
         let previousSurface = self.surfaceType
         
+        // If a duck command is queued, perform that first.
+        if self.currentState != .ducking && self.queuedAction == .duck {
+            if self.currentState == .airborne { // Override checking
+                self.performDuck()
+            } else {
+                self.duck()
+            }
+            self.queuedAction = nil
+            return
+        }
+        
         if currentSurface.isGrounded && !previousSurface.isGrounded {
             // Check HOW we landed.
             if previousState == .diving {
@@ -88,8 +100,24 @@ class PlayerEntity: SKSpriteNode {
                 self.run(SKAction.sequence([wait, transitionToRunning]))
                 
             } else {
-                // It was a normal landing, so we can run immediately.
-                self.currentState = .running
+                // If a queued action exists, perform that first
+                if let action = self.queuedAction {
+                    switch action {
+                    case .normalJump:
+                        self.normalJump()
+                    case .highJump:
+                        let target = (self.scene as? GameScene)?.findJumpTarget()
+                        self.highJump(to: target)
+                    default:
+                        break
+                    }
+                    // Clear the queue after executing.
+                    self.queuedAction = nil
+                    return
+                } else {
+                    // It was a normal landing, so we can run immediately.
+                    self.currentState = .running
+                }
             }
         } else if !currentSurface.isGrounded && previousSurface.isGrounded {
             // Falling or jumping
@@ -122,22 +150,24 @@ class PlayerEntity: SKSpriteNode {
     // MARK: - Actions
     func panContolledJump(swipeDistance: Double, target: SKNode? = nil) {
         guard self.currentState != .landing else { return }
-        guard self.surfaceType.isGrounded && canJump else { return }
+        guard self.surfaceType.isGrounded && canJump else {
+            if isCloseToGround() {
+                if swipeDistance < longSwipeTreshold {
+                    print("queueing normal jump")
+                    queuedAction = .normalJump
+                } else {
+                    print("queueing high jump")
+                    queuedAction = .highJump
+                }
+            }
+            return
+        }
         
         // --- Call the appropriate jump based on the swipe distance ---
-        if swipeDistance < 100 {
-            // Short Swipe: Perform a normal jump.
-            print("Short swipe detected (\(swipeDistance)). Performing Normal Jump.")
+        if swipeDistance < longSwipeTreshold {
             normalJump()
         } else {
-            // Long Swipe: Try to find a target for a high jump.
-            print("Long swipe detected (\(swipeDistance)). Performing High Jump.")
-            if let target = target {
-                highJump(to: target)
-            } else {
-                // If no target is found for a high jump, fall back to a normal jump.
-                normalJump()
-            }
+            highJump(to: target)
         }
     }
     
@@ -192,10 +222,21 @@ class PlayerEntity: SKSpriteNode {
         self.run(SKAction.sequence([jumpAction, completion]))
     }
 
-    private func highJump(to targetPlatform: SKNode) {
-        // Calculate jump parameters based on the target
-        let jumpHeight = targetPlatform.position.y - self.position.y + playerHitboxHeight*2
-        let horizontalDistance = max(defaultJumpDistance + gameSpeed/2, targetPlatform.position.x + playerHitboxWidth*2 - self.position.x)
+    private func highJump(to targetPlatform: SKNode?) {
+        var jumpHeight: CGFloat
+        var horizontalDistance: CGFloat
+        
+        if (targetPlatform == nil) {
+            print("performing default high jump")
+            jumpHeight = defaultJumpHeight * 2
+            // Use a default horizontal distance for timing the arc
+            horizontalDistance = defaultJumpDistance
+        } else {
+            // Calculate jump parameters based on the target
+            guard let targetPlatform = targetPlatform else { return }
+            jumpHeight = targetPlatform.position.y - self.position.y + playerHitboxHeight*2
+            horizontalDistance = max(defaultJumpDistance + gameSpeed/4, targetPlatform.position.x + playerHitboxWidth - self.position.x)
+        }
         
         canJump = false
         self.currentState = .airborne
@@ -209,7 +250,7 @@ class PlayerEntity: SKSpriteNode {
         
         self.physicsBody?.affectedByGravity = false
         
-        // High jump
+        // High jump effects
         EffectsFactory.shared.playSound(soundKey: "jump.mp3")
         EffectsFactory.shared.playHaptic(strength: 1.0)
         
@@ -230,6 +271,10 @@ class PlayerEntity: SKSpriteNode {
     
     func duck() {
         guard self.currentState != .landing else {return}
+        if self.currentState == .ducking {
+            self.queuedAction = .duck
+            return
+        }
         
         switch surfaceType {
         case .semiSolidPlatform:
@@ -289,6 +334,11 @@ class PlayerEntity: SKSpriteNode {
     }
     
     private func performDive() {
+        guard isCloseToGround() == false else {
+            self.queuedAction = .duck
+            return
+        }
+        
         self.currentState = .diving
         self.canDive = false
         
@@ -376,6 +426,13 @@ class PlayerEntity: SKSpriteNode {
         let moveAction = SKAction.moveBy(x: 0, y: adjustY, duration: transformDuration)
         
         self.run(SKAction.group([resizeAction, moveAction]))
+    }
+    
+    private func isCloseToGround() -> Bool {
+        let playerFeetY = self.position.y - (self.size.height / 2)
+        let distanceToGround = playerFeetY - groundHeight
+        
+        return distanceToGround <= (defaultJumpHeight / 2)
     }
     
     // MARK: - Collision Handling

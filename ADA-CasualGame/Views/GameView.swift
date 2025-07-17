@@ -40,21 +40,32 @@ struct GameView: View {
         ZStack(alignment: .topTrailing) {
             SpriteView(scene: scene)
                 .ignoresSafeArea()
-            HealthBar(health: health)
+            HStack{
+                HStack{
+                    HealthBar(health: health)
+                    CoinIndicator(coinCount: coin)
+                }
+                Spacer()
+            }
+            .padding(.top, 15)
             HStack{
                 Spacer()
-                VStack{
-                    Text("Score: \(score)")
-                        .font(.system(size: 24, weight: .bold))
+                HStack{
+                    Text("\(score)")
+                        .font(.system(size: 32, weight: .bold))
                         .foregroundColor(.white)
                         .shadow(radius: 3)
                         .padding(.bottom, 0)
-                    CoinIndicator(coinCount: coin)
-                        .padding(.top, -10)
                 }
-                .padding(.top, 40)
-                .padding(.trailing, 20)
+                Spacer()
             }
+            .padding(.top, 24)
+            
+            HStack{
+                PauseButton()
+            }
+            .padding(.top, 24)
+            
         }
     }
 }

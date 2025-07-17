@@ -8,36 +8,50 @@
 import SwiftUI
 
 struct HealthBar: View {
-    var health: Int
+//    var health: Int
+//    
+//    var body: some View {
+//        VStack {
+//            HStack {
+//                ZStack(alignment: .leading) { // align content to top-leading
+//                    Image("HealthBarBackground")
+//                        .resizable()
+//                        .aspectRatio(contentMode: .fit)
+//                        .frame(width: 180)
+//                    
+//                    HStack(spacing: 2) {
+//                        ForEach(0..<health) { _ in
+//                            Image("HealthBar")
+//                                .resizable()
+//                                .aspectRatio(contentMode: .fit)
+//                                .frame(width: 10)
+//                        }
+//                    }
+//                    .padding(.top, 18) // only top padding, no leading
+//                    .padding(.leading, 48) // optional fine adjustment
+//                }
+//            }
+//        }
+//    }
+    
+    let health: Int
     
     var body: some View {
-        VStack {
-            HStack {
-                ZStack(alignment: .topLeading) { // align content to top-leading
-                    Image("HealthBarBackground")
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .frame(width: 180)
-                    
-                    HStack(spacing: 2) {
-                        ForEach(0..<health) { _ in
-                            Image("HealthBar")
-                                .resizable()
-                                .aspectRatio(contentMode: .fit)
-                                .frame(width: 11)
-                        }
-                    }
-                    .padding(.top, 29) // only top padding, no leading
-                    .padding(.leading, 50) // optional fine adjustment
-                }
-                Spacer()
-            }
-            Spacer()
+        ZStack{
+            Image("HealthIndicator")
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .frame(width: 90)
+            Text("\(health)")
+                .font(.system(size: 20, weight: .bold))
+                .foregroundColor(.white)
+                .shadow(radius: 2)
+                .padding(.leading, 40)
+                .padding(.top, 2)
         }
-        .padding(.top, 20)
     }
 }
 
 #Preview {
-    HealthBar(health: 3)
+    HealthBar(health: 9)
 }

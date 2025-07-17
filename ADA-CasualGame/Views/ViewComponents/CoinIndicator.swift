@@ -15,12 +15,12 @@ struct CoinIndicator: View {
             Image("CoinIndicator")
                 .resizable()
                 .aspectRatio(contentMode: .fit)
-                .frame(width: 120)
+                .frame(width: 90)
             Text("\(coinCount)")
-                .font(.system(size: 24, weight: .bold))
+                .font(.system(size: 20, weight: .bold))
                 .foregroundColor(.white)
                 .shadow(radius: 2)
-                .padding(.leading, 60)
+                .padding(.leading, 40)
                 .padding(.top, 2)
         }
     }

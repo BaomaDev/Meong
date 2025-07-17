@@ -100,98 +100,103 @@ extension GameScene {
         let obstacleY = groundHeight + 40 // Position slightly above ground
         let position = CGPoint(x: self.size.width + 50, y: obstacleY)
         
-        // Randomly choose between NoTouch, Stepable, and Duckable obstacles
+        // Randomly choose an obstacle to spawn
         let randomChoice = Int.random(in: 0...3)
-        
+        var obstacle: SKSpriteNode?
+
         switch randomChoice {
         case 0:
-            let obstacle = NoTouch.create()
-            obstacle.position = position
-            self.addChild(obstacle)
-            obstacle.startMoving(across: self)
-            
+            obstacle = SpawnFactory.createNoTouch(at: position)
         case 1:
-            let obstacle = Stepable.create()
-            obstacle.position = position
-            self.addChild(obstacle)
-            obstacle.startMoving(across: self)
-            
+            obstacle = SpawnFactory.createStepable(at: position)
         case 2:
-            let obstacle = Duckable.create()
-            obstacle.position = position
-            self.addChild(obstacle)
-            obstacle.startMoving(across: self)
-            
+            obstacle = SpawnFactory.createDuckable(at: position)
         case 3:
-            let obstacle = Moving.create()
-            obstacle.position = CGPoint(x: self.size.width + 50, y: groundHeight + 30)
-            self.addChild(obstacle)
-            obstacle.startMoving(across: self)
-            
+            let movingPosition = CGPoint(x: self.size.width + 50, y: groundHeight + 30)
+            obstacle = SpawnFactory.createMoving(at: movingPosition)
         default:
             break
         }
+        
+        if let obstacle = obstacle {
+            self.addChild(obstacle)
+        }
+    }
+    
+    func startSpawningProjectiles() {
+        let spawnAction = SKAction.run(spawnProjectile)
+        let waitAction = SKAction.wait(forDuration: 6.0, withRange: 2.0) // Spawn every 4-8 seconds
+        run(SKAction.repeatForever(SKAction.sequence([spawnAction, waitAction])))
+    }
+    
+    func spawnProjectile() {
+        let projectile = SpawnFactory.createProjectile(in: self)
+        self.addChild(projectile)
     }
     
     func spawnCoinsAndPowerUps() {
-            // Get all obstacle frames to avoid overlapping
-            let obstacleNodes = self.children.compactMap {
-                $0.physicsBody?.categoryBitMask == PhysicsCategory.obstacle ? $0 as? SKSpriteNode : nil
-            }
-            let obstacleRects = obstacleNodes.map { $0.calculateAccumulatedFrame() }
+        // Get all obstacle frames to avoid overlapping
+        let obstacleNodes = self.children.compactMap {
+            $0.physicsBody?.categoryBitMask == PhysicsCategory.obstacle ? $0 as? SKSpriteNode : nil
+        }
+        let obstacleRects = obstacleNodes.map { $0.calculateAccumulatedFrame() }
 
-            let coinSpacing: CGFloat = 40.0
-            let coinChunkSize = Int.random(in: 1...3)
-            var attempts = 0
+        let coinSpacing: CGFloat = 40.0
+        let coinChunkSize = Int.random(in: 1...3)
+        var attempts = 0
 
-            while attempts < 10 {
-                attempts += 1
-                let coinY = CGFloat.random(in: self.size.height / 3.2 ... self.size.height / 1.5)
+        while attempts < 10 {
+            attempts += 1
+            let coinY = CGFloat.random(in: self.size.height / 3.2 ... self.size.height / 1.5)
 
-                var coinChunkRects: [CGRect] = []
-                var allValid = true
+            var coinChunkRects: [CGRect] = []
+            var allValid = true
 
-                for i in 0..<coinChunkSize {
-                    let coinX = self.size.width + 30 + CGFloat(i) * coinSpacing
-                    let coinRect = CGRect(x: coinX - 15, y: coinY - 15, width: 30, height: 30)
-                    coinChunkRects.append(coinRect)
+            for i in 0..<coinChunkSize {
+                let coinX = self.size.width + 30 + CGFloat(i) * coinSpacing
+                let coinRect = CGRect(x: coinX - 15, y: coinY - 15, width: 30, height: 30)
+                coinChunkRects.append(coinRect)
 
-                    if obstacleRects.contains(where: { $0.intersects(coinRect.insetBy(dx: -10, dy: -10)) }) {
-                        allValid = false
-                        break
-                    }
-                }
-
-                if allValid {
-                    for rect in coinChunkRects {
-                        let coin = SpawnFactory.createCoin(at: CGPoint(x: rect.midX, y: rect.midY), characterCategory: PhysicsCategory.player, coinCategory: PhysicsCategory.coin)
-                        self.addChild(coin)
-                    }
+                if obstacleRects.contains(where: { $0.intersects(coinRect.insetBy(dx: -10, dy: -10)) }) {
+                    allValid = false
                     break
                 }
             }
 
-            // Power-up spawning with 25% chance
-            if Int.random(in: 0..<4) == 0 {
-                attempts = 0
-                while attempts < 10 {
-                    attempts += 1
-                    let powerUpY = CGFloat.random(in: self.size.height / 3.2 ... self.size.height / 1.5)
-                    let powerUpX = self.size.width + CGFloat.random(in: 20...60)
-                    let powerUpRect = CGRect(x: powerUpX - 20, y: powerUpY - 20, width: 40, height: 40)
+            if allValid {
+                for rect in coinChunkRects {
+                    let coin = SpawnFactory.createCoin(at: CGPoint(x: rect.midX, y: rect.midY),
+                                                     characterCategory: PhysicsCategory.player,
+                                                     coinCategory: PhysicsCategory.coin)
+                    self.addChild(coin)
+                }
+                break
+            }
+        }
 
-                    if !obstacleRects.contains(where: { $0.intersects(powerUpRect.insetBy(dx: -10, dy: -10)) }) {
-                        let powerUp = SpawnFactory.createPowerUp(at: CGPoint(x: powerUpX, y: powerUpY), characterCategory: PhysicsCategory.player, powerUpCategory: PhysicsCategory.powerUp)
-                        self.addChild(powerUp)
-                        break
-                    }
+        // Power-up spawning with 25% chance
+        if Int.random(in: 0..<4) == 0 {
+            attempts = 0
+            while attempts < 10 {
+                attempts += 1
+                let powerUpY = CGFloat.random(in: self.size.height / 3.2 ... self.size.height / 1.5)
+                let powerUpX = self.size.width + CGFloat.random(in: 20...60)
+                let powerUpRect = CGRect(x: powerUpX - 20, y: powerUpY - 20, width: 40, height: 40)
+
+                if !obstacleRects.contains(where: { $0.intersects(powerUpRect.insetBy(dx: -10, dy: -10)) }) {
+                    let powerUp = SpawnFactory.createPowerUp(at: CGPoint(x: powerUpX, y: powerUpY),
+                                                           characterCategory: PhysicsCategory.player,
+                                                           powerUpCategory: PhysicsCategory.powerUp)
+                    self.addChild(powerUp)
+                    break
                 }
             }
         }
+    }
     
     func startSpawningObstacles() {
         let spawnAction = SKAction.run(spawnObstacle)
-        let waitAction = SKAction.wait(forDuration: 4.0, withRange: 1.5) // Spawn setiap 2.5-5.5 detik
+        let waitAction = SKAction.wait(forDuration: 4.0, withRange: 1.5) // Spawn every 2.5-5.5 seconds
         
         run(SKAction.repeatForever(SKAction.sequence([spawnAction, waitAction])))
     }

@@ -6,15 +6,27 @@
 //
 
 import UIKit
+import SwiftUI
 
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var window: UIWindow?
-
-
-    func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        // Override point for customization after application launch.
+    // ✅ UIKit lifecycle
+    func application(_ application: UIApplication,
+                     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+        
+        // ✅ Create UIWindow manually
+        let window = UIWindow(frame: UIScreen.main.bounds)
+        
+        // ✅ Use SwiftUI GameView as root view
+        let rootView = GameView()
+        window.rootViewController = UIHostingController(rootView: rootView)
+        
+        // ✅ Present window
+        self.window = window
+        window.makeKeyAndVisible()
+        
         return true
     }
 

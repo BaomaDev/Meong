@@ -160,10 +160,20 @@ class WorldGenerator {
             }
         }
     }
-
+    
     private func startSpawningCoinsAndPowerUps() {
         let spawnCoinsAndPower = SKAction.run(spawnCoinsAndPowerUps)
         let wait = SKAction.wait(forDuration: 5.0, withRange: 2.0)
         scene?.run(SKAction.repeatForever(SKAction.sequence([spawnCoinsAndPower, wait])))
+                if !obstacleRects.contains(where: { $0.intersects(catnipRect.insetBy(dx: -10, dy: -10)) }) {
+                    let catnip = SpawnFactory.createCatnip(at: CGPoint(x: catnipX, y: catnipY),
+                                                           characterCategory: PhysicsCategory.player,
+                                                           catnipCategory: PhysicsCategory.catnip)
+                    scene.addChild(catnip)
+                    break
+                }
+            }
+        }
+        currentStepCollectible += 1
     }
 }

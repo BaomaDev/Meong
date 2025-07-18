@@ -22,6 +22,10 @@ var speedScalingFactor: CGFloat = 20.0   // Speed increases every N seconds
 let platformHeight = 10.0
 let projectileSpeed = 450.0
 let longSwipeTreshold = 150.0
+let minPlatformDelay = 1.2
+let minObstacleDelay = 1.0
+let minProjectileDelay = 1.4
+let minCollectibleDelay = 1.3
 
 let parryRadius: CGFloat = 100.0 // The area around the player to check for projectiles
 let parryCooldown: TimeInterval = 2.0 // 2 seconds

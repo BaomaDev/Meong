@@ -8,8 +8,11 @@
 import SwiftUI
 
 struct PauseButton: View {
+    var onPause: () -> Void
     var body: some View {
-        Button(action: { }) {
+        Button(action: {
+            onPause()
+        }) {
             Image("PauseButton")
                 .resizable()
                 .aspectRatio(contentMode: .fit)
@@ -19,5 +22,5 @@ struct PauseButton: View {
 }
 
 #Preview {
-    PauseButton()
+    PauseButton(onPause: {})
 }

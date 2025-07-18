@@ -303,7 +303,7 @@ class WorldGenerator {
         }
         
         // Catnip spawning with 10% chance
-        if Int.random(in: 0..<2) == 0 {
+        if Int.random(in: 0..<20) == 0 {
             attempts = 0
             while attempts < 10 {
                 attempts += 1

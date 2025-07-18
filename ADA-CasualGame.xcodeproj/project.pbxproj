@@ -267,7 +267,11 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+<<<<<<< HEAD
 				DEVELOPMENT_TEAM = 336MS8FPXZ;
+=======
+				DEVELOPMENT_TEAM = PW3H9H9Q3Y;
+>>>>>>> parent of 0cf0d80 (modify movement)
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "ADA-CasualGame/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = Meong;
@@ -300,7 +304,11 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+<<<<<<< HEAD
 				DEVELOPMENT_TEAM = 336MS8FPXZ;
+=======
+				DEVELOPMENT_TEAM = PW3H9H9Q3Y;
+>>>>>>> parent of 0cf0d80 (modify movement)
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "ADA-CasualGame/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = Meong;

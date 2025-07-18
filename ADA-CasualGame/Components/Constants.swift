@@ -23,6 +23,10 @@ let platformHeight = 240.0
 let platformThickness = 10.0
 let projectileSpeed = 450.0
 let longSwipeTreshold = 150.0
+let minPlatformDelay = 1.2
+let minObstacleDelay = 1.0
+let minProjectileDelay = 1.4
+let minCollectibleDelay = 1.3
 
 let parryRadius: CGFloat = 100.0 // The area around the player to check for projectiles
 let parryCooldown: TimeInterval = 2.0 // 2 seconds
@@ -54,6 +58,7 @@ struct PhysicsCategory {
     static let enemy: UInt32 = 0b10000000
     static let powerUp: UInt32 = 0b100000000
     static let coin: UInt32 = 0b1000000000
+    static let catnip: UInt32 = 0b10000000000
 }
 
 enum SurfaceType {

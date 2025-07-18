@@ -23,7 +23,9 @@ class PlayerEntity: SKSpriteNode {
     var distance: Int = 3
     var hearts: Int = 9
     var coins: Int = 0
+    
     var isInvincible: Bool = false
+    var isInCatnipMode: Bool = false
     
     // MARK: - Computed Properties
     var state: PlayerState {
@@ -50,6 +52,9 @@ class PlayerEntity: SKSpriteNode {
         // Setup physics
         player.physicsBody = SKPhysicsBody(rectangleOf: playerSize)
         player.setupPhysics()
+        
+        let xConstraint = SKConstraint.positionX(SKRange(constantValue: player.position.x))
+        player.constraints = [xConstraint]
         
         return player
     }
@@ -376,6 +381,8 @@ class PlayerEntity: SKSpriteNode {
     }
     
     private func performDive() {
+        guard !isInCatnipMode else { return }
+        
         guard isCloseToGround() == false else {
             self.queuedAction = .duck
             return
@@ -518,39 +525,95 @@ class PlayerEntity: SKSpriteNode {
     
     func handleObstacleHit() {
         guard !isInvincible else { return }
-        
+
         hearts -= 1
         distance -= 1
         updateDistance(distance)
         isInvincible = true
-        
-        // Nonaktifkan kontak sementara dengan obstacle
-        physicsBody?.contactTestBitMask &= ~PhysicsCategory.obstacle
-        physicsBody?.collisionBitMask &= ~PhysicsCategory.obstacle
-        
-        // Blink effect (sama seperti projectile hit)
+
+        // ✅ Safely unwrap physicsBody before modifying
+        if let body = self.physicsBody {
+            body.contactTestBitMask &= ~PhysicsCategory.obstacle
+            body.collisionBitMask &= ~PhysicsCategory.obstacle
+        } else {
+            print("⚠️ Warning: physicsBody is nil during obstacle hit!")
+        }
+
+        // Blink effect
         let blink = SKAction.sequence([
             SKAction.fadeAlpha(to: 0.2, duration: 0.1),
             SKAction.fadeAlpha(to: 1.0, duration: 0.1)
         ])
         let repeatBlink = SKAction.repeat(blink, count: 5)
         self.run(repeatBlink)
-        
-        // Waktu invincibility
+
+        // Restore physics after invincibility ends
         let wait = SKAction.wait(forDuration: 1.0)
         let reset = SKAction.run { [weak self] in
             guard let self = self else { return }
             self.isInvincible = false
-            self.setupPhysics() // Kembalikan bitmask ke default
+            self.setupPhysics()
         }
-        
+
         self.run(SKAction.sequence([wait, reset]))
-        
-        //        print("Player was hit by an obstacle!")
     }
     
     func applyPowerUp() {
         distance += 1
         updateDistance(distance)
+    }
+    
+    func applyCatnip() {
+        guard !isInCatnipMode else { return }
+        isInCatnipMode = true
+        isInvincible = true
+
+        // --- NEW: Restore player's visual and physics state BEFORE applying catnip effects ---
+        // This ensures the player is not stuck in a blinking, stretched, or ducked state.
+        self.removeAllActions() // Stop any ongoing visual animations (like blinking or stretching)
+        self.alpha = 1.0        // Ensure player is fully visible
+        restoreOriginalShape()  // Reset size and physics body to default
+        // --- END NEW ---
+
+        // Modify physics and game settings
+        gameSpeed *= 2.0
+        self.physicsBody?.affectedByGravity = false
+        self.physicsBody?.contactTestBitMask = 0
+        self.physicsBody?.collisionBitMask = 0
+
+        let fixedHoverY: CGFloat = 280
+
+        let flyToFixedY = SKAction.moveTo(y: fixedHoverY, duration: 0.6)
+        flyToFixedY.timingMode = .easeOut
+
+        let hoverUp = SKAction.moveBy(x: 0, y: 15, duration: 0.3)
+        let hoverDown = SKAction.moveBy(x: 0, y: -15, duration: 0.3)
+        let singleHoverCycle = SKAction.sequence([hoverUp, hoverDown])
+
+        let catnipDuration: TimeInterval = 5.0
+        let hoverRepetitions = Int(catnipDuration / (hoverUp.duration + hoverDown.duration))
+        let remainingWaitTime = catnipDuration.truncatingRemainder(dividingBy: (hoverUp.duration + hoverDown.duration))
+
+        let catnipTimer = SKAction.sequence([
+            flyToFixedY,
+            SKAction.repeat(singleHoverCycle, count: hoverRepetitions),
+            SKAction.wait(forDuration: remainingWaitTime),
+            SKAction.run { [weak self] in
+                guard let self = self else { return }
+                // Clean up catnip specific actions/states
+                self.removeAction(forKey: "catnipModeSequence") // Remove the sequence itself
+                self.isInvincible = false
+                self.isInCatnipMode = false
+                gameSpeed /= 2.0
+                
+                // Restore original physics and visual state
+                self.setupPhysics()
+                self.physicsBody?.affectedByGravity = true
+                self.alpha = 1.0 // Ensure alpha is reset if it wasn't already
+                self.restoreOriginalShape() // Crucial for resetting size after catnip
+            }
+        ])
+
+        self.run(catnipTimer, withKey: "catnipModeSequence")
     }
 }

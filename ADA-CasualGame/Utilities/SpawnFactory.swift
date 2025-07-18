@@ -75,6 +75,23 @@ class SpawnFactory {
         return powerUp
     }
     
+    static func createCatnip(at position: CGPoint, characterCategory: UInt32, catnipCategory: UInt32) -> SKSpriteNode {
+        let catnip = SKSpriteNode(imageNamed: "catnip")
+        catnip.setScale(0.10)
+        catnip.position = position
+        catnip.zPosition = 1
+
+        catnip.physicsBody = SKPhysicsBody(circleOfRadius: catnip.size.width / 2)
+        catnip.physicsBody?.isDynamic = false
+        catnip.physicsBody?.categoryBitMask = catnipCategory
+        catnip.physicsBody?.contactTestBitMask = characterCategory
+        catnip.physicsBody?.collisionBitMask = 0
+        
+        catnip.run(createMovementAction(distance: worldMoveDistance, speed: gameSpeed))
+
+        return catnip
+    }
+    
     // MARK: - Obstacles
 
     static func createNoTouch(at position: CGPoint) -> SKSpriteNode {

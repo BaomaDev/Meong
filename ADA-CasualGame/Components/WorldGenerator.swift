@@ -174,6 +174,7 @@ class WorldGenerator {
                 }
             }
         }
+    }
         currentStepCollectible += 1
     }
 }

@@ -27,7 +27,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     private var internalScore: Int = 0
     
     private var lastDistanceBonusScore = 0
-    private var lastSpeedFactor: Double = 1.0
     
     // MARK: - Scene Lifecycle (Initializers)
     override func didMove(to view: SKView) {
@@ -96,8 +95,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         let speedIncrement = 40.0
         let calculatedGameSpeed = baseGameSpeed + speedIncrement * max(Double(internalScore) / speedScalingFactor, 1.0)
         gameSpeed = min(calculatedGameSpeed, maxGameSpeed)
-        updateSpawningIfNeeded()
-        
+//        print("current game speed: \(gameSpeed)")
         
         if let chaser = chaser {
             let followDistance = CGFloat(player.distance) * 40.0 // Adjust multiplier as needed
@@ -202,14 +200,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             
             player?.applyPowerUp()
         }
-        
-        if (firstBody.categoryBitMask == PhysicsCategory.player && secondBody.categoryBitMask == PhysicsCategory.catnip) ||
-            (firstBody.categoryBitMask == PhysicsCategory.catnip && secondBody.categoryBitMask == PhysicsCategory.player) {
-            let catnipNode = firstBody.categoryBitMask == PhysicsCategory.catnip ? firstBody.node : secondBody.node
-            catnipNode?.removeFromParent()
-            
-            player?.applyCatnip()
-        }
     }
     
     func checkGameOver() {
@@ -278,6 +268,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
         return surfaceType
     }
+    
     func createChaser() {
         let texture = SKTexture(imageNamed: "akmal")
         let chaserNode = SKSpriteNode(texture: texture)
@@ -294,18 +285,4 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         chaser = chaserNode
     }
 
-    func updateSpawningIfNeeded() {
-        let newFactor = Double(gameSpeed / baseGameSpeed)
-        guard abs(newFactor - lastSpeedFactor) >= 0.3 else { return }
-        
-        lastSpeedFactor = newFactor
-        print("current game speed: \(gameSpeed)")
-        
-        scene?.run(SKAction.sequence([
-                SKAction.wait(forDuration: 1),
-                SKAction.run { [weak self] in
-                    self?.worldGenerator?.startProceduralSpawning()
-                }
-            ]))
-    }
 }

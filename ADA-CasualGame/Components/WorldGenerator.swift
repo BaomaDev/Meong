@@ -123,8 +123,8 @@ class WorldGenerator {
         guard chance > threshold else { return }
 
         let typeVal = noiseMap.rawValueAt(atChunk: currentStepPlatform, layer: NoiseLayer.platformType.rawValue)
-        let platformSize = CGSize(width: 500, height: platformHeight)
-        let platformY: CGFloat = 240
+        let platformSize = CGSize(width: 500, height: platformThickness)
+        let platformY: CGFloat = platformHeight
         let position = CGPoint(x: scene.size.width + platformSize.width, y: platformY)
 
         let node: SKSpriteNode = (typeVal < 0) ?

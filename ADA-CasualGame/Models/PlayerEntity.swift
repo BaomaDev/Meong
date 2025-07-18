@@ -90,52 +90,32 @@ class PlayerEntity: SKSpriteNode {
         if currentSurface.isGrounded && !previousSurface.isGrounded {
             // Check HOW we landed.
             if previousState == .diving {
-                restoreOriginalShape()
-                // If we landed from a dive, enter the .landing state via an action.
-                self.currentState = .landing
-                EffectsFactory.shared.screenShake(strength: 0.5)
-                
-                let wait = SKAction.wait(forDuration: landingDuration)
-                let transitionToRunning = SKAction.run {
-                    if self.currentState == .landing {
-                        self.currentState = .running
-                    }
-                }
-                
-                self.run(SKAction.sequence([wait, transitionToRunning]))
+                hardLanding()
                 
             } else {
-                // If a queued action exists, perform that first
-                if let action = self.queuedAction {
-                    switch action {
-                    case .normalJump:
-                        self.normalJump()
-                    case .highJump:
-                        let target = (self.scene as? GameScene)?.findJumpTarget()
-                        self.highJump(to: target)
-                    default:
-                        break
-                    }
-                    // Clear the queue after executing.
-                    self.queuedAction = nil
-                    return
-                } else {
-                    // It was a normal landing, so we can run immediately.
-                    self.currentState = .running
-                }
+                softLanding()
             }
+            canJump = true
+            
         } else if !currentSurface.isGrounded && previousSurface.isGrounded {
-            // Falling or jumping
-            self.currentState = .airborne
-            self.canDive = true
+            handleGoingAirborne()
         }
-        self.surfaceType = currentSurface
         
+        self.surfaceType = currentSurface
+        updateColor()
+    }
+    
+    private func handleGoingAirborne() {
+        // Falling or jumping
+        self.currentState = .airborne
+        self.canDive = true
+    }
+    
+    private func updateColor() {
         if isParrying {
             color = .green
             return
         }
-        
         switch currentState {
         case .running:
             color = .orange
@@ -152,16 +132,52 @@ class PlayerEntity: SKSpriteNode {
         }
     }
     
+    private func hardLanding() {
+        restoreOriginalShape()
+        // If we landed from a dive, enter the .landing state via an action.
+        self.currentState = .landing
+        EffectsFactory.shared.screenShake(strength: 0.5)
+        
+        let wait = SKAction.wait(forDuration: landingDuration)
+        let transitionToRunning = SKAction.run {
+            if self.currentState == .landing {
+                self.currentState = .running
+            }
+        }
+        
+        self.run(SKAction.sequence([wait, transitionToRunning]))
+    }
+    
+    private func softLanding() {
+        // If a queued action exists, perform that first
+        if let action = self.queuedAction {
+            switch action {
+            case .normalJump:
+                self.normalJump()
+            case .highJump:
+                self.highJump()
+            default:
+                break
+            }
+            // Clear the queue after executing.
+            self.queuedAction = nil
+            return
+        } else {
+            // It was a normal landing, so we can run immediately.
+            self.currentState = .running
+        }
+    }
+    
     // MARK: - Actions
-    func panContolledJump(swipeDistance: Double, target: SKNode? = nil) {
+    func jump(swipeDistance: Double) {
         guard self.currentState != .landing else { return }
         guard self.surfaceType.isGrounded && canJump else {
             if isCloseToGround() {
                 if swipeDistance < longSwipeTreshold {
-                    print("queueing normal jump")
+//                    print("queueing normal jump")
                     queuedAction = .normalJump
                 } else {
-                    print("queueing high jump")
+//                    print("queueing high jump")
                     queuedAction = .highJump
                 }
             }
@@ -172,23 +188,7 @@ class PlayerEntity: SKSpriteNode {
         if swipeDistance < longSwipeTreshold {
             normalJump()
         } else {
-            highJump(to: target)
-        }
-    }
-    
-    func jump(targetPlatform: SKNode? = nil) {
-        guard self.currentState != .landing else { return }
-        guard self.surfaceType.isGrounded && canJump else { return }
-        
-        switch currentState {
-        case .ducking:
-            if let target = targetPlatform {
-                highJump(to: target)
-            } else {
-                normalJump()
-            }
-        default:
-            normalJump()
+            highJump()
         }
     }
 
@@ -226,52 +226,92 @@ class PlayerEntity: SKSpriteNode {
         
         self.run(SKAction.sequence([jumpAction, completion]))
     }
-
-    private func highJump(to targetPlatform: SKNode?) {
-        var jumpHeight: CGFloat
-        var horizontalDistance: CGFloat
+    
+    private func checkForSolidPlatform() -> Bool {
+        // --- Raycast 1: Check Directly Above ---
+        let verticalRayStart = self.position
+        // The ray should be long enough to check the entire potential jump path.
+        let verticalRayEnd = CGPoint(x: self.position.x, y: self.position.y + platformHeight)
         
-        if (targetPlatform == nil) {
-            print("performing default high jump")
-            jumpHeight = defaultJumpHeight * 2
-            // Use a default horizontal distance for timing the arc
-            horizontalDistance = defaultJumpDistance
-        } else {
-            // Calculate jump parameters based on the target
-            guard let targetPlatform = targetPlatform else { return }
-            jumpHeight = targetPlatform.position.y - self.position.y + playerHitboxHeight*2
-            horizontalDistance = max(defaultJumpDistance + gameSpeed/4, targetPlatform.position.x + playerHitboxWidth - self.position.x)
+        var isBlocked = false
+        self.scene?.physicsWorld.enumerateBodies(alongRayStart: verticalRayStart, end: verticalRayEnd) { (body, point, normal, stop) in
+            if body.node?.name == "SolidPlatform" {
+                isBlocked = true
+                stop.pointee = true // Stop searching once a block is found.
+            }
         }
         
-        canJump = false
-        self.currentState = .airborne
-        
-        let adjustY = playerHitboxHeight * -0.125
-        applyVerticalMovementTransformation(withYAdjustment: adjustY)
-        
-        // --- Create and Run the Scripted Jump Action ---
-        let startY = self.position.y
-        let duration = horizontalDistance / 4 / gameSpeed
-        
-        self.physicsBody?.affectedByGravity = false
-        
-        // High jump effects
-        EffectsFactory.shared.playSound(soundKey: "jump.mp3")
-        EffectsFactory.shared.playHaptic(strength: 1.0)
-        
-        let jumpAction = SKAction.customAction(withDuration: duration) { (node, elapsedTime) in
-            let t = elapsedTime / duration
-            let easingT = 1 - pow(1 - t, 3) // Cubic ease-out
-            node.position.y = startY + (jumpHeight * easingT)
+        // If the vertical path is blocked, we don't need to check again.
+        if isBlocked {
+            return true
         }
         
-        let completion = SKAction.run {
-            self.physicsBody?.affectedByGravity = true
+        // --- Raycast 2: Check Diagonally Forward ---
+        // This ray checks the space the player will jump into.
+        let diagonalRayStart = self.position
+        // The horizontal component (e.g., +75) creates the acute angle.
+        let diagonalRayEnd = CGPoint(x: self.position.x + 100, y: self.position.y + platformHeight)
+        
+        self.scene?.physicsWorld.enumerateBodies(alongRayStart: diagonalRayStart, end: diagonalRayEnd) { (body, point, normal, stop) in
+            if body.node?.name == "SolidPlatform" {
+                isBlocked = true
+                stop.pointee = true
+            }
+        }
+        
+        return isBlocked
+    }
+    
+    private func highJump() {
+        guard self.position.y <= platformHeight else {
+            normalJump()
+            return
+        }
+        
+        var jumpAction: SKAction
+        var wait: SKAction
+        let restoreAction = SKAction.run {
             self.restoreOriginalShape()
             self.canJump = true
         }
+
+        // --- 1. Set up the common properties for any jump ---
+        canJump = false
+        self.currentState = .airborne
+        let adjustY = playerHitboxHeight * -0.125
+        applyVerticalMovementTransformation(withYAdjustment: adjustY)
+
+        // --- 2. Decide which type of jump to perform ---
+        if checkForSolidPlatform() {
+            jumpAction = SKAction.run {
+                self.physicsBody?.velocity = CGVector(dx: 0, dy: 0)
+                self.physicsBody?.applyImpulse(CGVector(dx: 0, dy: defaultJumpHeight*1.5))
+            }
+
+            wait = SKAction.wait(forDuration: 0.5)
+
+        } else {
+            let jumpHeight = defaultJumpHeight * 2
+            let horizontalDistance = defaultJumpDistance + gameSpeed/2
+            
+            let startY = self.position.y
+            let duration = horizontalDistance / 4 / gameSpeed
+            
+            jumpAction = SKAction.customAction(withDuration: duration) { (node, elapsedTime) in
+                let t = elapsedTime / duration
+                let easingT = 1 - pow(1 - t, 3) // Cubic ease-out
+                node.position.y = startY + (jumpHeight * easingT)
+            }
+            
+            wait = SKAction.wait(forDuration: 0)
+        }
         
-        self.run(SKAction.sequence([jumpAction, completion]))
+        // Play effects for either jump type
+        EffectsFactory.shared.playSound(soundKey: "jump.mp3") // Or highJump.mp3
+        EffectsFactory.shared.playHaptic(strength: 1.0)
+        
+        // Run the chosen jumpAction followed by its corresponding completion action.
+        self.run(SKAction.sequence([jumpAction, wait, restoreAction]))
     }
     
     func duck() {
@@ -323,7 +363,7 @@ class PlayerEntity: SKSpriteNode {
         physicsBody?.collisionBitMask = PhysicsCategory.ground | PhysicsCategory.solidPlatform
         
         // **NEW**: Create an action to move the player down quickly.
-        let moveAction = SKAction.moveBy(x: 0, y: -platformHeight*2, duration: 0.05)
+        let moveAction = SKAction.moveBy(x: 0, y: -platformThickness*2, duration: 0.05)
         
         // This is the existing action that restores the collision rules after a delay.
         let wait = SKAction.wait(forDuration: 0.33)
@@ -381,11 +421,11 @@ class PlayerEntity: SKSpriteNode {
     
     private func applyHorizontalMovementTransformation(withYAdjustment adjustY: CGFloat = 0) {
         // Define the target shape: wider and shorter (the "duck" shape).
-        let duckSize = CGSize(width: playerHitboxWidth + (playerHitboxHeight / 2),
-                              height: playerHitboxHeight / 2)
+        let duckSize = CGSize(width: playerHitboxWidth * 1.33,
+                              height: playerHitboxHeight * 0.67)
         
         // 1. **Instantly** update the physics body to the final duck shape.
-        let physicsSize = CGSize(width: duckSize.width * 0.9, height: duckSize.height)
+        let physicsSize = CGSize(width: duckSize.width, height: duckSize.height)
         self.physicsBody = SKPhysicsBody(rectangleOf: physicsSize)
         setupPhysics()
         
@@ -405,7 +445,7 @@ class PlayerEntity: SKSpriteNode {
                               height: playerHitboxHeight * 1.33)
         
         // 1. **Instantly** update the physics body to the final jump shape.
-        let physicsSize = CGSize(width: jumpSize.width * 0.9, height: jumpSize.height)
+        let physicsSize = CGSize(width: jumpSize.width, height: jumpSize.height)
         self.physicsBody = SKPhysicsBody(rectangleOf: physicsSize)
         setupPhysics()
         
@@ -422,7 +462,7 @@ class PlayerEntity: SKSpriteNode {
         let originalSize = CGSize(width: playerHitboxWidth, height: playerHitboxHeight)
 
         // 1. **Instantly** restore the physics body to the original shape.
-        let physicsSize = CGSize(width: originalSize.width * 0.9, height: originalSize.height)
+        let physicsSize = CGSize(width: originalSize.width, height: originalSize.height)
         self.physicsBody = SKPhysicsBody(rectangleOf: physicsSize)
         setupPhysics()
 

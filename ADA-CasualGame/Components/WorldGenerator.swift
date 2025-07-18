@@ -159,6 +159,7 @@ class WorldGenerator {
                 }
             }
         }
+<<<<<<< HEAD
     }
     
     private func startSpawningCoinsAndPowerUps() {
@@ -175,6 +176,9 @@ class WorldGenerator {
             }
         }
     }
+=======
+
+>>>>>>> parent of ccef03b (Merge pull request #16 from BaomaDev/derend2)
         currentStepCollectible += 1
     }
 }

@@ -38,11 +38,20 @@ extension GameScene {
             
             if deltaY < -swipeThreshold { // Negative deltaY means finger moved UP.
                 let swipeDistance = -deltaY // Make the distance positive
+<<<<<<< HEAD
     
                 player.jump(swipeDistance: swipeDistance)
             } else if deltaY > swipeThreshold { // Positive deltaY means finger moved DOWN.
 //                print("Swipe DOWN detected. Performing Duck.")
                 player.duck()
+=======
+                let targetPlatform = findJumpTarget()
+    
+                player.panContolledJump(swipeDistance: swipeDistance, target: targetPlatform)
+            } else if deltaY > swipeThreshold { // Positive deltaY means finger moved DOWN.
+//                print("Swipe DOWN detected. Performing Duck.")
+                duck()
+>>>>>>> parent of ccef03b (Merge pull request #16 from BaomaDev/derend2)
             }
             
             // Reset the start point for the next pan.

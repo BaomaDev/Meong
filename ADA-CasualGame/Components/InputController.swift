@@ -23,38 +23,53 @@ extension GameScene {
         
         switch sender.state {
         case .began:
-            // Record the start point when the player first touches down.
             panStartPoint = sender.location(in: self.view)
             
         case .ended:
-            // When the player lifts their finger, determine the swipe's direction and distance.
             guard let startPoint = panStartPoint else { return }
             let endPoint = sender.location(in: self.view)
-            
-            // Calculate the vertical and horizontal distance of the swipe.
             let deltaY = endPoint.y - startPoint.y
             let deltaX = endPoint.x - startPoint.x
             
-            // We only care about swipes that are primarily vertical.
+            // Ignore if mostly horizontal
             guard abs(deltaY) > abs(deltaX) else {
                 panStartPoint = nil
                 return
             }
-
-            // A small threshold to prevent accidental taps from registering as swipes.
+            
             let swipeThreshold: CGFloat = 30.0
             
-            if deltaY < -swipeThreshold { // Negative deltaY means finger moved UP.
-                let swipeDistance = -deltaY // Make the distance positive
+            // ✅ Intercept swipes during catnip mode
+            if player.isInCatnipMode {
+                let targetY: CGFloat
+                if deltaY < -swipeThreshold {
+                    // Swipe up → go to Y = 280
+                    targetY = 280
+                } else if deltaY > swipeThreshold {
+                    // Swipe down → go to Y = 140
+                    targetY = 140
+                } else {
+                    panStartPoint = nil
+                    return
+                }
+                
+                let moveToY = SKAction.moveTo(y: targetY, duration: 0.3)
+                moveToY.timingMode = .easeOut
+                player.run(moveToY)
+                
+                panStartPoint = nil
+                return
+            }
+
+            // Normal behavior if not in catnip mode
+            if deltaY < -swipeThreshold {
+                let swipeDistance = -deltaY
                 let targetPlatform = findJumpTarget()
-    
                 player.panContolledJump(swipeDistance: swipeDistance, target: targetPlatform)
-            } else if deltaY > swipeThreshold { // Positive deltaY means finger moved DOWN.
-//                print("Swipe DOWN detected. Performing Duck.")
+            } else if deltaY > swipeThreshold {
                 duck()
             }
             
-            // Reset the start point for the next pan.
             panStartPoint = nil
             
         default:

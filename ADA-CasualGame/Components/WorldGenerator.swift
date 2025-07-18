@@ -37,8 +37,8 @@ class WorldGenerator {
 
     private func spawnPlatform() {
         guard let scene = scene else { return }
-        let platformSize = CGSize(width: 500, height: platformHeight)
-        let platformY = 240.0
+        let platformSize = CGSize(width: 500, height: platformThickness)
+        let platformY = platformHeight
         let platformPosition = CGPoint(x: scene.size.width + platformSize.width, y: platformY)
 
         let platform: SKSpriteNode

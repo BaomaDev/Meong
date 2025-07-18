@@ -518,6 +518,7 @@ class PlayerEntity: SKSpriteNode {
     
     func applyPowerUp() {
         distance += 1
+        hearts += 1
         updateDistance(distance)
     }
     

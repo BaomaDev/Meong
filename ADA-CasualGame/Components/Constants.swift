@@ -53,6 +53,7 @@ struct PhysicsCategory {
     static let enemy: UInt32 = 0b10000000
     static let powerUp: UInt32 = 0b100000000
     static let coin: UInt32 = 0b1000000000
+    static let catnip: UInt32 = 0b10000000000
 }
 
 enum SurfaceType {

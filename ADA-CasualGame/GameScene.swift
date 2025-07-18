@@ -200,6 +200,14 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             
             player?.applyPowerUp()
         }
+        
+        if (firstBody.categoryBitMask == PhysicsCategory.player && secondBody.categoryBitMask == PhysicsCategory.catnip) ||
+            (firstBody.categoryBitMask == PhysicsCategory.catnip && secondBody.categoryBitMask == PhysicsCategory.player) {
+            let catnipNode = firstBody.categoryBitMask == PhysicsCategory.catnip ? firstBody.node : secondBody.node
+            catnipNode?.removeFromParent()
+            
+            player?.applyCatnip()
+        }
     }
     
     func checkGameOver() {
@@ -283,5 +291,4 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         addChild(chaserNode)
         chaser = chaserNode
     }
-
 }

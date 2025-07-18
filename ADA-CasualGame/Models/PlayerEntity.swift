@@ -53,6 +53,9 @@ class PlayerEntity: SKSpriteNode {
         player.physicsBody = SKPhysicsBody(rectangleOf: playerSize)
         player.setupPhysics()
         
+        let xConstraint = SKConstraint.positionX(SKRange(constantValue: player.position.x))
+        player.constraints = [xConstraint]
+        
         return player
     }
     

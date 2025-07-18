@@ -268,6 +268,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
         return surfaceType
     }
+    
     func createChaser() {
         let texture = SKTexture(imageNamed: "akmal")
         let chaserNode = SKSpriteNode(texture: texture)

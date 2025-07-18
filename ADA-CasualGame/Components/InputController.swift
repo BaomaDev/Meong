@@ -39,7 +39,6 @@ extension GameScene {
             
             let swipeThreshold: CGFloat = 30.0
             
-<<<<<<< HEAD
             // ✅ Intercept swipes during catnip mode
             if player.isInCatnipMode {
                 let targetY: CGFloat
@@ -68,15 +67,6 @@ extension GameScene {
                 let targetPlatform = findJumpTarget()
                 player.panContolledJump(swipeDistance: swipeDistance, target: targetPlatform)
             } else if deltaY > swipeThreshold {
-=======
-            if deltaY < -swipeThreshold { // Negative deltaY means finger moved UP.
-                let swipeDistance = -deltaY // Make the distance positive
-                let targetPlatform = findJumpTarget()
-    
-                player.panContolledJump(swipeDistance: swipeDistance, target: targetPlatform)
-            } else if deltaY > swipeThreshold { // Positive deltaY means finger moved DOWN.
-//                print("Swipe DOWN detected. Performing Duck.")
->>>>>>> parent of 0cf0d80 (modify movement)
                 duck()
             }
             

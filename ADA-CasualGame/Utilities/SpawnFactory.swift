@@ -237,7 +237,11 @@ class SpawnFactory {
 
     static func createProjectile(in scene: SKScene) -> SKSpriteNode {
         let texture = SKTexture(imageNamed: "sendal")
-        let size = CGSize(width: 40, height: 40)
+        
+        let targetWidth: CGFloat = 30
+        let aspectRatio = texture.size().height / texture.size().width
+        let targetHeight = targetWidth * aspectRatio
+        let size = CGSize(width: targetWidth, height: targetHeight)
         let projectile = SKSpriteNode(texture: texture, color: .clear, size: size)
         projectile.name = "Projectile"
         

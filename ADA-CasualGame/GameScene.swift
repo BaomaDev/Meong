@@ -4,7 +4,7 @@ import GameplayKit
 class GameScene: SKScene, SKPhysicsContactDelegate {
     // MARK: - Properties
     var player: PlayerEntity?
-    var chaser: SKSpriteNode?
+    var chaser: ChaserEntity?
     
     // This class will now handle all the spawning logic
     var worldGenerator: WorldGenerator?
@@ -50,8 +50,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         startScoreTimer()
         createPlayer()
-        setupSwipeRecognizers()
         createChaser()
+        setupSwipeRecognizers()
     }
     
     func startScoreTimer(resetScore: Bool = false) {
@@ -105,16 +105,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         
         if let chaser = chaser {
-            let followDistance = CGFloat(player.distance) * 40.0 // Adjust multiplier as needed
-            let targetX = player.position.x - followDistance
-            let targetY = player.position.y
-
-            let currentPosition = chaser.position
-            let lerpFactor: CGFloat = 0.05 // Smooth following
-            let newX = currentPosition.x + (targetX - currentPosition.x) * lerpFactor
-            let newY = currentPosition.y + (targetY - currentPosition.y) * lerpFactor
-
-            chaser.position = CGPoint(x: newX, y: newY)
+            chaser.updateFollowPosition()
         }
     }
     
@@ -272,7 +263,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     // MARK: - Player Creation
     func createPlayer() {
-        let spawnPoint = CGPoint(x: 150, y: 125)
+        let spawnPoint = CGPoint(x: 200, y: 125)
         player = PlayerEntity.create(at: spawnPoint)
         self.addChild(player!)
     }
@@ -302,17 +293,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         return surfaceType
     }
     func createChaser() {
-        let texture = SKTexture(imageNamed: "akmal")
-        let chaserNode = SKSpriteNode(texture: texture)
-        chaserNode.name = "Chaser"
-        chaserNode.zPosition = 1
-        chaserNode.size = CGSize(width: 80, height: 80) // Adjust as needed
-
-        if let player = player {
-            let initialDistance = max(CGFloat(player.distance) * 40.0, 800) // Increased multiplier and fallback
-            chaserNode.position = CGPoint(x: player.position.x - initialDistance, y: player.position.y)
-        }
-
+        guard let player = player else { return }
+        let chaserNode = ChaserEntity(player: player)
         addChild(chaserNode)
         chaser = chaserNode
     }

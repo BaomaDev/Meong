@@ -44,10 +44,15 @@ class PlayerEntity: SKSpriteNode {
     
     // MARK: - Initialization
     static func create(at position: CGPoint) -> PlayerEntity {
+        let texture = SKTexture(imageNamed: "cat")
         let playerSize = CGSize(width: playerHitboxWidth, height: playerHitboxHeight)
-        let player = PlayerEntity(color: .yellow, size: playerSize)
-        player.position = position
+        let player = PlayerEntity(texture: texture, color: .clear, size: playerSize)
         player.name = "Player"
+        
+        // let playerSize = CGSize(width: playerHitboxWidth, height: playerHitboxHeight)
+        //let player = PlayerEntity(color: .yellow, size: playerSize)
+        player.position = position
+        // player.name = "Player"
         
         // Setup physics
         player.physicsBody = SKPhysicsBody(rectangleOf: playerSize)

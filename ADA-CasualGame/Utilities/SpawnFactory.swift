@@ -77,7 +77,7 @@ class SpawnFactory {
     
     static func createCatnip(at position: CGPoint, characterCategory: UInt32, catnipCategory: UInt32) -> SKSpriteNode {
         let catnip = SKSpriteNode(imageNamed: "catnip")
-        catnip.setScale(0.10)
+        catnip.setScale(0.07)
         catnip.position = position
         catnip.zPosition = 1
 

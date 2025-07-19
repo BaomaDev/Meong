@@ -26,6 +26,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     private var scoreTimer: Timer?
     private var internalScore: Int = 0
     
+    private var isGamePaused: Bool = false  // 👈 new flag
+    
     private var lastDistanceBonusScore = 0
     private var lastSpeedFactor: Double = 1.0
     
@@ -52,17 +54,20 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         createChaser()
     }
     
-    func startScoreTimer() {
-        scoreTimer?.invalidate()
-        internalScore = 0
-        lastDistanceBonusScore = 0
-        
+    func startScoreTimer(resetScore: Bool = false) {
+        scoreTimer?.invalidate()  // always clean up existing timer
+
+        if resetScore {
+            internalScore = 0
+            lastDistanceBonusScore = 0
+        }
+
         scoreTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
-            guard let self = self, let player = self.player else { return }
-            
+            guard let self = self, !self.isGamePaused, let player = self.player else { return }
+
             self.internalScore += 1
             self.scoreUpdateHandler?(self.internalScore)
-            
+
             if self.internalScore % 50 == 0 && self.internalScore > self.lastDistanceBonusScore {
                 player.updateDistance(player.distance + 1)
                 self.lastDistanceBonusScore = self.internalScore
@@ -241,8 +246,26 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         newScene.healthUpdateHandler = self.healthUpdateHandler
         newScene.distanceUpdateHandler = self.distanceUpdateHandler
         
+        // ✅ Ensure new scene is not paused
+        newScene.isPaused = false
+        
         let transition = SKTransition.fade(withDuration: 0.5)
         self.view?.presentScene(newScene, transition: transition)
+    }
+    
+    func pauseGame() {
+        guard !isGamePaused else { return }
+        isGamePaused = true
+        isPaused = true
+        scoreTimer?.invalidate()
+        scoreTimer = nil
+    }
+
+    func resumeGame() {
+        guard isGamePaused else { return }
+        isGamePaused = false
+        isPaused = false
+        startScoreTimer(resetScore: false)
     }
     
     func didEnd(_ contact: SKPhysicsContact) { }

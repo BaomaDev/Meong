@@ -3,6 +3,9 @@ import CoreHaptics // For haptic feedback
 
 /// A singleton class to manage all game-wide visual and audio effects.
 class EffectsFactory {
+    // MARK: - Assets
+    private let groundParticleTextures = ["dirt_01", "dirt_02", "dirt_03"]
+    private let platformParticleTextures = ["smoke_01", "smoke_02", "smoke_03"]
     
     // MARK: - Singleton Instance
     static let shared = EffectsFactory()
@@ -47,10 +50,18 @@ class EffectsFactory {
     /// Triggers haptic feedback on the device.
     /// - Parameter strength: A value from 0.0 to 1.0 representing the intensity.
     func playHaptic(strength: Double) {
-        guard CHHapticEngine.capabilitiesForHardware().supportsHaptics else { return }
+        guard let hapticEngine = hapticEngine,
+              CHHapticEngine.capabilitiesForHardware().supportsHaptics else { return }
+        
+        // This is the most reliable way to recover from an app suspension.
+        do {
+            try hapticEngine.start()
+        } catch {
+            print("Failed to start haptic engine before playing: \(error)")
+            return // Can't play if the engine won't start.
+        }
         
         var events = [CHHapticEvent]()
-        // Create a sharp, intense haptic event.
         let intensity = CHHapticEventParameter(parameterID: .hapticIntensity, value: Float(strength))
         let sharpness = CHHapticEventParameter(parameterID: .hapticSharpness, value: Float(strength))
         let event = CHHapticEvent(eventType: .hapticTransient, parameters: [intensity, sharpness], relativeTime: 0)
@@ -58,13 +69,13 @@ class EffectsFactory {
 
         do {
             let pattern = try CHHapticPattern(events: events, parameters: [])
-            let player = try hapticEngine?.makePlayer(with: pattern)
-            try player?.start(atTime: 0)
+            let player = try hapticEngine.makePlayer(with: pattern)
+            try player.start(atTime: 0)
         } catch {
             print("Failed to play haptic pattern: \(error.localizedDescription)")
         }
     }
-    
+
     /// Shakes the screen to add impact.
     /// - Parameter strength: A value from 0.0 to 1.0 controlling the shake intensity.
     func screenShake(strength: Double) {
@@ -123,14 +134,19 @@ class EffectsFactory {
             hapticEngine = try CHHapticEngine()
             try hapticEngine?.start()
             
-            // **THE FIX**: Set a handler to automatically restart the engine if it's stopped by the system.
+            // This handler is called when the engine is stopped by the system (e.g., app suspended).
+            // Its main purpose is for logging or cleaning up resources.
             hapticEngine?.stoppedHandler = { reason in
-                print("Haptic engine stopped for reason: \(reason). Attempting to restart.")
+                print("Haptic engine stopped for reason: \(reason).")
+            }
+            
+            // **MODIFIED**: The reset handler is the primary place to attempt a restart after a server failure.
+            hapticEngine?.resetHandler = { [weak self] in
+                print("Haptic engine reset. Attempting to restart.")
                 do {
-                    // Try to restart the engine.
-                    try self.hapticEngine?.start()
+                    try self?.hapticEngine?.start()
                 } catch {
-                    print("Failed to restart haptic engine: \(error)")
+                    print("Failed to restart haptic engine after reset: \(error)")
                 }
             }
             
@@ -144,40 +160,61 @@ class EffectsFactory {
     ///   - at: The position where the effect should spawn.
     ///   - surfaceType: The type of surface, used to determine the particle color.
     ///   - amount: The number of particles to emit.
-    func playParticleEffect(at position: CGPoint, for surfaceType: SurfaceType, amount: Int) {
+    func createParticleEffect(at position: CGPoint, amount: Int, surfaceType: SurfaceType) {
         guard let scene = scene else { return }
         
-        let particleTexture = SKTexture(imageNamed: "particle")
-        let emitter = SKEmitterNode()
+        var textureName: String?
+
+        // Select a random texture name based on the surface type.
+        switch surfaceType {
+        case .ground:
+            textureName = groundParticleTextures.randomElement()
+        case .semiSolidPlatform, .solidPlatform:
+            textureName = platformParticleTextures.randomElement()
+        case .none:
+            return
+        }
         
-        // --- Core Properties ---
-        emitter.position = position
+        guard let selectedTextureName = textureName else {
+            print("Warning: Could not select a particle texture for surface type \(surfaceType).")
+            return
+        }
+
+        let particleTexture = SKTexture(imageNamed: selectedTextureName)
+        let emitter = SKEmitterNode()
+        let spawnRadius = 20.0
         emitter.particleTexture = particleTexture
+        
+        emitter.position = position
         emitter.numParticlesToEmit = amount
         
         // --- Color Logic ---
-        // The particles are tinted based on the surface type.
         switch surfaceType {
         case .ground:
-            emitter.particleColor = .lightGray // Dust color
+            emitter.particleColor = .brown
             emitter.particleColorBlendFactor = 0.8
         case .semiSolidPlatform, .solidPlatform:
-            emitter.particleColor = .cyan // Tech/magic color
+            emitter.particleColor = .lightGray
             emitter.particleColorBlendFactor = 1.0
         case .none:
-            return // Don't make particles in mid-air
+            emitter.particleColor = .lightGray
+            emitter.particleColorBlendFactor = 1.0
         }
         
         // --- Particle Behavior ---
-        // These values create a small, quick "poof" effect.
+        emitter.zPosition = 10
         emitter.particleLifetime = 0.5
         emitter.particleBirthRate = 200
         emitter.particleSpeed = 100
         emitter.particleSpeedRange = 50
-        emitter.emissionAngle = .pi / 2 // Straight up
-        emitter.emissionAngleRange = .pi * 2 // 360 degrees
-        emitter.xAcceleration = 0
-        emitter.yAcceleration = -200 // A little bit of gravity on the particles
+        emitter.emissionAngle = .pi / 2 // Still points straight up on average
+        
+        emitter.particlePositionRange = CGVector(dx: spawnRadius, dy: spawnRadius/2)
+        emitter.emissionAngleRange = .pi / 2
+        
+        // **MODIFIED**: Apply a constant acceleration to the left to simulate being "left behind".
+        emitter.xAcceleration = -gameSpeed
+        emitter.yAcceleration = -200
         
         // --- Fading and Scaling ---
         emitter.particleAlpha = 0.8
@@ -185,8 +222,7 @@ class EffectsFactory {
         emitter.particleScaleSequence = SKKeyframeSequence(keyframeValues: [0.1, 0.01], times: [0, 1])
 
         // --- Cleanup ---
-        // Add an action to remove the emitter from the scene after it's finished.
-        let waitAction = SKAction.wait(forDuration: 1.0)
+        let waitAction = SKAction.wait(forDuration: 1.5)
         let removeAction = SKAction.removeFromParent()
         
         scene.addChild(emitter)

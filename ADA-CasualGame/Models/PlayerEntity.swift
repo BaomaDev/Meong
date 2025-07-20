@@ -27,6 +27,9 @@ class PlayerEntity: SKSpriteNode {
     var isInvincible: Bool = false
     var isInCatnipMode: Bool = false
     
+    private var lastRunParticleTime: TimeInterval = 0
+    private let runParticleInterval: TimeInterval = 0.5
+    
     // MARK: - Computed Properties
     var state: PlayerState {
         return currentState
@@ -81,6 +84,8 @@ class PlayerEntity: SKSpriteNode {
         let previousState = self.currentState
         let previousSurface = self.surfaceType
         
+        let particlePosition = CGPoint(x: self.position.x, y: self.position.y - self.size.height / 2)
+        
         // If a duck command is queued, perform that first.
         if self.currentState != .ducking && self.queuedAction == .duck {
             if self.currentState == .airborne { // Override checking
@@ -96,14 +101,17 @@ class PlayerEntity: SKSpriteNode {
             // Check HOW we landed.
             if previousState == .diving {
                 hardLanding()
-                
+                EffectsFactory.shared.createParticleEffect(at: particlePosition, amount: 4, surfaceType: currentSurface)
+
             } else {
                 softLanding()
+                EffectsFactory.shared.createParticleEffect(at: particlePosition, amount: 2, surfaceType: currentSurface)
             }
             canJump = true
             
         } else if !currentSurface.isGrounded && previousSurface.isGrounded {
             handleGoingAirborne()
+            EffectsFactory.shared.createParticleEffect(at: particlePosition, amount: 2, surfaceType: currentSurface)
         }
         
         self.surfaceType = currentSurface
@@ -150,6 +158,7 @@ class PlayerEntity: SKSpriteNode {
             }
         }
         
+        EffectsFactory.shared.playHaptic(strength: 2)
         self.run(SKAction.sequence([wait, transitionToRunning]))
     }
     

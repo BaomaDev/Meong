@@ -33,7 +33,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     // MARK: - Scene Lifecycle (Initializers)
     override func didMove(to view: SKView) {
-        backgroundColor = SKColor(white: 0.1, alpha: 1.0)
+        backgroundColor = SKColor(white: 0.2, alpha: 1.0)
         physicsWorld.gravity = CGVector(dx: 0, dy: customGravity)
         physicsWorld.contactDelegate = self
         
@@ -48,6 +48,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         worldGenerator = WorldGenerator(scene: self)
         worldGenerator?.setupEnvironment()
         
+//        setupScrollingBackground(imageNamed: "background")
         startScoreTimer()
         createPlayer()
         createChaser()
@@ -83,8 +84,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         let currentSurface = getSurfaceType()
         player.updateState(currentSurface: currentSurface)
         
-        //        print("player state: \(String(describing: player.currentState))")
-        
         // Remove projectiles that are off screen
         self.enumerateChildNodes(withName: "Projectile") { (node, stop) in
             if node.position.x < -50 || node.position.y < -50 {
@@ -103,10 +102,17 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         gameSpeed = min(calculatedGameSpeed, maxGameSpeed)
         updateSpawningIfNeeded()
         
-        
         if let chaser = chaser {
             chaser.updateFollowPosition()
         }
+        
+//        for background in backgrounds {
+//            background.position.x -= CGFloat(gameSpeed * 0.016)  // adjust multiplier to your scroll speed
+//            
+//            if background.position.x <= -background.size.width {
+//                background.position.x += background.size.width * 2
+//            }
+//        }
     }
     
     // MARK: - SKPhysicsContactDelegate
@@ -313,4 +319,26 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 }
             ]))
     }
+    
+//    func setupScrollingBackground(imageNamed: String) {
+//        let texture = SKTexture(imageNamed: imageNamed)
+//        
+//        for i in 0..<2 {
+//            let background = SKSpriteNode(texture: texture)
+//            background.anchorPoint = .zero
+//            
+//            // Scale the height proportionally to scene height
+//            let scale = self.size.height / texture.size().height
+//            background.size = CGSize(
+//                width: texture.size().width * scale,
+//                height: self.size.height
+//            )
+//
+//            background.position = CGPoint(x: CGFloat(i) * background.size.width, y: 0)
+//            background.zPosition = -1
+//            background.name = "scrollingBackground"
+//            addChild(background)
+//            backgrounds.append(background)
+//        }
+//    }
 }

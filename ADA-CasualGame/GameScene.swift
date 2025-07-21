@@ -108,7 +108,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
 //        for background in backgrounds {
 //            background.position.x -= CGFloat(gameSpeed * 0.016)  // adjust multiplier to your scroll speed
-//            
+//
 //            if background.position.x <= -background.size.width {
 //                background.position.x += background.size.width * 2
 //            }
@@ -312,8 +312,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         lastSpeedFactor = newFactor
         print("current game speed: \(gameSpeed)")
         
+        worldGenerator?.stopAllSpawning()
+        
         scene?.run(SKAction.sequence([
-                SKAction.wait(forDuration: 1),
+                SKAction.wait(forDuration: 3),
                 SKAction.run { [weak self] in
                     self?.worldGenerator?.startProceduralSpawning()
                 }
@@ -322,11 +324,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
 //    func setupScrollingBackground(imageNamed: String) {
 //        let texture = SKTexture(imageNamed: imageNamed)
-//        
+//
 //        for i in 0..<2 {
 //            let background = SKSpriteNode(texture: texture)
 //            background.anchorPoint = .zero
-//            
+//
 //            // Scale the height proportionally to scene height
 //            let scale = self.size.height / texture.size().height
 //            background.size = CGSize(

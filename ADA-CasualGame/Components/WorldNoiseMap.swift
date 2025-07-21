@@ -16,11 +16,19 @@ class WorldNoiseMap {
         self.width = chunkCount
         self.height = layerCount
 
-        let source = GKPerlinNoiseSource(
-            frequency: 10,         // increase frequency to add more variation between chunks
-            octaveCount: 2,         // more detail
-            persistence: 0.2,      // controls amplitude of each octave (higher = bolder noise)
-            lacunarity: 5,        // controls frequency change between octaves
+//        let source = GKPerlinNoiseSource(
+//            frequency: 10,         // increase frequency to add more variation between chunks
+//            octaveCount: 2,         // more detail
+//            persistence: 0.2,      // controls amplitude of each octave (higher = bolder noise)
+//            lacunarity: 5,        // controls frequency change between octaves
+//            seed: seed
+//        )
+        
+        print("Seed: \(seed)")
+        let source = GKRidgedNoiseSource(
+            frequency: 3.0,
+            octaveCount: 4,
+            lacunarity: 2.0,
             seed: seed
         )
 

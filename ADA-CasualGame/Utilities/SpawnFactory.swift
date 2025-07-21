@@ -75,6 +75,23 @@ class SpawnFactory {
         return powerUp
     }
     
+    static func createCatnip(at position: CGPoint, characterCategory: UInt32, catnipCategory: UInt32) -> SKSpriteNode {
+        let catnip = SKSpriteNode(imageNamed: "catnip")
+        catnip.setScale(0.07)
+        catnip.position = position
+        catnip.zPosition = 1
+
+        catnip.physicsBody = SKPhysicsBody(circleOfRadius: catnip.size.width / 2)
+        catnip.physicsBody?.isDynamic = false
+        catnip.physicsBody?.categoryBitMask = catnipCategory
+        catnip.physicsBody?.contactTestBitMask = characterCategory
+        catnip.physicsBody?.collisionBitMask = 0
+        
+        catnip.run(createMovementAction(distance: worldMoveDistance, speed: gameSpeed))
+
+        return catnip
+    }
+    
     // MARK: - Obstacles
 
     static func createNoTouch(at position: CGPoint) -> SKSpriteNode {
@@ -220,7 +237,11 @@ class SpawnFactory {
 
     static func createProjectile(in scene: SKScene) -> SKSpriteNode {
         let texture = SKTexture(imageNamed: "sendal")
-        let size = CGSize(width: 40, height: 40)
+        
+        let targetWidth: CGFloat = 30
+        let aspectRatio = texture.size().height / texture.size().width
+        let targetHeight = targetWidth * aspectRatio
+        let size = CGSize(width: targetWidth, height: targetHeight)
         let projectile = SKSpriteNode(texture: texture, color: .clear, size: size)
         projectile.name = "Projectile"
         
@@ -297,23 +318,61 @@ class SpawnFactory {
         return platform
     }
     
+//    static func createSemiSolidPlatform(at position: CGPoint, size: CGSize) -> SKSpriteNode {
+//        let texture = SKTexture(imageNamed: "TiangListrik")
+//        let platform = SKSpriteNode(texture: texture, color: .blue, size: size)
+//        platform.position = position
+//        platform.name = "SemiSolidPlatform"
+//        
+//        // Create an edge-based body for the top surface only
+//        let topEdge = SKPhysicsBody(edgeFrom: CGPoint(x: -size.width / 2, y: size.height / 2),
+//                                    to: CGPoint(x: size.width / 2, y: size.height / 2))
+//        platform.physicsBody = topEdge
+//        platform.physicsBody?.isDynamic = false
+//        
+//        platform.physicsBody?.categoryBitMask = PhysicsCategory.semiSolidPlatform
+//        platform.physicsBody?.collisionBitMask = PhysicsCategory.player
+//        
+//        // Apply movement action directly from the factory
+//        platform.run(createMovementAction(distance: worldMoveDistance, speed: gameSpeed))
+//        
+//        return platform
+//    }
+    
     static func createSemiSolidPlatform(at position: CGPoint, size: CGSize) -> SKSpriteNode {
-        let platform = SKSpriteNode(color: .blue, size: size)
+        // This will be the actual platform with physics
+        let platform = SKSpriteNode(color: .clear, size: size)
         platform.position = position
         platform.name = "SemiSolidPlatform"
-        
-        // Create an edge-based body for the top surface only
+        platform.zPosition = 0
+
+        // Physics body: only the top edge is solid
         let topEdge = SKPhysicsBody(edgeFrom: CGPoint(x: -size.width / 2, y: size.height / 2),
                                     to: CGPoint(x: size.width / 2, y: size.height / 2))
         platform.physicsBody = topEdge
         platform.physicsBody?.isDynamic = false
-        
         platform.physicsBody?.categoryBitMask = PhysicsCategory.semiSolidPlatform
         platform.physicsBody?.collisionBitMask = PhysicsCategory.player
-        
-        // Apply movement action directly from the factory
+        platform.physicsBody?.contactTestBitMask = 0
+
+        // Create the "TiangListrik" decoration as a child of the platform
+        let decorationTexture = SKTexture(imageNamed: "TiangListrik3")
+        let aspectRatio = decorationTexture.size().height / decorationTexture.size().width
+        let decorationHeight = 300.0
+        let decorationWidth = 600.0
+        let decorationSize = CGSize(width: decorationWidth, height: decorationHeight)
+
+        let decoration = SKSpriteNode(texture: decorationTexture, size: decorationSize)
+        decoration.position = CGPoint(x: 0, y: -115) // Align bottom to platform
+        decoration.zPosition = -1
+        decoration.name = "TiangListrikDecoration"
+
+        // Add the decoration behind the platform
+        platform.addChild(decoration)
+
+        // Add movement
         platform.run(createMovementAction(distance: worldMoveDistance, speed: gameSpeed))
-        
+
         return platform
     }
 }

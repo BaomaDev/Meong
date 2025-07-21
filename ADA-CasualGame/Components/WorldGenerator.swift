@@ -123,8 +123,8 @@ class WorldGenerator {
         guard chance > threshold else { return }
 
         let typeVal = noiseMap.rawValueAt(atChunk: currentStepPlatform, layer: NoiseLayer.platformType.rawValue)
-        let platformSize = CGSize(width: 500, height: platformHeight)
-        let platformY: CGFloat = 240
+        let platformSize = CGSize(width: 500, height: platformThickness)
+        let platformY: CGFloat = platformHeight
         let position = CGPoint(x: scene.size.width + platformSize.width, y: platformY)
 
         let node: SKSpriteNode = (typeVal < 0) ?
@@ -301,7 +301,25 @@ class WorldGenerator {
                 }
             }
         }
+        
+        // Catnip spawning with 10% chance
+        if Int.random(in: 0..<20) == 0 {
+            attempts = 0
+            while attempts < 10 {
+                attempts += 1
+                let catnipY = CGFloat.random(in: scene.size.height / 3.2 ... scene.size.height / 1.5)
+                let catnipX = scene.size.width + CGFloat.random(in: 80...140)
+                let catnipRect = CGRect(x: catnipX - 20, y: catnipY - 20, width: 40, height: 40)
 
+                if !obstacleRects.contains(where: { $0.intersects(catnipRect.insetBy(dx: -10, dy: -10)) }) {
+                    let catnip = SpawnFactory.createCatnip(at: CGPoint(x: catnipX, y: catnipY),
+                                                           characterCategory: PhysicsCategory.player,
+                                                           catnipCategory: PhysicsCategory.catnip)
+                    scene.addChild(catnip)
+                    break
+                }
+            }
+        }
         currentStepCollectible += 1
     }
 }

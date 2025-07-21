@@ -4,7 +4,7 @@ import GameplayKit
 class GameScene: SKScene, SKPhysicsContactDelegate {
     // MARK: - Properties
     var player: PlayerEntity?
-    var chaser: SKSpriteNode?
+    var chaser: ChaserEntity?
     
     // This class will now handle all the spawning logic
     var worldGenerator: WorldGenerator?
@@ -26,12 +26,14 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     private var scoreTimer: Timer?
     private var internalScore: Int = 0
     
+    private var isGamePaused: Bool = false  // 👈 new flag
+    
     private var lastDistanceBonusScore = 0
     private var lastSpeedFactor: Double = 1.0
     
     // MARK: - Scene Lifecycle (Initializers)
     override func didMove(to view: SKView) {
-        backgroundColor = SKColor(white: 0.1, alpha: 1.0)
+        backgroundColor = SKColor(white: 0.2, alpha: 1.0)
         physicsWorld.gravity = CGVector(dx: 0, dy: customGravity)
         physicsWorld.contactDelegate = self
         
@@ -46,23 +48,27 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         worldGenerator = WorldGenerator(scene: self)
         worldGenerator?.setupEnvironment()
         
+//        setupScrollingBackground(imageNamed: "background")
         startScoreTimer()
         createPlayer()
-        setupSwipeRecognizers()
         createChaser()
+        setupSwipeRecognizers()
     }
     
-    func startScoreTimer() {
-        scoreTimer?.invalidate()
-        internalScore = 0
-        lastDistanceBonusScore = 0
-        
+    func startScoreTimer(resetScore: Bool = false) {
+        scoreTimer?.invalidate()  // always clean up existing timer
+
+        if resetScore {
+            internalScore = 0
+            lastDistanceBonusScore = 0
+        }
+
         scoreTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
-            guard let self = self, let player = self.player else { return }
-            
+            guard let self = self, !self.isGamePaused, let player = self.player else { return }
+
             self.internalScore += 1
             self.scoreUpdateHandler?(self.internalScore)
-            
+
             if self.internalScore % 50 == 0 && self.internalScore > self.lastDistanceBonusScore {
                 player.updateDistance(player.distance + 1)
                 self.lastDistanceBonusScore = self.internalScore
@@ -77,8 +83,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         // Update player state
         let currentSurface = getSurfaceType()
         player.updateState(currentSurface: currentSurface)
-        
-        //        print("player state: \(String(describing: player.currentState))")
         
         // Remove projectiles that are off screen
         self.enumerateChildNodes(withName: "Projectile") { (node, stop) in
@@ -98,19 +102,17 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         gameSpeed = min(calculatedGameSpeed, maxGameSpeed)
         updateSpawningIfNeeded()
         
-        
         if let chaser = chaser {
-            let followDistance = CGFloat(player.distance) * 40.0 // Adjust multiplier as needed
-            let targetX = player.position.x - followDistance
-            let targetY = player.position.y
-
-            let currentPosition = chaser.position
-            let lerpFactor: CGFloat = 0.05 // Smooth following
-            let newX = currentPosition.x + (targetX - currentPosition.x) * lerpFactor
-            let newY = currentPosition.y + (targetY - currentPosition.y) * lerpFactor
-
-            chaser.position = CGPoint(x: newX, y: newY)
+            chaser.updateFollowPosition()
         }
+        
+//        for background in backgrounds {
+//            background.position.x -= CGFloat(gameSpeed * 0.016)  // adjust multiplier to your scroll speed
+//            
+//            if background.position.x <= -background.size.width {
+//                background.position.x += background.size.width * 2
+//            }
+//        }
     }
     
     // MARK: - SKPhysicsContactDelegate
@@ -202,6 +204,14 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             
             player?.applyPowerUp()
         }
+        
+        if (firstBody.categoryBitMask == PhysicsCategory.player && secondBody.categoryBitMask == PhysicsCategory.catnip) ||
+            (firstBody.categoryBitMask == PhysicsCategory.catnip && secondBody.categoryBitMask == PhysicsCategory.player) {
+            let catnipNode = firstBody.categoryBitMask == PhysicsCategory.catnip ? firstBody.node : secondBody.node
+            catnipNode?.removeFromParent()
+            
+            player?.applyCatnip()
+        }
     }
     
     func checkGameOver() {
@@ -233,15 +243,33 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         newScene.healthUpdateHandler = self.healthUpdateHandler
         newScene.distanceUpdateHandler = self.distanceUpdateHandler
         
+        // ✅ Ensure new scene is not paused
+        newScene.isPaused = false
+        
         let transition = SKTransition.fade(withDuration: 0.5)
         self.view?.presentScene(newScene, transition: transition)
+    }
+    
+    func pauseGame() {
+        guard !isGamePaused else { return }
+        isGamePaused = true
+        isPaused = true
+        scoreTimer?.invalidate()
+        scoreTimer = nil
+    }
+
+    func resumeGame() {
+        guard isGamePaused else { return }
+        isGamePaused = false
+        isPaused = false
+        startScoreTimer(resetScore: false)
     }
     
     func didEnd(_ contact: SKPhysicsContact) { }
     
     // MARK: - Player Creation
     func createPlayer() {
-        let spawnPoint = CGPoint(x: 150, y: 125)
+        let spawnPoint = CGPoint(x: 200, y: 125)
         player = PlayerEntity.create(at: spawnPoint)
         self.addChild(player!)
     }
@@ -271,17 +299,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         return surfaceType
     }
     func createChaser() {
-        let texture = SKTexture(imageNamed: "akmal")
-        let chaserNode = SKSpriteNode(texture: texture)
-        chaserNode.name = "Chaser"
-        chaserNode.zPosition = 1
-        chaserNode.size = CGSize(width: 80, height: 80) // Adjust as needed
-
-        if let player = player {
-            let initialDistance = max(CGFloat(player.distance) * 40.0, 800) // Increased multiplier and fallback
-            chaserNode.position = CGPoint(x: player.position.x - initialDistance, y: player.position.y)
-        }
-
+        guard let player = player else { return }
+        let chaserNode = ChaserEntity(player: player)
         addChild(chaserNode)
         chaser = chaserNode
     }
@@ -300,4 +319,26 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 }
             ]))
     }
+    
+//    func setupScrollingBackground(imageNamed: String) {
+//        let texture = SKTexture(imageNamed: imageNamed)
+//        
+//        for i in 0..<2 {
+//            let background = SKSpriteNode(texture: texture)
+//            background.anchorPoint = .zero
+//            
+//            // Scale the height proportionally to scene height
+//            let scale = self.size.height / texture.size().height
+//            background.size = CGSize(
+//                width: texture.size().width * scale,
+//                height: self.size.height
+//            )
+//
+//            background.position = CGPoint(x: CGFloat(i) * background.size.width, y: 0)
+//            background.zPosition = -1
+//            background.name = "scrollingBackground"
+//            addChild(background)
+//            backgrounds.append(background)
+//        }
+//    }
 }

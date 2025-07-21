@@ -8,16 +8,12 @@
 import SpriteKit
 
 enum NoiseLayer: Int {
-    case obstacleChance = 0
-    case obstacleType
-    case coinChance
-    case coinPos
-    case powerUpChance
-    case powerUpPos
-    case platformChance
-    case platformType
-    case projectileChance
-    case projectileType
+    case obstacleChance = 0 //perlin
+    case coinChance //ridged
+    case powerUpChance //ridged
+    case catnipChance //ridged
+    case platformChance //perlin
+    case projectileChance //perlin
 }
 
 private enum SpawnKey {
@@ -29,7 +25,7 @@ private enum SpawnKey {
 
 class WorldGenerator {
     private weak var scene: SKScene?
-    private let noiseMap = WorldNoiseMap(seed: Int32.random(in: 0..<Int32.max), chunkCount: 1000, layerCount: 10) // 10 = total noise layers
+    private let noiseMap = WorldNoiseMap(seed: Int32.random(in: 0..<Int32.max), chunkCount: 1000, layerCount: 6) // 10 = total noise layers
 
     private var currentStepPlatform = 0
     private var currentStepObstacle = 0
@@ -62,7 +58,7 @@ class WorldGenerator {
         startProceduralSpawning()
     }
     
-    private func stopAllSpawning() {
+    func stopAllSpawning() {
         scene?.removeAction(forKey: SpawnKey.platform)
         scene?.removeAction(forKey: SpawnKey.obstacle)
         scene?.removeAction(forKey: SpawnKey.projectile)
@@ -122,16 +118,37 @@ class WorldGenerator {
         let threshold = adaptiveThreshold(forStep: currentStepPlatform, base: 0.5)
         guard chance > threshold else { return }
 
-        let typeVal = noiseMap.rawValueAt(atChunk: currentStepPlatform, layer: NoiseLayer.platformType.rawValue)
         let platformSize = CGSize(width: 500, height: platformThickness)
         let platformY: CGFloat = platformHeight
         let position = CGPoint(x: scene.size.width + platformSize.width, y: platformY)
-
-        let node: SKSpriteNode = (typeVal < 0) ?
-            SpawnFactory.createSemiSolidPlatform(at: position, size: platformSize) :
-            SpawnFactory.createSolidPlatform(at: position, size: platformSize)
-
-        scene.addChild(node)
+        
+//        let type = noiseMap.typeIndex(
+//            atChunk: currentStepPlatform,
+//            layer: NoiseLayer.platformType.rawValue,
+//            maxTypes: 2
+//        )
+//
+//        let platform: SKSpriteNode?
+//        switch type {
+//        case 0:
+//            platform = SpawnFactory.createSemiSolidPlatform(at: position, size: platformSize)
+//        case 1:
+//            platform = SpawnFactory.createSolidPlatform(at: position, size: platformSize)
+//        default:
+//            platform = nil
+//        }
+//
+//        if let p = platform {
+//            scene.addChild(p)
+//        }
+        
+        let platform: SKSpriteNode
+        if Bool.random() {
+            platform = SpawnFactory.createSemiSolidPlatform(at: position, size: platformSize)
+        } else {
+            platform = SpawnFactory.createSolidPlatform(at: position, size: platformSize)
+        }
+        scene.addChild(platform)
     }
 
     private func startSpawningObstacles() {
@@ -155,30 +172,66 @@ class WorldGenerator {
 
     private func spawnObstacle() {
         guard let scene = scene else { return }
-        
+
         defer { currentStepObstacle += 1 }
 
-        let chance = noiseMap.valueAt(atChunk: currentStepObstacle, layer: NoiseLayer.obstacleChance.rawValue)
+        let chance = noiseMap.valueAt(
+            atChunk: currentStepObstacle,
+            layer: NoiseLayer.obstacleChance.rawValue
+        )
         print("Obstacle chance at \(currentStepObstacle):", chance)
-        let threshold = adaptiveThreshold(forStep: currentStepObstacle, base: 0.3)
+
+        let threshold = adaptiveThreshold(
+            forStep: currentStepObstacle,
+            base: 0.3
+        )
         guard chance > threshold else { return }
 
+        let type = noiseMap.typeIndex(
+            atChunk: currentStepObstacle,
+            layer: NoiseLayer.obstacleType.rawValue,
+            maxTypes: 4 // NoTouch, Stepable, Duckable, Moving
+        )
 
-        let typeVal = noiseMap.rawValueAt(atChunk: currentStepObstacle, layer: NoiseLayer.obstacleType.rawValue)
         let position = CGPoint(x: scene.size.width + 50, y: groundHeight + 40)
 
-        let obstacle: SKSpriteNode?
-        switch typeVal {
-        case ..<(-0.5): obstacle = SpawnFactory.createNoTouch(at: position)
-        case ..<0.0: obstacle = SpawnFactory.createStepable(at: position)
-        case ..<0.5: obstacle = SpawnFactory.createDuckable(at: position)
-        default:
-            let moveY = groundHeight + 30
-            obstacle = SpawnFactory.createMoving(at: CGPoint(x: position.x, y: moveY))
-        }
+//        let obstacle: SKSpriteNode?
+//        switch type {
+//        case 0:
+//            obstacle = SpawnFactory.createNoTouch(at: position)
+//        case 1:
+//            obstacle = SpawnFactory.createStepable(at: position)
+//        case 2:
+//            obstacle = SpawnFactory.createDuckable(at: position)
+//        case 3:
+//            let moveY = groundHeight + 30
+//            obstacle = SpawnFactory.createMoving(at: CGPoint(x: position.x, y: moveY))
+//        default:
+//            obstacle = nil
+//        }
+//
+//        if let o = obstacle {
+//            scene.addChild(o)
+//        }
+        let randomChoice = Int.random(in: 0...3)
+        var obstacle: SKSpriteNode?
 
-        if let o = obstacle {
-            scene.addChild(o)
+        switch randomChoice {
+        case 0:
+            obstacle = SpawnFactory.createNoTouch(at: position)
+        case 1:
+            obstacle = SpawnFactory.createStepable(at: position)
+        case 2:
+            obstacle = SpawnFactory.createDuckable(at: position)
+        case 3:
+            let movingPosition = CGPoint(x: scene.size.width + 50, y: groundHeight + 30)
+            obstacle = SpawnFactory.createMoving(at: movingPosition)
+        default:
+            break
+        }
+        
+        if let obstacle = obstacle {
+            scene.addChild(obstacle)
         }
     }
 
@@ -379,7 +432,7 @@ class WorldGenerator {
 //        guard let scene = scene else { return }
 //        let obstacleY = groundHeight + 40
 //        let position = CGPoint(x: scene.size.width + 50, y: obstacleY)
-//        
+//
 //        let randomChoice = Int.random(in: 0...3)
 //        var obstacle: SKSpriteNode?
 //
@@ -396,7 +449,7 @@ class WorldGenerator {
 //        default:
 //            break
 //        }
-//        
+//
 //        if let obstacle = obstacle {
 //            scene.addChild(obstacle)
 //        }
@@ -407,7 +460,7 @@ class WorldGenerator {
 //        let waitAction = SKAction.wait(forDuration: 4.0, withRange: 1.5)
 //        scene?.run(SKAction.repeatForever(SKAction.sequence([spawnAction, waitAction])))
 //    }
-//    
+//
 //    private func spawnProjectile() {
 //        guard let scene = scene else { return }
 //        let projectile = SpawnFactory.createProjectile(in: scene)

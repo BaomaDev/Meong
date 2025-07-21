@@ -356,7 +356,7 @@ class SpawnFactory {
         platform.physicsBody?.contactTestBitMask = 0
 
         // Create the "TiangListrik" decoration as a child of the platform
-        let decorationTexture = SKTexture(imageNamed: "TiangListrik3")
+        let decorationTexture = SKTexture(imageNamed: "TiangListrik")
         let aspectRatio = decorationTexture.size().height / decorationTexture.size().width
         let decorationHeight = 300.0
         let decorationWidth = 600.0

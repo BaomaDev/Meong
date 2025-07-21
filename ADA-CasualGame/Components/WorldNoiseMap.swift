@@ -7,30 +7,43 @@
 
 import GameplayKit
 
+enum NoiseShapingMethod {
+    case none
+    case squared(Double)
+    case inverseValley(baseNoise: Double)
+    case custom((_ value: Double) -> Double)
+}
+
 class WorldNoiseMap {
     private let noiseMap: GKNoiseMap
     private let width: Int
     private let height: Int
 
-    init(seed: Int32 = 1337, chunkCount: Int = 1000, layerCount: Int = 10) {
+    init(seed: Int32 = 1337, chunkCount: Int = 1000, layerCount: Int = 10, noiseType: String = "Perlin") {
         self.width = chunkCount
         self.height = layerCount
-
-//        let source = GKPerlinNoiseSource(
-//            frequency: 10,         // increase frequency to add more variation between chunks
-//            octaveCount: 2,         // more detail
-//            persistence: 0.2,      // controls amplitude of each octave (higher = bolder noise)
-//            lacunarity: 5,        // controls frequency change between octaves
-//            seed: seed
-//        )
         
         print("Seed: \(seed)")
-        let source = GKRidgedNoiseSource(
-            frequency: 3.0,
-            octaveCount: 4,
-            lacunarity: 2.0,
-            seed: seed
-        )
+        
+        let source: GKNoiseSource
+        switch noiseType {
+        case "Perlin" :
+            source = GKPerlinNoiseSource(
+                frequency: 10,         
+                octaveCount: 2,         
+                persistence: 0.2,      
+                lacunarity: 5,
+                seed: seed)
+        case "Ridged" :
+            source = GKRidgedNoiseSource(
+                frequency: 3.0,
+                octaveCount: 4,
+                lacunarity: 2.0,
+                seed: seed
+            )
+        default :
+            fatalError("Unsupported noise type: \(noiseType)")
+        }
 
         let noise = GKNoise(source)
         
@@ -62,6 +75,21 @@ class WorldNoiseMap {
         let raw = valueAt(atChunk: x, layer: y)
         let normalized = (raw + 1) / 2 // now in [0, 1]
         return Int(normalized * Float(maxTypes)).clamped(to: 0..<(maxTypes))
+    }
+    
+    func adjustNoiseValue(_ value: Double, method: NoiseShapingMethod = .none) -> Double {
+        let clamped = max(0.0, min(1.0, value))
+        
+        switch method {
+        case .none:
+            return clamped
+        case .squared(let power):
+            return pow(clamped, power) // High values become rarer
+        case .inverseValley(let baseNoise):
+            return clamped * (1.0 - abs(baseNoise)) // Creates valleys
+        case .custom(let transform):
+            return transform(clamped)
+        }
     }
 }
 

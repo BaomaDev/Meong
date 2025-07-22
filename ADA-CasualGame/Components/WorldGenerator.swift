@@ -288,10 +288,8 @@ class WorldGenerator {
             if let obstacleName = obstacle?.name {
                 switch obstacleName {
                 case "bajaj":
-                    // Assuming you have a "bajaj_sound.mp3" file in your project
                     EffectsFactory.shared.playSound(soundKey: "bajaj_sound.mp3", volumeKey: 1.0)
                 case "gojek":
-                    // Assuming you have a "gojek_sound.mp3" file in your project
                     EffectsFactory.shared.playSound(soundKey: "trimmed_gojek.m4a", volumeKey: 1.0)
                     EffectsFactory.shared.playSound(soundKey: "gojek_horn.m4a", volumeKey: 0.2)
                 default:

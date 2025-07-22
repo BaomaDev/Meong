@@ -1,6 +1,12 @@
 import SpriteKit
 import GameplayKit
 
+enum GamePhase {
+    case tutorial
+    case playing
+    case gameOver
+}
+
 class GameScene: SKScene, SKPhysicsContactDelegate {
     // MARK: - Properties
     var player: PlayerEntity?
@@ -31,12 +37,22 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     private var lastDistanceBonusScore = 0
     private var lastSpeedFactor: Double = 1.0
     
+    private var tutorialManager: TutorialManager?
+    private(set) var gamePhase: GamePhase = .tutorial
+    private static var isFirstLaunch = true
+    
     // MARK: - Scene Lifecycle (Initializers)
     override func didMove(to view: SKView) {
         setupGame()
     }
     
     private func setupGame() {
+        // Reset properties
+        internalScore = 0
+        lastDistanceBonusScore = 0
+        gameSpeed = baseGameSpeed
+        
+        // Basic scene setup
         backgroundColor = SKColor(white: 0.2, alpha: 1.0)
         physicsWorld.gravity = CGVector(dx: 0, dy: customGravity)
         physicsWorld.contactDelegate = self
@@ -48,15 +64,35 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         EffectsFactory.shared.initialize(with: self)
         
-        // Initialize and set up the world using the generator
         worldGenerator = WorldGenerator(scene: self)
-        worldGenerator?.setupEnvironment()
+        worldGenerator?.setupEnvironment() // This creates the ground and starts spawning
         
-//        setupScrollingBackground(imageNamed: "background")
-        startScoreTimer()
         createPlayer()
         createChaser()
         setupSwipeRecognizers()
+        
+        // 4. ADD THIS LOGIC TO START THE TUTORIAL OR THE GAME
+        if GameScene.isFirstLaunch {
+            gamePhase = .tutorial
+            worldGenerator?.stopAllSpawning() // <-- STOPS spawning during tutorial
+            GameScene.isFirstLaunch = false // Ensure tutorial only runs once
+            
+            tutorialManager = TutorialManager(scene: self)
+            // The tutorial manager will call endTutorial when it's done
+            tutorialManager?.start { [weak self] in
+                self?.endTutorial()
+            }
+        } else {
+            // If not the first launch, start the game directly
+            gamePhase = .playing
+            endTutorial() // This function now also starts the main game
+        }
+    }
+    
+    func endTutorial() {
+        gamePhase = .playing
+        worldGenerator?.startProceduralSpawning()
+        startScoreTimer()
     }
     
     func startScoreTimer(resetScore: Bool = false) {
@@ -87,6 +123,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         // Update player state
         let currentSurface = getSurfaceType()
         player.updateState(currentSurface: currentSurface)
+        
+        guard gamePhase == .playing else { return }
         
         // Remove projectiles that are off screen
         self.enumerateChildNodes(withName: "Projectile") { (node, stop) in
@@ -122,6 +160,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     // MARK: - SKPhysicsContactDelegate
     func didBegin(_ contact: SKPhysicsContact) {
 //        worldMoveDistance = self.size.width * 2
+        guard gamePhase == .playing else { return }
         
         var firstBody: SKPhysicsBody
         var secondBody: SKPhysicsBody
@@ -226,6 +265,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
     
     func gameOver() {
+        gamePhase = .gameOver
+        
         // 1. Clear all nodes from the previous game (player, platforms, etc.).
         self.removeAllChildren()
         

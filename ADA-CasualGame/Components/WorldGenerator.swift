@@ -59,6 +59,52 @@ class WorldGenerator {
         let sequence = SKAction.sequence([run, wait])
         scene.run(SKAction.repeatForever(sequence), withKey: key)
     }
+    
+    func updateAllNodeSpeedsToMatchGameSpeed() {
+        guard let scene = scene else { return }
+
+        let targetX: CGFloat = -100  // Offscreen left edge
+
+        let speed = gameSpeed // pixels per second
+
+        for node in scene.children {
+            guard node.hasActions() else { continue }
+            guard let category = node.physicsBody?.categoryBitMask else { continue }
+
+            // Option 1: Filter by name
+//            guard let name = node.name,
+//                  ["platform", "obstacle", "projectile", "collectible"].contains(name) else {
+//                continue
+//            }
+
+            // Option 2: (Alternative) Filter by physics category
+            var actionKey: String
+            switch category {
+            case PhysicsCategory.solidPlatform | PhysicsCategory.semiSolidPlatform:
+                actionKey = SpawnKey.platform
+            case PhysicsCategory.obstacle:
+                actionKey = SpawnKey.obstacle
+            case PhysicsCategory.projectile:
+                actionKey = SpawnKey.projectile
+            case PhysicsCategory.coin | PhysicsCategory.powerUp | PhysicsCategory.catnip:
+                actionKey = SpawnKey.collectible
+            default:
+                continue
+            }
+            
+             
+            let currentX = node.position.x
+            let remainingDistance = currentX - targetX
+            guard remainingDistance > 0 else { continue }
+
+            let newDuration = TimeInterval(remainingDistance / speed)
+
+            node.removeAction(forKey: actionKey)
+            let move = SKAction.moveTo(x: targetX, duration: newDuration)
+            node.run(move, withKey: actionKey)
+        }
+    }
+
 
 
     func setupEnvironment() {

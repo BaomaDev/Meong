@@ -70,42 +70,32 @@ class WorldGenerator {
         for node in scene.children {
             guard node.hasActions() else { continue }
             guard let category = node.physicsBody?.categoryBitMask else { continue }
-
-            // Option 1: Filter by name
-//            guard let name = node.name,
-//                  ["platform", "obstacle", "projectile", "collectible"].contains(name) else {
-//                continue
-//            }
-
-            // Option 2: (Alternative) Filter by physics category
+            
             var actionKey: String
             switch category {
             case PhysicsCategory.solidPlatform | PhysicsCategory.semiSolidPlatform:
-                actionKey = SpawnKey.platform
+                actionKey = MoveKey.platform
             case PhysicsCategory.obstacle:
-                actionKey = SpawnKey.obstacle
+                actionKey = MoveKey.obstacle
             case PhysicsCategory.projectile:
-                actionKey = SpawnKey.projectile
+                actionKey = MoveKey.projectile
             case PhysicsCategory.coin | PhysicsCategory.powerUp | PhysicsCategory.catnip:
-                actionKey = SpawnKey.collectible
+                actionKey = MoveKey.collectible
             default:
                 continue
             }
             
-             
+            print(node.name, actionKey, speed, category, node.hasActions())
+            
             let currentX = node.position.x
             let remainingDistance = currentX - targetX
             guard remainingDistance > 0 else { continue }
 
-            let newDuration = TimeInterval(remainingDistance / speed)
-
             node.removeAction(forKey: actionKey)
-            let move = SKAction.moveTo(x: targetX, duration: newDuration)
+            let move = SpawnFactory.createMovementAction(distance: remainingDistance, speed: speed)
             node.run(move, withKey: actionKey)
         }
     }
-
-
 
     func setupEnvironment() {
         createGround()
@@ -170,26 +160,6 @@ class WorldGenerator {
         let platformSize = CGSize(width: 500, height: platformThickness)
         let platformY: CGFloat = platformHeight
         let position = CGPoint(x: scene.size.width + platformSize.width, y: platformY)
-        
-//        let type = noiseMap.typeIndex(
-//            atChunk: currentStepPlatform,
-//            layer: NoiseLayer.platformType.rawValue,
-//            maxTypes: 2
-//        )
-//
-//        let platform: SKSpriteNode?
-//        switch type {
-//        case 0:
-//            platform = SpawnFactory.createSemiSolidPlatform(at: position, size: platformSize)
-//        case 1:
-//            platform = SpawnFactory.createSolidPlatform(at: position, size: platformSize)
-//        default:
-//            platform = nil
-//        }
-//
-//        if let p = platform {
-//            scene.addChild(p)
-//        }
         
         let platform: SKSpriteNode
         if Bool.random() {

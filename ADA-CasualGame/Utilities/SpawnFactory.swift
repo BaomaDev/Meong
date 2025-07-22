@@ -29,10 +29,17 @@ class Stepable: SKSpriteNode {
     }
 }
 
+enum MoveKey {
+    static let platform = "movePlatform"
+    static let obstacle = "moveObstacle"
+    static let projectile = "moveProjectile"
+    static let collectible = "moveCollectible"
+}
+
 class SpawnFactory {
     // MARK: - Reusable Movement Action
     
-    private static func createMovementAction(distance: CGFloat, speed: CGFloat) -> SKAction {
+    static func createMovementAction(distance: CGFloat, speed: CGFloat) -> SKAction {
         let duration = TimeInterval(floor(distance / speed))
         let moveAction = SKAction.moveBy(x: -distance, y: 0, duration: duration)
         let removeAction = SKAction.removeFromParent()
@@ -53,7 +60,7 @@ class SpawnFactory {
         coin.physicsBody?.contactTestBitMask = characterCategory
         coin.physicsBody?.collisionBitMask = 0
         
-        coin.run(createMovementAction(distance: worldMoveDistance, speed: gameSpeed))
+        coin.run(createMovementAction(distance: worldMoveDistance, speed: gameSpeed), withKey: MoveKey.collectible)
 
         return coin
     }
@@ -70,7 +77,7 @@ class SpawnFactory {
         powerUp.physicsBody?.contactTestBitMask = characterCategory
         powerUp.physicsBody?.collisionBitMask = 0
         
-        powerUp.run(createMovementAction(distance: worldMoveDistance, speed: gameSpeed))
+        powerUp.run(createMovementAction(distance: worldMoveDistance, speed: gameSpeed), withKey: MoveKey.collectible)
 
         return powerUp
     }
@@ -87,7 +94,7 @@ class SpawnFactory {
         catnip.physicsBody?.contactTestBitMask = characterCategory
         catnip.physicsBody?.collisionBitMask = 0
         
-        catnip.run(createMovementAction(distance: worldMoveDistance, speed: gameSpeed))
+        catnip.run(createMovementAction(distance: worldMoveDistance, speed: gameSpeed), withKey: MoveKey.collectible)
 
         return catnip
     }
@@ -106,7 +113,7 @@ class SpawnFactory {
         noTouch.physicsBody?.contactTestBitMask = PhysicsCategory.player
         noTouch.physicsBody?.collisionBitMask = PhysicsCategory.none
         
-        noTouch.run(createMovementAction(distance: worldMoveDistance, speed: gameSpeed))
+        noTouch.run(createMovementAction(distance: worldMoveDistance, speed: gameSpeed), withKey: MoveKey.obstacle)
         
         return noTouch
     }
@@ -143,7 +150,7 @@ class SpawnFactory {
         let group = SKAction.group([moveAction, bobRepeat])
         let removeAction = SKAction.removeFromParent()
         
-        moving.run(SKAction.sequence([group, removeAction]))
+        moving.run(SKAction.sequence([group, removeAction]), withKey: MoveKey.obstacle)
         
         return moving
     }
@@ -172,7 +179,7 @@ class SpawnFactory {
         duckZone.name = "duckZone"
         duckable.addChild(duckZone)
         
-        duckable.run(createMovementAction(distance: worldMoveDistance, speed: gameSpeed))
+        duckable.run(createMovementAction(distance: worldMoveDistance, speed: gameSpeed), withKey: MoveKey.obstacle)
         
         return duckable
     }
@@ -228,7 +235,7 @@ class SpawnFactory {
         bottomZone.name = "bottomZone"
         stepable.addChild(bottomZone)
         
-        stepable.run(createMovementAction(distance: worldMoveDistance, speed: gameSpeed))
+        stepable.run(createMovementAction(distance: worldMoveDistance, speed: gameSpeed), withKey: MoveKey.obstacle)
         
         return stepable
     }
@@ -313,7 +320,7 @@ class SpawnFactory {
         platform.physicsBody?.collisionBitMask = PhysicsCategory.player
         
         // Apply movement action directly from the factory
-        platform.run(createMovementAction(distance: worldMoveDistance, speed: gameSpeed))
+        platform.run(createMovementAction(distance: worldMoveDistance, speed: gameSpeed), withKey: MoveKey.platform)
         
         return platform
     }
@@ -371,7 +378,7 @@ class SpawnFactory {
         platform.addChild(decoration)
 
         // Add movement
-        platform.run(createMovementAction(distance: worldMoveDistance, speed: gameSpeed))
+        platform.run(createMovementAction(distance: worldMoveDistance, speed: gameSpeed), withKey: MoveKey.platform)
 
         return platform
     }

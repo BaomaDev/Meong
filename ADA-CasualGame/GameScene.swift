@@ -30,6 +30,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     private var lastDistanceBonusScore = 0
     private var lastSpeedFactor: Double = 1.0
+    private var lastSpeedFactor2: Double = 1.0
     
     // MARK: - Scene Lifecycle (Initializers)
     override func didMove(to view: SKView) {
@@ -312,11 +313,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         lastSpeedFactor = newFactor
         print("current game speed: \(gameSpeed)")
         
-        worldGenerator?.stopAllSpawning()
         worldGenerator?.updateAllNodeSpeedsToMatchGameSpeed()
         
+        worldGenerator?.stopAllSpawning()
+        
         scene?.run(SKAction.sequence([
-            SKAction.wait(forDuration: 1.5),
+            SKAction.wait(forDuration: 2),
                 SKAction.run { [weak self] in
                     self?.worldGenerator?.startProceduralSpawning()
                 }

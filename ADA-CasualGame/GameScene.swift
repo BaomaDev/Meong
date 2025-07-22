@@ -40,7 +40,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     private var tutorialManager: TutorialManager?
     private(set) var gamePhase: GamePhase = .tutorial
-    private static var isFirstLaunch = true
+//    private static var isFirstLaunch = true
+    
+    private var playerData: PlayerData!
     
     // MARK: - Scene Lifecycle (Initializers)
     override func didMove(to view: SKView) {
@@ -52,6 +54,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         internalScore = 0
         lastDistanceBonusScore = 0
         gameSpeed = baseGameSpeed
+        
+        playerData = SaveManager.shared.load()
         
         // Basic scene setup
         backgroundColor = SKColor(white: 0.2, alpha: 1.0)
@@ -73,10 +77,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         setupSwipeRecognizers()
         
         // 4. ADD THIS LOGIC TO START THE TUTORIAL OR THE GAME
-        if GameScene.isFirstLaunch {
+        if playerData.isFirstTimeInstall {
             gamePhase = .tutorial
             worldGenerator?.stopAllSpawning() // <-- STOPS spawning during tutorial
-            GameScene.isFirstLaunch = false // Ensure tutorial only runs once
+//            GameScene.isFirstLaunch = false // Ensure tutorial only runs once
             
             tutorialManager = TutorialManager(scene: self)
             // The tutorial manager will call endTutorial when it's done
@@ -91,6 +95,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
     
     func endTutorial() {
+        playerData.isFirstTimeInstall = false
         gamePhase = .playing
         worldGenerator?.startProceduralSpawning()
         startScoreTimer()
@@ -267,6 +272,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     func gameOver() {
         gamePhase = .gameOver
+        
+        playerData.highScore = internalScore > playerData.highScore ? internalScore : playerData.highScore
+        playerData.coins += player?.coins ?? 0
+        
+        print(playerData.highScore)
         
         // 1. Clear all nodes from the previous game (player, platforms, etc.).
         self.removeAllChildren()

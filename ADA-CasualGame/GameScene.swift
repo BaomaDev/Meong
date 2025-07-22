@@ -313,9 +313,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         print("current game speed: \(gameSpeed)")
         
         worldGenerator?.stopAllSpawning()
+        worldGenerator?.updateAllNodeSpeedsToMatchGameSpeed()
         
         scene?.run(SKAction.sequence([
-                SKAction.wait(forDuration: 3),
+            SKAction.wait(forDuration: 1.5),
                 SKAction.run { [weak self] in
                     self?.worldGenerator?.startProceduralSpawning()
                 }

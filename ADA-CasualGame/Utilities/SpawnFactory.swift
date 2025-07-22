@@ -111,12 +111,38 @@ class SpawnFactory {
         return noTouch
     }
     
+    static func createMovingAlert(at position: CGPoint, in scene: SKScene) {
+        print("test \(position)")
+        
+        let alertTexture = SKTexture(imageNamed: "alert")
+        let alert = SKSpriteNode(texture: alertTexture, color: .yellow, size: CGSize(width: 40, height: 40))
+        
+        // Place it slightly to the left of where the moving object will appear
+        alert.position = CGPoint(x: position.x - 100, y: position.y)
+        alert.zPosition = 100
+        alert.name = "Alert"
+
+        let blink = SKAction.repeat(SKAction.sequence([
+            SKAction.fadeOut(withDuration: 0.25),
+            SKAction.fadeIn(withDuration: 0.25)
+        ]), count: 2)
+
+        let remove = SKAction.removeFromParent()
+
+        scene.addChild(alert)
+
+        // Remove the alert after a short blink
+        alert.run(SKAction.sequence([blink, SKAction.wait(forDuration: 0.2), remove]))
+    }
+    
     static func createMoving(at position: CGPoint) -> SKSpriteNode {
         let textureName = Bool.random() ? "bajaj" : "gojek"
         let texture = SKTexture(imageNamed: textureName)
         let desiredSize = CGSize(width: 80, height: 80)
         let moving = SKSpriteNode(texture: texture, color: .clear, size: desiredSize)
-        moving.name = "Moving"
+        
+        moving.name = textureName
+
         moving.position = position
         
         moving.physicsBody = SKPhysicsBody(rectangleOf: moving.size)

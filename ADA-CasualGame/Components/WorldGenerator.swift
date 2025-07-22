@@ -228,7 +228,31 @@ class WorldGenerator {
             obstacle = SpawnFactory.createDuckable(at: position)
         case 3:
             let movingPosition = CGPoint(x: scene.size.width + 50, y: groundHeight + 30)
-            obstacle = SpawnFactory.createMoving(at: movingPosition)
+
+            SpawnFactory.createMovingAlert(at: movingPosition, in: scene)
+            
+            scene.run(SKAction.sequence([
+                SKAction.wait(forDuration: 1.0),
+                SKAction.run {
+                    let moving = SpawnFactory.createMoving(at: movingPosition)
+                    scene.addChild(moving)
+                }
+            ]))
+            
+            if let obstacleName = obstacle?.name {
+                switch obstacleName {
+                case "bajaj":
+                    // Assuming you have a "bajaj_sound.mp3" file in your project
+                    EffectsFactory.shared.playSound(soundKey: "bajaj_sound.mp3", volumeKey: 1.0)
+                case "gojek":
+                    // Assuming you have a "gojek_sound.mp3" file in your project
+                    EffectsFactory.shared.playSound(soundKey: "trimmed_gojek.m4a", volumeKey: 1.0)
+                    EffectsFactory.shared.playSound(soundKey: "gojek_horn.m4a", volumeKey: 0.2)
+                default:
+                    break
+                }
+            }
+            
         default:
             break
         }

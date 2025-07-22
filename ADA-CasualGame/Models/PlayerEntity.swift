@@ -102,7 +102,6 @@ class PlayerEntity: SKSpriteNode {
             if previousState == .diving {
                 hardLanding()
                 EffectsFactory.shared.createParticleEffect(at: particlePosition, amount: 4, surfaceType: currentSurface)
-
             } else {
                 softLanding()
                 EffectsFactory.shared.createParticleEffect(at: particlePosition, amount: 2, surfaceType: currentSurface)
@@ -149,7 +148,7 @@ class PlayerEntity: SKSpriteNode {
         restoreOriginalShape()
         // If we landed from a dive, enter the .landing state via an action.
         self.currentState = .landing
-        EffectsFactory.shared.screenShake(strength: 0.5)
+        EffectsFactory.shared.screenShake(strength: 0.3)
         
         let wait = SKAction.wait(forDuration: landingDuration)
         let transitionToRunning = SKAction.run {
@@ -158,7 +157,9 @@ class PlayerEntity: SKSpriteNode {
             }
         }
         
-        EffectsFactory.shared.playHaptic(strength: 2)
+        EffectsFactory.shared.playSound(soundKey: "landing.mp3", volumeKey: 1.0)
+        EffectsFactory.shared.playHaptic(intensity: 1.0, sharpness: 0.1, type: .hapticTransient)
+        
         self.run(SKAction.sequence([wait, transitionToRunning]))
     }
     
@@ -223,8 +224,9 @@ class PlayerEntity: SKSpriteNode {
         
         self.physicsBody?.affectedByGravity = false
         
-        EffectsFactory.shared.playSound(soundKey: "jump.mp3")
-        EffectsFactory.shared.playHaptic(strength: 0.5)
+        EffectsFactory.shared.playSound(soundKey: "jump.mp3", volumeKey: 1.0)
+//        EffectsFactory.shared.playSound(soundKey: "normaljump.mp3")
+//        EffectsFactory.shared.playHaptic(strength: 0.5)
         
         let jumpAction = SKAction.customAction(withDuration: duration) { (node, elapsedTime) in
             let t = elapsedTime / duration
@@ -321,8 +323,9 @@ class PlayerEntity: SKSpriteNode {
         }
         
         // Play effects for either jump type
-        EffectsFactory.shared.playSound(soundKey: "jump.mp3") // Or highJump.mp3
-        EffectsFactory.shared.playHaptic(strength: 1.0)
+        EffectsFactory.shared.playSound(soundKey: "highjumpie.mp3", volumeKey: 1.0) // Or highJump.mp3
+        EffectsFactory.shared.playSound(soundKey: "highJump.mp3", volumeKey: 1.0)
+//        EffectsFactory.shared.playHaptic(strength: 1.0)
         
         // Run the chosen jumpAction followed by its corresponding completion action.
         self.run(SKAction.sequence([jumpAction, wait, restoreAction]))
@@ -419,7 +422,7 @@ class PlayerEntity: SKSpriteNode {
         let adjustY = CGFloat(-playerHitboxHeight / 4)
         applyHorizontalMovementTransformation(withYAdjustment: adjustY)
         
-        EffectsFactory.shared.playSound(soundKey: "duck.wav")
+        EffectsFactory.shared.playSound(soundKey: "duck.wav", volumeKey: 1.0)
         
         // Restore after duration
         let wait = SKAction.wait(forDuration: 0.75)
@@ -514,6 +517,9 @@ class PlayerEntity: SKSpriteNode {
         physicsBody?.contactTestBitMask &= ~PhysicsCategory.projectile
         physicsBody?.collisionBitMask &= ~PhysicsCategory.projectile
         
+        EffectsFactory.shared.playSound(soundKey: "hurt.mp3", volumeKey: 1.5)
+        EffectsFactory.shared.playHaptic(intensity: 1.0, sharpness: 0.1, type: .hapticContinuous, duration: 0.3)
+        
         // Blink effect
         let blink = SKAction.sequence([
             SKAction.fadeAlpha(to: 0.2, duration: 0.1),
@@ -550,6 +556,9 @@ class PlayerEntity: SKSpriteNode {
         } else {
             print("⚠️ Warning: physicsBody is nil during obstacle hit!")
         }
+        
+        EffectsFactory.shared.playSound(soundKey: "hurt.mp3", volumeKey: 1.5)
+        EffectsFactory.shared.playHaptic(intensity: 2.0, sharpness: 0.1, type: .hapticContinuous, duration: 0.3)
 
         // Blink effect
         let blink = SKAction.sequence([

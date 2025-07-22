@@ -25,12 +25,20 @@ private enum SpawnKey {
 
 class WorldGenerator {
     private weak var scene: SKScene?
-    private let noiseMap = WorldNoiseMap(seed: Int32.random(in: 0..<Int32.max), chunkCount: 1000, layerCount: 6) // 10 = total noise layers
+    private let obstacleNoiseMap = WorldNoiseMap(seed: Int32.random(in: 0..<Int32.max), chunkCount: 1000, layerCount: 1, noiseType: "Perlin")
+    private let platformNoiseMap = WorldNoiseMap(seed: Int32.random(in: 0..<Int32.max), chunkCount: 1000, layerCount: 1, noiseType: "Perlin")
+    private let projectileNoiseMap = WorldNoiseMap(seed: Int32.random(in: 0..<Int32.max), chunkCount: 1000, layerCount: 1, noiseType: "Perlin")
+    private let coinChanceNoiseMap = WorldNoiseMap(seed: Int32.random(in: 0..<Int32.max), chunkCount: 1000, layerCount: 1, noiseType: "Perlin")
+    private let powerUpChanceNoiseMap = WorldNoiseMap(seed: Int32.random(in: 0..<Int32.max), chunkCount: 1000, layerCount: 1, noiseType: "Perlin")
+    private let catnipChanceNoiseMap = WorldNoiseMap(seed: Int32.random(in: 0..<Int32.max), chunkCount: 1000, layerCount: 1, noiseType: "Perlin")
 
     private var currentStepPlatform = 0
     private var currentStepObstacle = 0
     private var currentStepProjectile = 0
     private var currentStepCollectible = 0
+    
+    private var powerUpBonus: Float = 0
+    private var catnipBonus: Float = 0
 
 
     init(scene: SKScene) {
@@ -90,11 +98,6 @@ class WorldGenerator {
     }
 
     private func startSpawningPlatforms() {
-//        let speedFactor = Double(gameSpeed / baseGameSpeed) // 1.0 ... 2.0
-//        let baseDelay = 4.5 / speedFactor // Delay shrinks as speed increases
-//        let delay = max(0.6, baseDelay * pow(0.98, Double(currentStepPlatform)))
-//        let range = min(delay * 0.3, 0.5)
-        
         let speedFactor = Double(gameSpeed / baseGameSpeed)
         let baseDelay = 4.5 / speedFactor
         let rawDelay = baseDelay * pow(0.98, Double(currentStepPlatform))
@@ -113,8 +116,8 @@ class WorldGenerator {
         guard let scene = scene else { return }
         defer { currentStepPlatform += 1 }
 
-        let chance = noiseMap.valueAt(atChunk: currentStepPlatform, layer: NoiseLayer.platformChance.rawValue)
-        print("Platform chance at \(currentStepPlatform):", chance)
+        let chance = platformNoiseMap.valueAt(atChunk: currentStepPlatform, layer: 0)
+//        print("Platform chance at \(currentStepPlatform):", chance)
         let threshold = adaptiveThreshold(forStep: currentStepPlatform, base: 0.5)
         guard chance > threshold else { return }
 
@@ -175,11 +178,11 @@ class WorldGenerator {
 
         defer { currentStepObstacle += 1 }
 
-        let chance = noiseMap.valueAt(
+        let chance = obstacleNoiseMap.valueAt(
             atChunk: currentStepObstacle,
-            layer: NoiseLayer.obstacleChance.rawValue
+            layer: 0
         )
-        print("Obstacle chance at \(currentStepObstacle):", chance)
+//        print("Obstacle chance at \(currentStepObstacle):", chance)
 
         let threshold = adaptiveThreshold(
             forStep: currentStepObstacle,
@@ -187,11 +190,11 @@ class WorldGenerator {
         )
         guard chance > threshold else { return }
 
-        let type = noiseMap.typeIndex(
-            atChunk: currentStepObstacle,
-            layer: NoiseLayer.obstacleType.rawValue,
-            maxTypes: 4 // NoTouch, Stepable, Duckable, Moving
-        )
+//        let type = noiseMap.typeIndex(
+//            atChunk: currentStepObstacle,
+//            layer: NoiseLayer.obstacleType.rawValue,
+//            maxTypes: 4 // NoTouch, Stepable, Duckable, Moving
+//        )
 
         let position = CGPoint(x: scene.size.width + 50, y: groundHeight + 40)
 
@@ -259,7 +262,7 @@ class WorldGenerator {
         
         defer { currentStepProjectile += 1 }
 
-        let chance = noiseMap.valueAt(atChunk: currentStepProjectile, layer: NoiseLayer.projectileChance.rawValue)
+        let chance = projectileNoiseMap.valueAt(atChunk: currentStepProjectile, layer: 0)
         let threshold = adaptiveThreshold(forStep: currentStepProjectile, base: 0.3)
         guard chance > threshold else { return }
 
@@ -295,10 +298,17 @@ class WorldGenerator {
         }
         let obstacleRects = obstacles.map { $0.calculateAccumulatedFrame() }
 
-        let coinChance = noiseMap.valueAt(atChunk: currentStepCollectible, layer: NoiseLayer.coinChance.rawValue)
-        let powerUpChance = noiseMap.valueAt(atChunk: currentStepCollectible, layer: NoiseLayer.powerUpChance.rawValue)
-        print("Coin chance at \(currentStepCollectible):", coinChance)
-        print("PowerUp chance at \(currentStepCollectible):", powerUpChance)
+        let coinChance = coinChanceNoiseMap.adjustNoiseValue(Double(coinChanceNoiseMap.valueAt(atChunk: currentStepCollectible, layer: 0)), method: .squared(1))
+        let powerUpChance = powerUpChanceNoiseMap.adjustNoiseValue(Double(powerUpChanceNoiseMap.valueAt(atChunk: currentStepCollectible, layer: 0)), method: .squared(2))
+        let catnipChance = catnipChanceNoiseMap.adjustNoiseValue(Double(catnipChanceNoiseMap.valueAt(atChunk: currentStepCollectible, layer: 0)), method: .squared(2))
+        print("Coin chance at \(currentStepCollectible) (squared):", coinChance)
+        print("PowerUp chance at \(currentStepCollectible) (squared):", powerUpChance)
+        print("Catnip chance at \(currentStepCollectible) (squared):", catnipChance)
+        print("Coin chance at \(currentStepCollectible) (raw):", coinChanceNoiseMap.valueAt(atChunk: currentStepCollectible, layer: 0))
+        print("PowerUp chance at \(currentStepCollectible) (raw):", powerUpChanceNoiseMap.valueAt(atChunk: currentStepCollectible, layer: 0))
+        print("Catnip chance at \(currentStepCollectible) (raw):", catnipChanceNoiseMap.valueAt(atChunk: currentStepCollectible, layer: 0))
+        
+        
 
         var attempts = 0
         let coinSpacing: CGFloat = 40
@@ -335,7 +345,7 @@ class WorldGenerator {
             }
         }
 
-        if powerUpChance > 0.75 {
+        if powerUpChance + Double(powerUpBonus) > 0.55 {
             attempts = 0
             while attempts < 10 {
                 attempts += 1
@@ -350,13 +360,15 @@ class WorldGenerator {
                         powerUpCategory: PhysicsCategory.powerUp
                     )
                     scene.addChild(powerUp)
+                    powerUpBonus = 0
                     break
                 }
             }
+        } else {
+            powerUpBonus += 0.05
         }
         
-        // Catnip spawning with 10% chance
-        if Int.random(in: 0..<20) == 0 {
+        if catnipChance + Double(catnipBonus) > 0.65 {
             attempts = 0
             while attempts < 10 {
                 attempts += 1
@@ -369,9 +381,12 @@ class WorldGenerator {
                                                            characterCategory: PhysicsCategory.player,
                                                            catnipCategory: PhysicsCategory.catnip)
                     scene.addChild(catnip)
+                    catnipBonus = 0
                     break
                 }
             }
+        } else {
+            catnipBonus += 0.05
         }
         currentStepCollectible += 1
     }

@@ -71,3 +71,7 @@ enum SurfaceType {
         return self != .none
     }
 }
+
+extension Notification.Name {
+    static let gameDidAutoPause = Notification.Name("gameDidAutoPause")
+}

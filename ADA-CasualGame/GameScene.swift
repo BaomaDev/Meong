@@ -32,7 +32,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     private var scoreTimer: Timer?
     private var internalScore: Int = 0
     
-    private var isGamePaused: Bool = false  // 👈 new flag
+    private static var isGamePaused: Bool = false
     
     private var lastDistanceBonusScore = 0
     private var lastSpeedFactor: Double = 1.0
@@ -44,6 +44,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     // MARK: - Scene Lifecycle (Initializers)
     override func didMove(to view: SKView) {
+        NotificationCenter.default.addObserver(self, selector: #selector(appWillResignActive), name: UIApplication.willResignActiveNotification, object: nil)
         setupGame()
     }
     
@@ -90,6 +91,21 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
     }
     
+    override func willMove(from view: SKView) {
+        super.willMove(from: view)
+        NotificationCenter.default.removeObserver(self)
+    }
+
+    @objc private func appWillResignActive() {
+        print("App is resigning active, pausing game.")
+        GameScene.isGamePaused = true
+        // 1. Pause the game's internal logic.
+        self.pauseGame()
+        
+        // 2. Broadcast the custom notification to anyone listening (like the GameView).
+        NotificationCenter.default.post(name: .gameDidAutoPause, object: nil)
+    }
+    
     func endTutorial() {
         gamePhase = .playing
         worldGenerator?.startProceduralSpawning()
@@ -105,7 +121,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
 
         scoreTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
-            guard let self = self, !self.isGamePaused, let player = self.player else { return }
+            guard let self = self else { return }
+
+            // **THE FIX**: Check both the static flag AND the scene's own isPaused property.
+            // This is immune to the race condition.
+            guard !GameScene.isGamePaused && !self.isPaused, let player = self.player else { return }
 
             self.internalScore += 1
             self.scoreUpdateHandler?(self.internalScore)
@@ -118,6 +138,17 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
     
     override func update(_ currentTime: TimeInterval) {
+        if GameScene.isGamePaused {
+            // Immediately pause the game.
+            self.pauseGame()
+            
+            // Post the notification to show the SwiftUI HUD.
+            NotificationCenter.default.post(name: .gameDidAutoPause, object: nil)
+            
+            // Reset the flag so this only runs once.
+            GameScene.isGamePaused = false
+        }
+        
         guard let player = player else { return }
         self.lastUpdateTime = currentTime
         
@@ -289,20 +320,20 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         // 4. Ensure the game is unpaused.
         self.isPaused = false
-        self.isGamePaused = false
+        GameScene.isGamePaused = false
     }
     
     func pauseGame() {
-        guard !isGamePaused else { return }
-        isGamePaused = true
+        guard !GameScene.isGamePaused else { return }
+        GameScene.isGamePaused = true
         isPaused = true
         scoreTimer?.invalidate()
         scoreTimer = nil
     }
 
     func resumeGame() {
-        guard isGamePaused else { return }
-        isGamePaused = false
+        guard GameScene.isGamePaused else { return }
+        GameScene.isGamePaused = false
         isPaused = false
         startScoreTimer(resetScore: false)
     }

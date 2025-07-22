@@ -33,6 +33,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     // MARK: - Scene Lifecycle (Initializers)
     override func didMove(to view: SKView) {
+        setupGame()
+    }
+    
+    private func setupGame() {
         backgroundColor = SKColor(white: 0.2, alpha: 1.0)
         physicsWorld.gravity = CGVector(dx: 0, dy: customGravity)
         physicsWorld.contactDelegate = self
@@ -222,9 +226,13 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
     
     func gameOver() {
-        //        print("Matek")
+        // 1. Clear all nodes from the previous game (player, platforms, etc.).
+        self.removeAllChildren()
+        
+        // 2. Reset the score and update the HUD.
         scoreTimer?.invalidate()
         internalScore = 0
+        // You might not need to reset these if createPlayer() does it, but it's safe to do so.
         player?.coins = 0
         player?.hearts = 9
         player?.distance = 3
@@ -234,20 +242,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         healthUpdateHandler?(player?.hearts ?? 9)
         distanceUpdateHandler?(player?.distance ?? 3)
         
-        let newScene = GameScene(size: self.size)
-        newScene.scaleMode = self.scaleMode
-
-        // ✅ Pass current update handlers to the new scene
-        newScene.scoreUpdateHandler = self.scoreUpdateHandler
-        newScene.coinUpdateHandler = self.coinUpdateHandler
-        newScene.healthUpdateHandler = self.healthUpdateHandler
-        newScene.distanceUpdateHandler = self.distanceUpdateHandler
+        // 3. Call the setup function to rebuild and restart the game.
+        setupGame()
         
-        // ✅ Ensure new scene is not paused
-        newScene.isPaused = false
-        
-        let transition = SKTransition.fade(withDuration: 0.5)
-        self.view?.presentScene(newScene, transition: transition)
+        // 4. Ensure the game is unpaused.
+        self.isPaused = false
+        self.isGamePaused = false
     }
     
     func pauseGame() {

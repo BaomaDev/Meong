@@ -16,6 +16,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     var worldGenerator: WorldGenerator?
 
     var backgrounds: [SKSpriteNode] = []
+    private var backgroundView: BackgroundView?
     
     var swipeUpRecognizer: UISwipeGestureRecognizer?
     var swipeDownRecognizer: UISwipeGestureRecognizer?
@@ -53,7 +54,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         gameSpeed = baseGameSpeed
         
         // Basic scene setup
-        backgroundColor = SKColor(white: 0.2, alpha: 1.0)
+        backgroundView = BackgroundView(scene: self)
+        backgroundView?.setupScrollingBackground(imageNamed: "background")
+//        backgroundView?.spawnRandomClouds()
+
         physicsWorld.gravity = CGVector(dx: 0, dy: customGravity)
         physicsWorld.contactDelegate = self
         
@@ -74,18 +78,16 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         // 4. ADD THIS LOGIC TO START THE TUTORIAL OR THE GAME
         if GameScene.isFirstLaunch {
             gamePhase = .tutorial
-            worldGenerator?.stopAllSpawning() // <-- STOPS spawning during tutorial
-            GameScene.isFirstLaunch = false // Ensure tutorial only runs once
+            worldGenerator?.stopAllSpawning()
+            GameScene.isFirstLaunch = false
             
             tutorialManager = TutorialManager(scene: self)
-            // The tutorial manager will call endTutorial when it's done
             tutorialManager?.start { [weak self] in
                 self?.endTutorial()
             }
         } else {
-            // If not the first launch, start the game directly
             gamePhase = .playing
-            endTutorial() // This function now also starts the main game
+            endTutorial()
         }
     }
     
@@ -124,6 +126,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         let currentSurface = getSurfaceType()
         player.updateState(currentSurface: currentSurface)
         
+        backgroundView?.updateBackgroundPosition(gameSpeed: gameSpeed)
+        
         guard gamePhase == .playing else { return }
         
         // Remove projectiles that are off screen
@@ -160,8 +164,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     // MARK: - SKPhysicsContactDelegate
     func didBegin(_ contact: SKPhysicsContact) {
 //        worldMoveDistance = self.size.width * 2
-        guard gamePhase == .playing else { return }
-        
+        guard gamePhase != .gameOver else { return }
+
         var firstBody: SKPhysicsBody
         var secondBody: SKPhysicsBody
         
@@ -183,6 +187,17 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         // Check for collision between player and obstacle
         if firstBody.categoryBitMask == PhysicsCategory.player && secondBody.categoryBitMask == PhysicsCategory.obstacle {
+            if gamePhase == .tutorial {
+                tutorialManager?.playerDidFail()
+                
+                // We remove the obstacle that was hit to clean up the scene for the retry.
+                secondBody.node?.parent?.removeFromParent() // Use parent for complex obstacles
+                secondBody.node?.removeFromParent()
+                
+                // Return early to prevent the player from taking damage during the tutorial.
+                return
+            }
+            
             // Check what type of obstacle zone was hit
             if let obstacleNode = secondBody.node {
                 if obstacleNode.name == "damageZone" {

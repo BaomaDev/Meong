@@ -31,6 +31,13 @@ struct PauseMenu: View {
                     gameScene.isPaused = false
                 }
                 .padding(2)
+                
+                Button(action: {
+                    SaveManager.shared.reset()
+                }){
+                    Image(systemName: "trash")
+                }
+                .padding(2)
             }
         }
         .padding(24)

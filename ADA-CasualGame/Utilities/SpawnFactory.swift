@@ -102,9 +102,32 @@ class SpawnFactory {
     // MARK: - Obstacles
 
     static func createNoTouch(at position: CGPoint) -> SKSpriteNode {
-        let noTouch = SKSpriteNode(color: .red, size: CGSize(width: 10, height: 30))
+        let textureNames = ["BapakMainCatur", "BoxPisang"]
+        let textureName = textureNames.randomElement()!
+        let texture = SKTexture(imageNamed: textureName)
+        
+        var targetWidth: CGFloat = 0
+        var objectPosition = position
+        
+        switch textureName {
+            case "BapakMainCatur":
+                targetWidth = 150
+                objectPosition = CGPoint(x: position.x, y: position.y + 10)
+            case "BoxPisang":
+                targetWidth = 70
+                objectPosition = CGPoint(x: position.x, y: position.y - 15)
+            default:
+                targetWidth = 50
+                objectPosition = CGPoint(x: position.x, y: position.y - 10)
+        }
+        
+        let aspectRatio = texture.size().height / texture.size().width
+        let targetHeight = targetWidth * aspectRatio
+        let size = CGSize(width: targetWidth, height: targetHeight)
+        
+        let noTouch = SKSpriteNode(texture: texture, color: .clear, size: size)
         noTouch.name = "NoTouch"
-        noTouch.position = position
+        noTouch.position = objectPosition
         
         noTouch.physicsBody = SKPhysicsBody(rectangleOf: noTouch.size)
         noTouch.physicsBody?.categoryBitMask = PhysicsCategory.obstacle
@@ -182,9 +205,31 @@ class SpawnFactory {
     }
     
     static func createDuckable(at position: CGPoint) -> Duckable {
-        let duckable = Duckable(texture: nil, color: .purple, size: CGSize(width: 20, height: 60))
+        let textureNames = ["BoxBuah", "GerobakSayur"]
+        let textureName = textureNames.randomElement()!
+        let texture = SKTexture(imageNamed: textureName)
+        
+        var targetWidth: CGFloat = 0
+        var objectPosition = position
+        
+        switch textureName {
+            case "BoxBuah":
+                targetWidth = 65
+            case "GerobakSayur":
+                targetWidth = 160
+                objectPosition = CGPoint(x: position.x, y: position.y + 30)
+            default:
+                targetWidth = 50
+                objectPosition = CGPoint(x: position.x, y: position.y - 10)
+        }
+        
+        let aspectRatio = texture.size().height / texture.size().width
+        let targetHeight = targetWidth * aspectRatio
+        let size = CGSize(width: targetWidth, height: targetHeight)
+        
+        let duckable = Duckable(texture: texture, color: .clear, size: size)
         duckable.name = "Duckable"
-        duckable.position = position
+        duckable.position = objectPosition
         duckable.userData = ["obstacleType": "duckable"]
         
         let collisionHeight = duckable.size.height * 0.4
@@ -199,7 +244,7 @@ class SpawnFactory {
         duckable.addChild(collisionZone)
         
         let duckZoneHeight = duckable.size.height * 0.6
-        let duckZone = SKSpriteNode(color: .green, size: CGSize(width: duckable.size.width, height: duckZoneHeight))
+        let duckZone = SKSpriteNode(color: .clear, size: CGSize(width: duckable.size.width, height: duckZoneHeight))
         duckZone.position = CGPoint(x: 0, y: -duckable.size.height/2 + duckZoneHeight/2)
         duckZone.alpha = 0.3
         duckZone.name = "duckZone"
@@ -211,16 +256,35 @@ class SpawnFactory {
     }
     
     static func createStepable(at position: CGPoint) -> Stepable {
-        let texture = SKTexture(imageNamed: "Tong")
+        let textureNames = ["Tong", "Box", "BoxBerdiri"]
+        let textureName = textureNames.randomElement()!
+        let texture = SKTexture(imageNamed: textureName)
         
-        let targetWidth: CGFloat = 50
+        var targetWidth: CGFloat = 0
+        var objectPosition = position
+        
+        switch textureName {
+            case "Tong":
+                targetWidth = 50
+                objectPosition = position
+            case "Box":
+                targetWidth = 50
+                objectPosition = CGPoint(x: position.x, y: position.y - 10)
+            case "BoxBerdiri":
+                targetWidth = 40
+                objectPosition = CGPoint(x: position.x, y: position.y - 10)
+            default:
+                targetWidth = 50
+                objectPosition = CGPoint(x: position.x, y: position.y - 10)
+        }
+        
         let aspectRatio = texture.size().height / texture.size().width
         let targetHeight = targetWidth * aspectRatio
         let size = CGSize(width: targetWidth, height: targetHeight)
         let stepable = Stepable(texture: texture, color: .clear, size: size)
         
         stepable.name = "Stepable"
-        stepable.position = position
+        stepable.position = objectPosition
         stepable.userData = ["obstacleType": "stepable"]
 
         let safeZoneHeight: CGFloat = 15
@@ -276,7 +340,7 @@ class SpawnFactory {
     // MARK: - Projectiles
 
     static func createProjectile(in scene: SKScene) -> SKSpriteNode {
-        let texture = SKTexture(imageNamed: "sendal")
+        let texture = SKTexture(imageNamed: "Sendal")
         
         let targetWidth: CGFloat = 30
         let aspectRatio = texture.size().height / texture.size().width
@@ -344,13 +408,49 @@ class SpawnFactory {
     
     // MARK: - Platform
     static func createSolidPlatform(at position: CGPoint, size: CGSize) -> SKSpriteNode {
-        let platform = SKSpriteNode(color: .white, size: size)
-        platform.position = position
+        let platform = SKSpriteNode(color: .clear, size: size)
+        platform.zPosition = 0
         platform.name = "SolidPlatform"
         platform.physicsBody = SKPhysicsBody(rectangleOf: platform.size)
         platform.physicsBody?.isDynamic = false
         platform.physicsBody?.categoryBitMask = PhysicsCategory.solidPlatform
         platform.physicsBody?.collisionBitMask = PhysicsCategory.player
+        
+        // Create the "TiangListrik" decoration as a child of the platform
+        let textureNames = ["BuildingWithSignwPlatform", "BuildingTallwPlatform"]
+        let textureName = textureNames.randomElement()!
+        let decorationTexture = SKTexture(imageNamed: textureName)
+        
+        var targetWidth: CGFloat = 0
+        var objectPosition = CGPoint(x: 0, y: -115)
+        var platformPosition = position
+        
+        switch textureName {
+            case "BuildingWithSignwPlatform":
+                targetWidth = 325
+                objectPosition = CGPoint(x: 0, y: -60)
+                platformPosition.y -= 7
+            case "BuildingTallwPlatform":
+                targetWidth = 320
+                objectPosition = CGPoint(x: 0, y: -10)
+                platformPosition.y -= 20
+            default:
+                targetWidth = 300
+                objectPosition = CGPoint(x: 0, y: -50)
+        }
+        
+        let aspectRatio = decorationTexture.size().height / decorationTexture.size().width
+        let decorationWidth = targetWidth
+        let decorationHeight = decorationWidth * aspectRatio
+        let decorationSize = CGSize(width: decorationWidth, height: decorationHeight)
+
+        let decoration = SKSpriteNode(texture: decorationTexture, size: decorationSize)
+        decoration.position = objectPosition // Align bottom to platform
+        decoration.zPosition = -1
+        decoration.name = "BuildingDecoration"
+        
+        platform.position = platformPosition
+        platform.addChild(decoration)
         
         // Apply movement action directly from the factory
         platform.run(createMovementAction(distance: worldMoveDistance, speed: gameSpeed), withKey: MoveKey.platform)

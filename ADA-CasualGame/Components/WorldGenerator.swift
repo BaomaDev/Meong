@@ -166,7 +166,7 @@ class WorldGenerator {
         if Bool.random() {
             platform = SpawnFactory.createSemiSolidPlatform(at: position, size: platformSize)
         } else {
-            platform = SpawnFactory.createSolidPlatform(at: position, size: platformSize)
+            platform = SpawnFactory.createSolidPlatform(at: position, size: CGSize(width: 320, height: platformThickness))
         }
         scene.addChild(platform)
     }

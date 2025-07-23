@@ -6,7 +6,7 @@ let customGravity: CGFloat = -24
 let groundHeight: CGFloat = 60
 let airResistance: CGFloat = 5
 let platformHeight = 240.0
-let platformThickness = 10.0
+let platformThickness = 7.0
 
 // MARK: - Player Variables
 let playerHitboxWidth: CGFloat = 50

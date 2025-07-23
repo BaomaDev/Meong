@@ -48,6 +48,21 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     override func didMove(to view: SKView) {
         NotificationCenter.default.addObserver(self, selector: #selector(appWillResignActive), name: UIApplication.willResignActiveNotification, object: nil)
         setupGame()
+        
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(savePlayerData),
+            name: UIApplication.willTerminateNotification,
+            object: nil
+        )
+
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(savePlayerData),
+            name: UIApplication.didEnterBackgroundNotification,
+            object: nil
+        )
+
     }
     
     private func setupGame() {
@@ -93,6 +108,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             gamePhase = .playing
             endTutorial() // This function now also starts the main game
         }
+        
+        
     }
     
     override func willMove(from view: SKView) {
@@ -309,6 +326,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         print(playerData.highScore)
         
+        savePlayerData()
+        
         // 1. Clear all nodes from the previous game (player, platforms, etc.).
         self.removeAllChildren()
         
@@ -406,6 +425,16 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 }
             ]))
     }
+    
+    @objc private func savePlayerData() {
+        SaveManager.shared.save(playerData)
+    }
+    
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+        savePlayerData()
+    }
+
     
 //    func setupScrollingBackground(imageNamed: String) {
 //        let texture = SKTexture(imageNamed: imageNamed)

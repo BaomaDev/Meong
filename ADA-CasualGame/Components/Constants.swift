@@ -1,35 +1,42 @@
 import Foundation
 import SwiftUI
 
+// MARK: - Environment Variables
 let customGravity: CGFloat = -24
 let groundHeight: CGFloat = 60
+let airResistance: CGFloat = 5
+let platformHeight = 240.0
+let platformThickness = 10.0
+
+// MARK: - Player Variables
 let playerHitboxWidth: CGFloat = 50
 let playerHitboxHeight: CGFloat = 34
+
+// MARK: - Movement Variables
+let longSwipeTreshold = 150.0           // Min. distance for pan input to trigger high jump
 let defaultJumpHeight: CGFloat = 120
 let defaultJumpDistance: CGFloat = 300
-let airResistance: CGFloat = 5
-let diveForce: CGFloat = 100
-let landingDuration: CGFloat = 0.25
-let transformDuration: TimeInterval = 0.05
+let diveForce: CGFloat = 100            // Downward force applied during dive command
+let landingDuration: CGFloat = 0.25     // "Ministun" duration when dive landing
+let transformDuration: TimeInterval = 0.05  // Transition of hitbox between states
+let parryRadius: CGFloat = 100.0 // The area around the player to check for projectiles
+let parryCooldown: TimeInterval = 2.0
+
+// MARK: - Obstacle Variables
+let projectileSpeed = 450.0
+
+// MARK: - Game Speed Variables
 let worldMoveDistance: CGFloat = UIScreen.main.bounds.width * 2
-    
-let jumpSnapRayLength: CGFloat = 240.0
-let throwVelocity: CGFloat = -10.0
 let baseGameSpeed: CGFloat = 300.0
 var gameSpeed: CGFloat = baseGameSpeed
 let maxGameSpeed: CGFloat = 600.0
 var speedScalingFactor: CGFloat = 20.0   // Speed increases every N seconds
-let platformHeight = 240.0
-let platformThickness = 10.0
-let projectileSpeed = 450.0
-let longSwipeTreshold = 150.0
+
+// MARK: - World Generation Variables
 let minPlatformDelay = 1.2
 let minObstacleDelay = 1.0
 let minProjectileDelay = 1.4
 let minCollectibleDelay = 1.3
-
-let parryRadius: CGFloat = 100.0 // The area around the player to check for projectiles
-let parryCooldown: TimeInterval = 2.0 // 2 seconds
 
 enum PlayerState {
     case running

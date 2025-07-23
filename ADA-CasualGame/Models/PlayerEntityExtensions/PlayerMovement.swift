@@ -202,7 +202,6 @@ extension PlayerEntity {
     }
     
     // MARK: - Parry
-    
     func parry(currentTime: TimeInterval) -> Bool {
         guard self.currentState != .landing else {return false}
         let timeSinceLastParry = currentTime - lastParryTime

@@ -59,7 +59,43 @@ class WorldGenerator {
         let sequence = SKAction.sequence([run, wait])
         scene.run(SKAction.repeatForever(sequence), withKey: key)
     }
+    
+    func updateAllNodeSpeedsToMatchGameSpeed() {
+        guard let scene = scene else { return }
 
+        let targetX: CGFloat = -100  // Offscreen left edge
+
+        let speed = gameSpeed // pixels per second
+
+        for node in scene.children {
+            guard node.hasActions() else { continue }
+            guard let category = node.physicsBody?.categoryBitMask else { continue }
+            
+            var actionKey: String
+            switch category {
+            case PhysicsCategory.solidPlatform | PhysicsCategory.semiSolidPlatform:
+                actionKey = MoveKey.platform
+            case PhysicsCategory.obstacle:
+                actionKey = MoveKey.obstacle
+            case PhysicsCategory.projectile:
+                actionKey = MoveKey.projectile
+            case PhysicsCategory.coin | PhysicsCategory.powerUp | PhysicsCategory.catnip:
+                actionKey = MoveKey.collectible
+            default:
+                continue
+            }
+            
+            print(node.name, actionKey, speed, category, node.hasActions())
+            
+            let currentX = node.position.x
+            let remainingDistance = currentX - targetX
+            guard remainingDistance > 0 else { continue }
+
+            node.removeAction(forKey: actionKey)
+            let move = SpawnFactory.createMovementAction(distance: remainingDistance, speed: speed)
+            node.run(move, withKey: actionKey)
+        }
+    }
 
     func setupEnvironment() {
         createGround()
@@ -124,26 +160,6 @@ class WorldGenerator {
         let platformSize = CGSize(width: 500, height: platformThickness)
         let platformY: CGFloat = platformHeight
         let position = CGPoint(x: scene.size.width + platformSize.width, y: platformY)
-        
-//        let type = noiseMap.typeIndex(
-//            atChunk: currentStepPlatform,
-//            layer: NoiseLayer.platformType.rawValue,
-//            maxTypes: 2
-//        )
-//
-//        let platform: SKSpriteNode?
-//        switch type {
-//        case 0:
-//            platform = SpawnFactory.createSemiSolidPlatform(at: position, size: platformSize)
-//        case 1:
-//            platform = SpawnFactory.createSolidPlatform(at: position, size: platformSize)
-//        default:
-//            platform = nil
-//        }
-//
-//        if let p = platform {
-//            scene.addChild(p)
-//        }
         
         let platform: SKSpriteNode
         if Bool.random() {
@@ -228,7 +244,29 @@ class WorldGenerator {
             obstacle = SpawnFactory.createDuckable(at: position)
         case 3:
             let movingPosition = CGPoint(x: scene.size.width + 50, y: groundHeight + 30)
-            obstacle = SpawnFactory.createMoving(at: movingPosition)
+
+            SpawnFactory.createMovingAlert(at: movingPosition, in: scene)
+            
+            scene.run(SKAction.sequence([
+                SKAction.wait(forDuration: 1.0),
+                SKAction.run {
+                    let moving = SpawnFactory.createMoving(at: movingPosition)
+                    scene.addChild(moving)
+                }
+            ]))
+            
+            if let obstacleName = obstacle?.name {
+                switch obstacleName {
+                case "bajaj":
+                    EffectsFactory.shared.playSound(soundKey: "bajaj_sound.mp3", volumeKey: 1.0)
+                case "gojek":
+                    EffectsFactory.shared.playSound(soundKey: "trimmed_gojek.m4a", volumeKey: 1.0)
+                    EffectsFactory.shared.playSound(soundKey: "gojek_horn.m4a", volumeKey: 0.2)
+                default:
+                    break
+                }
+            }
+            
         default:
             break
         }

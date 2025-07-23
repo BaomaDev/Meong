@@ -39,36 +39,58 @@ class EffectsFactory {
     
     /// Plays a one-off sound effect.
     /// - Parameter soundKey: The filename of the sound to play (e.g., "jump.wav").
-    func playSound(soundKey: String) {
+    func playSound(soundKey: String, volumeKey: Float) {
         guard let scene = scene else { return }
         // playSoundFileNamed is a simple way to play a short sound effect.
         // 'waitForCompletion: false' allows the game to continue without waiting for the sound to finish.
-        let playAction = SKAction.playSoundFileNamed(soundKey, waitForCompletion: false)
-        scene.run(playAction)
+        let soundAction = SKAction.playSoundFileNamed(soundKey, waitForCompletion: false)
+
+        scene.run(soundAction)
     }
     
     /// Triggers haptic feedback on the device.
     /// - Parameter strength: A value from 0.0 to 1.0 representing the intensity.
-    func playHaptic(strength: Double) {
+    func playHaptic(
+        intensity: Float,
+        sharpness: Float,
+        type: CHHapticEvent.EventType = .hapticTransient,
+        duration: TimeInterval? = nil
+    ) {
         guard let hapticEngine = hapticEngine,
               CHHapticEngine.capabilitiesForHardware().supportsHaptics else { return }
-        
-        // This is the most reliable way to recover from an app suspension.
+
+        // Start the haptic engine
         do {
             try hapticEngine.start()
         } catch {
-            print("Failed to start haptic engine before playing: \(error)")
-            return // Can't play if the engine won't start.
+            print("Failed to start haptic engine: \(error)")
+            return
+        }
+
+        let intensityParam = CHHapticEventParameter(parameterID: .hapticIntensity, value: intensity)
+        let sharpnessParam = CHHapticEventParameter(parameterID: .hapticSharpness, value: sharpness)
+
+        let event: CHHapticEvent
+        if let duration = duration, type == .hapticContinuous {
+            // Continous
+            event = CHHapticEvent(
+                eventType: type,
+                parameters: [intensityParam, sharpnessParam],
+                relativeTime: 0,
+                duration: duration
+            )
+        } else {
+            // Transient (tap or anything yang ga continous)
+            event = CHHapticEvent(
+                eventType: type,
+                parameters: [intensityParam, sharpnessParam],
+                relativeTime: 0
+            )
         }
         
-        var events = [CHHapticEvent]()
-        let intensity = CHHapticEventParameter(parameterID: .hapticIntensity, value: Float(strength))
-        let sharpness = CHHapticEventParameter(parameterID: .hapticSharpness, value: Float(strength))
-        let event = CHHapticEvent(eventType: .hapticTransient, parameters: [intensity, sharpness], relativeTime: 0)
-        events.append(event)
-
+        // Create a pattern and player, then play the haptic
         do {
-            let pattern = try CHHapticPattern(events: events, parameters: [])
+            let pattern = try CHHapticPattern(events: [event], parameters: [])
             let player = try hapticEngine.makePlayer(with: pattern)
             try player.start(atTime: 0)
         } catch {

@@ -60,9 +60,7 @@ struct GameView: View {
 
                 HStack {
                     PauseButton {
-                        showPauseMenu = true
-                        gameScene.pauseGame()
-                        gameScene.isPaused = true
+                        pauseGame()
                     }
                 }
                 .padding(.top, 24)
@@ -76,6 +74,15 @@ struct GameView: View {
                 PauseMenu(showPauseMenu: $showPauseMenu, gameScene: $gameScene)
             }
         }
+        .onReceive(NotificationCenter.default.publisher(for: .gameDidAutoPause)) { _ in
+            pauseGame()
+        }
+    }
+    
+    private func pauseGame() {
+        self.showPauseMenu = true
+        self.gameScene.pauseGame()
+        self.gameScene.isPaused = true
     }
 }
 

@@ -1,6 +1,12 @@
 import SpriteKit
 import GameplayKit
 
+enum GamePhase {
+    case tutorial
+    case playing
+    case gameOver
+}
+
 class GameScene: SKScene, SKPhysicsContactDelegate {
     // MARK: - Properties
     var player: PlayerEntity?
@@ -26,13 +32,48 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     private var scoreTimer: Timer?
     private var internalScore: Int = 0
     
-    private var isGamePaused: Bool = false  // 👈 new flag
+    private static var isGamePaused: Bool = false
     
     private var lastDistanceBonusScore = 0
     private var lastSpeedFactor: Double = 1.0
+    private var lastSpeedFactor2: Double = 1.0
+    
+    private var tutorialManager: TutorialManager?
+    private(set) var gamePhase: GamePhase = .tutorial
+//    private static var isFirstLaunch = true
+    
+    private var playerData: PlayerData!
     
     // MARK: - Scene Lifecycle (Initializers)
     override func didMove(to view: SKView) {
+        NotificationCenter.default.addObserver(self, selector: #selector(appWillResignActive), name: UIApplication.willResignActiveNotification, object: nil)
+        setupGame()
+        
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(savePlayerData),
+            name: UIApplication.willTerminateNotification,
+            object: nil
+        )
+
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(savePlayerData),
+            name: UIApplication.didEnterBackgroundNotification,
+            object: nil
+        )
+
+    }
+    
+    private func setupGame() {
+        // Reset properties
+        internalScore = 0
+        lastDistanceBonusScore = 0
+        gameSpeed = baseGameSpeed
+        
+        playerData = SaveManager.shared.load()
+        
+        // Basic scene setup
         backgroundColor = SKColor(white: 0.2, alpha: 1.0)
         physicsWorld.gravity = CGVector(dx: 0, dy: customGravity)
         physicsWorld.contactDelegate = self
@@ -44,15 +85,53 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         EffectsFactory.shared.initialize(with: self)
         
-        // Initialize and set up the world using the generator
         worldGenerator = WorldGenerator(scene: self)
-        worldGenerator?.setupEnvironment()
+        worldGenerator?.setupEnvironment() // This creates the ground and starts spawning
         
-//        setupScrollingBackground(imageNamed: "background")
-        startScoreTimer()
         createPlayer()
         createChaser()
         setupSwipeRecognizers()
+        
+        // 4. ADD THIS LOGIC TO START THE TUTORIAL OR THE GAME
+        if playerData.isFirstTimeInstall {
+            gamePhase = .tutorial
+            worldGenerator?.stopAllSpawning() // <-- STOPS spawning during tutorial
+//            GameScene.isFirstLaunch = false // Ensure tutorial only runs once
+            
+            tutorialManager = TutorialManager(scene: self)
+            // The tutorial manager will call endTutorial when it's done
+            tutorialManager?.start { [weak self] in
+                self?.endTutorial()
+            }
+        } else {
+            // If not the first launch, start the game directly
+            gamePhase = .playing
+            endTutorial() // This function now also starts the main game
+        }
+        
+        
+    }
+    
+    override func willMove(from view: SKView) {
+        super.willMove(from: view)
+        NotificationCenter.default.removeObserver(self)
+    }
+
+    @objc private func appWillResignActive() {
+        print("App is resigning active, pausing game.")
+        GameScene.isGamePaused = true
+        // 1. Pause the game's internal logic.
+        self.pauseGame()
+        
+        // 2. Broadcast the custom notification to anyone listening (like the GameView).
+        NotificationCenter.default.post(name: .gameDidAutoPause, object: nil)
+    }
+    
+    func endTutorial() {
+        playerData.isFirstTimeInstall = false
+        gamePhase = .playing
+        worldGenerator?.startProceduralSpawning()
+        startScoreTimer()
     }
     
     func startScoreTimer(resetScore: Bool = false) {
@@ -64,7 +143,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
 
         scoreTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
-            guard let self = self, !self.isGamePaused, let player = self.player else { return }
+            guard let self = self else { return }
+
+            // **THE FIX**: Check both the static flag AND the scene's own isPaused property.
+            // This is immune to the race condition.
+            guard !GameScene.isGamePaused && !self.isPaused, let player = self.player else { return }
 
             self.internalScore += 1
             self.scoreUpdateHandler?(self.internalScore)
@@ -77,12 +160,25 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
     
     override func update(_ currentTime: TimeInterval) {
+        if GameScene.isGamePaused {
+            // Immediately pause the game.
+            self.pauseGame()
+            
+            // Post the notification to show the SwiftUI HUD.
+            NotificationCenter.default.post(name: .gameDidAutoPause, object: nil)
+            
+            // Reset the flag so this only runs once.
+            GameScene.isGamePaused = false
+        }
+        
         guard let player = player else { return }
         self.lastUpdateTime = currentTime
         
         // Update player state
         let currentSurface = getSurfaceType()
         player.updateState(currentSurface: currentSurface)
+        
+        guard gamePhase == .playing else { return }
         
         // Remove projectiles that are off screen
         self.enumerateChildNodes(withName: "Projectile") { (node, stop) in
@@ -118,6 +214,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     // MARK: - SKPhysicsContactDelegate
     func didBegin(_ contact: SKPhysicsContact) {
 //        worldMoveDistance = self.size.width * 2
+        guard gamePhase == .playing else { return }
         
         var firstBody: SKPhysicsBody
         var secondBody: SKPhysicsBody
@@ -222,9 +319,22 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
     
     func gameOver() {
-        //        print("Matek")
+        gamePhase = .gameOver
+        
+        playerData.highScore = internalScore > playerData.highScore ? internalScore : playerData.highScore
+        playerData.coins += player?.coins ?? 0
+        
+        print(playerData.highScore)
+        
+        savePlayerData()
+        
+        // 1. Clear all nodes from the previous game (player, platforms, etc.).
+        self.removeAllChildren()
+        
+        // 2. Reset the score and update the HUD.
         scoreTimer?.invalidate()
         internalScore = 0
+        // You might not need to reset these if createPlayer() does it, but it's safe to do so.
         player?.coins = 0
         player?.hearts = 9
         player?.distance = 3
@@ -234,33 +344,25 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         healthUpdateHandler?(player?.hearts ?? 9)
         distanceUpdateHandler?(player?.distance ?? 3)
         
-        let newScene = GameScene(size: self.size)
-        newScene.scaleMode = self.scaleMode
-
-        // ✅ Pass current update handlers to the new scene
-        newScene.scoreUpdateHandler = self.scoreUpdateHandler
-        newScene.coinUpdateHandler = self.coinUpdateHandler
-        newScene.healthUpdateHandler = self.healthUpdateHandler
-        newScene.distanceUpdateHandler = self.distanceUpdateHandler
+        // 3. Call the setup function to rebuild and restart the game.
+        setupGame()
         
-        // ✅ Ensure new scene is not paused
-        newScene.isPaused = false
-        
-        let transition = SKTransition.fade(withDuration: 0.5)
-        self.view?.presentScene(newScene, transition: transition)
+        // 4. Ensure the game is unpaused.
+        self.isPaused = false
+        GameScene.isGamePaused = false
     }
     
     func pauseGame() {
-        guard !isGamePaused else { return }
-        isGamePaused = true
+        guard !GameScene.isGamePaused else { return }
+        GameScene.isGamePaused = true
         isPaused = true
         scoreTimer?.invalidate()
         scoreTimer = nil
     }
 
     func resumeGame() {
-        guard isGamePaused else { return }
-        isGamePaused = false
+        guard GameScene.isGamePaused else { return }
+        GameScene.isGamePaused = false
         isPaused = false
         startScoreTimer(resetScore: false)
     }
@@ -312,15 +414,27 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         lastSpeedFactor = newFactor
         print("current game speed: \(gameSpeed)")
         
+        worldGenerator?.updateAllNodeSpeedsToMatchGameSpeed()
+        
         worldGenerator?.stopAllSpawning()
         
         scene?.run(SKAction.sequence([
-                SKAction.wait(forDuration: 3),
+            SKAction.wait(forDuration: 2),
                 SKAction.run { [weak self] in
                     self?.worldGenerator?.startProceduralSpawning()
                 }
             ]))
     }
+    
+    @objc private func savePlayerData() {
+        SaveManager.shared.save(playerData)
+    }
+    
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+        savePlayerData()
+    }
+
     
 //    func setupScrollingBackground(imageNamed: String) {
 //        let texture = SKTexture(imageNamed: imageNamed)

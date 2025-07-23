@@ -110,12 +110,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 //    private func setupProperties() {
 //        physicsWorld.gravity = CGVector(dx: 0, dy: customGravity)
 //        physicsWorld.contactDelegate = self
-//        
+//
 //        let cameraNode = SKCameraNode()
 //        cameraNode.position = CGPoint(x: self.size.width / 2, y: self.size.height / 2)
 //        self.addChild(cameraNode)
 //        self.camera = cameraNode
-//        
+//
 //        playerData = SaveManager.shared.load()
 //        worldGenerator = WorldGenerator(scene: self)
 //    }
@@ -267,8 +267,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     // MARK: - SKPhysicsContactDelegate
     func didBegin(_ contact: SKPhysicsContact) {
         //        worldMoveDistance = self.size.width * 2
-        guard gamePhase == .playing else { return }
-        
+        guard gamePhase != .gameOver else { return }
+
         var firstBody: SKPhysicsBody
         var secondBody: SKPhysicsBody
         
@@ -297,6 +297,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     private func handlePlayerProjectileContact(projectileBody: SKPhysicsBody) {
         guard let projectileNode = projectileBody.node, let player = self.player else { return }
+        
+        if gamePhase == .tutorial {
+            tutorialManager?.playerDidFail()
+            projectileNode.removeFromParent()
+            return
+        }
         
         // The player's internal logic will decide whether to take damage or knock it away.
         player.handleProjectileHit(projectileNode: projectileNode)

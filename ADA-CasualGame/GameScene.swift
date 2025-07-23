@@ -16,6 +16,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     var worldGenerator: WorldGenerator?
 
     var backgrounds: [SKSpriteNode] = []
+    private var backgroundView: BackgroundView?
     
     var swipeUpRecognizer: UISwipeGestureRecognizer?
     var swipeDownRecognizer: UISwipeGestureRecognizer?
@@ -40,7 +41,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     private var tutorialManager: TutorialManager?
     private(set) var gamePhase: GamePhase = .tutorial
-//    private static var isFirstLaunch = true
+    private static var isFirstLaunch = true
     
     private var playerData: PlayerData!
     
@@ -71,10 +72,14 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         lastDistanceBonusScore = 0
         gameSpeed = baseGameSpeed
         
+        // Basic scene setup
+        backgroundView = BackgroundView(scene: self)
+        backgroundView?.setupScrollingBackground(imageNamed: "background")
+//        backgroundView?.spawnRandomClouds()
+        
         playerData = SaveManager.shared.load()
         
         // Basic scene setup
-        backgroundColor = SKColor(white: 0.2, alpha: 1.0)
         physicsWorld.gravity = CGVector(dx: 0, dy: customGravity)
         physicsWorld.contactDelegate = self
         
@@ -143,11 +148,13 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
 
         scoreTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
-            guard let self = self else { return }
+            
+            guard let self = self, !GameScene.isGamePaused && !self.isPaused, let player = self.player else { return }
 
             // **THE FIX**: Check both the static flag AND the scene's own isPaused property.
             // This is immune to the race condition.
-            guard !GameScene.isGamePaused && !self.isPaused, let player = self.player else { return }
+//            guard let self = self else { return }
+//            guard !GameScene.isGamePaused && !self.isPaused, let player = self.player else { return }
 
             self.internalScore += 1
             self.scoreUpdateHandler?(self.internalScore)
@@ -178,6 +185,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         let currentSurface = getSurfaceType()
         player.updateState(currentSurface: currentSurface)
         
+        backgroundView?.updateBackgroundPosition(gameSpeed: gameSpeed)
+        
         guard gamePhase == .playing else { return }
         
         // Remove projectiles that are off screen
@@ -201,20 +210,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         if let chaser = chaser {
             chaser.updateFollowPosition()
         }
-        
-//        for background in backgrounds {
-//            background.position.x -= CGFloat(gameSpeed * 0.016)  // adjust multiplier to your scroll speed
-//
-//            if background.position.x <= -background.size.width {
-//                background.position.x += background.size.width * 2
-//            }
-//        }
-        
-//        print(player.isInvincible)
     }
     
     // MARK: - SKPhysicsContactDelegate
     func didBegin(_ contact: SKPhysicsContact) {
+        //        worldMoveDistance = self.size.width * 2
         guard gamePhase == .playing else { return }
         
         var firstBody: SKPhysicsBody
@@ -260,6 +260,17 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     private func handlePlayerObstacleContact(obstacleBody: SKPhysicsBody) {
         guard let obstacleNode = obstacleBody.node, let player = self.player else { return }
+        
+        if gamePhase == .tutorial {
+            tutorialManager?.playerDidFail()
+            
+            // We remove the obstacle that was hit to clean up the scene for the retry.
+            obstacleNode.parent?.removeFromParent() // Use parent for complex obstacles
+            obstacleNode.removeFromParent()
+            
+            // Return early to prevent the player from taking damage during the tutorial.
+            return
+        }
         
         var nodeToHandle: SKNode = obstacleNode
         
@@ -405,7 +416,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         print("current game speed: \(gameSpeed)")
         
         worldGenerator?.updateAllNodeSpeedsToMatchGameSpeed()
-        
         worldGenerator?.stopAllSpawning()
         
         scene?.run(SKAction.sequence([
@@ -424,27 +434,4 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         NotificationCenter.default.removeObserver(self)
         savePlayerData()
     }
-
-    
-//    func setupScrollingBackground(imageNamed: String) {
-//        let texture = SKTexture(imageNamed: imageNamed)
-//
-//        for i in 0..<2 {
-//            let background = SKSpriteNode(texture: texture)
-//            background.anchorPoint = .zero
-//
-//            // Scale the height proportionally to scene height
-//            let scale = self.size.height / texture.size().height
-//            background.size = CGSize(
-//                width: texture.size().width * scale,
-//                height: self.size.height
-//            )
-//
-//            background.position = CGPoint(x: CGFloat(i) * background.size.width, y: 0)
-//            background.zPosition = -1
-//            background.name = "scrollingBackground"
-//            addChild(background)
-//            backgrounds.append(background)
-//        }
-//    }
 }

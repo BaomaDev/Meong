@@ -1,149 +1,180 @@
 import SpriteKit
 
+// 1. Define all the steps of the tutorial in an enum
+enum TutorialStep: CaseIterable {
+    case welcome
+    case teachJump
+    case teachDuck
+    case teachObstacles
+    case teachHighJump
+    case teachPlatforms
+    case finished
+
+    func next() -> TutorialStep? {
+        guard let currentIndex = Self.allCases.firstIndex(of: self) else { return nil }
+        let nextIndex = Self.allCases.index(after: currentIndex)
+        guard nextIndex < Self.allCases.endIndex else { return nil }
+        return Self.allCases[nextIndex]
+    }
+}
+
 class TutorialManager {
     private weak var scene: GameScene?
     private var completionHandler: (() -> Void)?
     private var messageNode: SKLabelNode?
+    
+    private var currentStep: TutorialStep = .welcome
+    private let advanceActionKey = "advanceTutorialAction"
 
     init(scene: GameScene) {
         self.scene = scene
     }
-
-    /// Starts the tutorial sequence.
-    /// - Parameter completion: A closure that will be called when the tutorial is finished.
+    
     func start(completion: @escaping () -> Void) {
         self.completionHandler = completion
-        runTutorialSequence()
+        presentCurrentStep()
     }
-
-    private func runTutorialSequence() {
+    
+    private func presentCurrentStep() {
         guard let scene = scene else { return }
+        
+        scene.removeAction(forKey: advanceActionKey)
+        cleanupTutorialNodes()
 
-        // Define the new sequence of tutorial steps
-        let sequence = SKAction.sequence([
-            // Welcome Message
-            SKAction.run { self.showMessage("Welcome! Let's learn the moves.") },
-            SKAction.wait(forDuration: 3.5),
+        switch currentStep {
+        case .welcome:
+            showMessage("Welcome! Let's learn the moves.")
+            let advance = SKAction.run { self.advance() }
+            let wait = SKAction.wait(forDuration: 3.5)
+            scene.run(SKAction.sequence([wait, advance]), withKey: advanceActionKey)
 
-            // 1. Teach Normal Jump (over a low obstacle)
-            SKAction.run { self.teachJump() },
-            SKAction.wait(forDuration: 4.0),
+        case .teachJump:
+            showMessage("Swipe UP to jump over obstacles.")
+            spawnObstacle(for: .teachJump)
+            waitForSuccess(duration: 4.0)
 
-            // 2. Teach Ducking
-            SKAction.run { self.teachDuck() },
-            SKAction.wait(forDuration: 4.0),
+        case .teachDuck:
+            showMessage("Swipe DOWN to duck under things.")
+            spawnObstacle(for: .teachDuck)
+            waitForSuccess(duration: 4.0)
             
-            // 3. Teach different obstacle interactions
-            SKAction.run { self.teachObstacles() },
-            SKAction.wait(forDuration: 6.0),
+        case .teachObstacles:
+            showMessage("Some obstacles you must DODGE, others you can STEP on.")
+            spawnObstacle(for: .teachObstacles)
+            waitForSuccess(duration: 6.0)
 
-            // 4. Teach High Jump (to land on a high platform)
-            SKAction.run { self.teachHighJump() },
-            SKAction.wait(forDuration: 5.0),
+        case .teachHighJump:
+            showMessage("Swipe UP HIGHER to land on tall platforms.")
+            spawnObstacle(for: .teachHighJump)
+            waitForSuccess(duration: 5.0)
 
-            // 5. Teach Semi-Solid Platforms & Dropping
-            SKAction.run { self.teachPlatforms() },
-            SKAction.wait(forDuration: 5.0),
+        case .teachPlatforms:
+            showMessage("You can land on these platforms too.")
+            spawnObstacle(for: .teachPlatforms)
+            // Add the follow-up message
+            scene.run(SKAction.sequence([
+                SKAction.wait(forDuration: 2.5),
+                SKAction.run { self.showMessage("Swipe DOWN on them to drop through.") }
+            ]))
+            waitForSuccess(duration: 5.5)
 
-            // End of Tutorial
-            SKAction.run { self.endTutorial() }
-        ])
-        scene.run(sequence)
+        case .finished:
+            endTutorial()
+        }
+    }
+    
+    // 5. This method is called from GameScene when the player hits an obstacle
+    func playerDidFail() {
+        print("Player failed step: \(currentStep). Retrying...")
+        // Immediately re-run the same step
+        presentCurrentStep()
+    }
+    
+    // Helper method to advance to the next state
+    private func advance() {
+        guard let nextStep = currentStep.next() else {
+            endTutorial()
+            return
+        }
+        currentStep = nextStep
+        presentCurrentStep()
     }
 
-    /// Displays a message on the screen.
-    private func showMessage(_ text: String, duration: TimeInterval = 3.0) {
-        guard let scene = scene, let camera = scene.camera else { return }
+    // Spawns the correct obstacle based on the current step
+    private func spawnObstacle(for step: TutorialStep) {
+        guard let scene = scene else { return }
         
-        messageNode?.removeFromParent()
+        switch step {
+        case .teachJump:
+            let obstaclePosition = CGPoint(x: scene.size.width + 100, y: groundHeight + 15)
+            let obstacle = SpawnFactory.createStepable(at: obstaclePosition)
+            obstacle.name = "TutorialObstacle"
+            scene.addChild(obstacle)
+        case .teachDuck:
+            let obstaclePosition = CGPoint(x: scene.size.width + 150, y: groundHeight + 30)
+            let obstacle = SpawnFactory.createDuckable(at: obstaclePosition)
+            obstacle.name = "TutorialObstacle"
+            scene.addChild(obstacle)
+        case .teachObstacles:
+            let noTouchPosition = CGPoint(x: scene.size.width + 120, y: groundHeight + 15)
+            let noTouchObstacle = SpawnFactory.createNoTouch(at: noTouchPosition)
+            noTouchObstacle.name = "TutorialObstacle"
+            scene.addChild(noTouchObstacle)
+            
+            let stepablePosition = CGPoint(x: scene.size.width + 400, y: groundHeight + 15)
+            let stepableObstacle = SpawnFactory.createStepable(at: stepablePosition)
+            stepableObstacle.name = "TutorialObstacle"
+            scene.addChild(stepableObstacle)
+        case .teachHighJump:
+            let platformPosition = CGPoint(x: scene.size.width + 200, y: platformHeight)
+            let platformSize = CGSize(width: 300, height: platformThickness)
+            let tallPlatform = SpawnFactory.createSolidPlatform(at: platformPosition, size: platformSize)
+            tallPlatform.name = "TutorialObstacle"
+            scene.addChild(tallPlatform)
+        case .teachPlatforms:
+            let platformPosition = CGPoint(x: scene.size.width + 250, y: platformHeight)
+            let platformSize = CGSize(width: 400, height: platformThickness)
+            let platform = SpawnFactory.createSemiSolidPlatform(at: platformPosition, size: platformSize)
+            platform.name = "TutorialObstacle"
+            scene.addChild(platform)
+        default:
+            break
+        }
+    }
+    
+    private func cleanupTutorialNodes() {
+        scene?.children.forEach { node in
+            if node.name == "TutorialObstacle" {
+                node.removeFromParent()
+            }
+        }
+    }
+    
+    private func waitForSuccess(duration: TimeInterval) {
+        let wait = SKAction.wait(forDuration: duration)
+        let advance = SKAction.run { self.advance() }
+        scene?.run(SKAction.sequence([wait, advance]), withKey: advanceActionKey)
+    }
 
+    private func showMessage(_ text: String) {
+        guard let scene = scene, let camera = scene.camera else { return }
+        messageNode?.removeFromParent()
         let label = SKLabelNode(fontNamed: "Helvetica-Bold")
         label.text = text
         label.fontSize = 28
         label.fontColor = .white
         label.position = CGPoint(x: camera.position.x, y: camera.position.y + 100)
         label.zPosition = 100
-        label.alpha = 0
-
-        self.messageNode = label
+        messageNode = label
         scene.addChild(label)
-
-        let fadeIn = SKAction.fadeIn(withDuration: 0.5)
-        let wait = SKAction.wait(forDuration: duration - 1.0)
-        let fadeOut = SKAction.fadeOut(withDuration: 0.5)
-        let remove = SKAction.removeFromParent()
-        
-        label.run(SKAction.sequence([fadeIn, wait, fadeOut, remove]))
-    }
-
-    private func teachJump() {
-        guard let scene = scene else { return }
-        showMessage("Swipe UP to jump over obstacles.")
-        
-        // Spawn a low obstacle that requires a simple jump
-        let obstaclePosition = CGPoint(x: scene.size.width + 100, y: groundHeight + 15)
-        let obstacle = SpawnFactory.createStepable(at: obstaclePosition)
-        scene.addChild(obstacle)
-    }
-    
-    private func teachDuck() {
-        guard let scene = scene else { return }
-        showMessage("Swipe DOWN to duck under things.")
-        
-        // Spawn an obstacle that must be ducked under
-        let obstaclePosition = CGPoint(x: scene.size.width + 150, y: groundHeight + 30)
-        let obstacle = SpawnFactory.createDuckable(at: obstaclePosition)
-        scene.addChild(obstacle)
-    }
-    
-    private func teachObstacles() {
-        guard let scene = scene else { return }
-        showMessage("Some obstacles you must DODGE, others you can STEP on.")
-
-        // Spawn a "NoTouch" obstacle that must be avoided entirely
-        let noTouchPosition = CGPoint(x: scene.size.width + 120, y: groundHeight + 15)
-        let noTouchObstacle = SpawnFactory.createNoTouch(at: noTouchPosition)
-        scene.addChild(noTouchObstacle)
-        
-        // Spawn a "Stepable" obstacle shortly after
-        let stepablePosition = CGPoint(x: scene.size.width + 400, y: groundHeight + 15)
-        let stepableObstacle = SpawnFactory.createStepable(at: stepablePosition)
-        scene.addChild(stepableObstacle)
-    }
-
-    private func teachHighJump() {
-        guard let scene = scene else { return }
-        showMessage("Swipe UP HIGHER to land on tall platforms.")
-        
-        // Spawn a tall, solid platform that requires a high jump to reach
-        let platformPosition = CGPoint(x: scene.size.width + 200, y: platformHeight)
-        let platformSize = CGSize(width: 300, height: platformThickness)
-        let tallPlatform = SpawnFactory.createSolidPlatform(at: platformPosition, size: platformSize)
-        scene.addChild(tallPlatform)
-    }
-    
-    private func teachPlatforms() {
-        guard let scene = scene else { return }
-        showMessage("You can land on these platforms too.")
-        
-        // Spawn a semi-solid platform for the player to land on
-        let platformPosition = CGPoint(x: scene.size.width + 250, y: platformHeight)
-        let platformSize = CGSize(width: 400, height: platformThickness)
-        let platform = SpawnFactory.createSemiSolidPlatform(at: platformPosition, size: platformSize)
-        scene.addChild(platform)
-
-        // Show a follow-up message about dropping down
-        let dropMessageAction = SKAction.sequence([
-            SKAction.wait(forDuration: 2),
-            SKAction.run {
-                self.showMessage("Swipe DOWN on them to drop through.")
-            }
-        ])
-        scene.run(dropMessageAction)
     }
 
     private func endTutorial() {
-        showMessage("Good luck!", duration: 2.0)
-        completionHandler?()
+        cleanupTutorialNodes()
+        showMessage("Good luck!")
+        // Use a slight delay before calling the completion handler to let the message show
+        let wait = SKAction.wait(forDuration: 2.0)
+        let complete = SKAction.run { self.completionHandler?() }
+        scene?.run(SKAction.sequence([wait, complete]))
     }
 }

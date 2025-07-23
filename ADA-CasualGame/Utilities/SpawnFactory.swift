@@ -143,9 +143,9 @@ class SpawnFactory {
     }
     
     static func createMoving(at position: CGPoint) -> SKSpriteNode {
-        let textureName = Bool.random() ? "bajaj" : "gojek"
-        let texture = SKTexture(imageNamed: textureName)
-        let desiredSize = CGSize(width: 80, height: 80)
+        let textureName = Bool.random() ? "Chicken" : "gojek"
+        let texture = SKTexture(imageNamed: "Chicken")
+        let desiredSize = CGSize(width: 50, height: 50)
         let moving = SKSpriteNode(texture: texture, color: .clear, size: desiredSize)
         
         moving.name = textureName
@@ -211,7 +211,14 @@ class SpawnFactory {
     }
     
     static func createStepable(at position: CGPoint) -> Stepable {
-        let stepable = Stepable(texture: nil, color: .blue, size: CGSize(width: 60, height: 30))
+        let texture = SKTexture(imageNamed: "Tong")
+        
+        let targetWidth: CGFloat = 50
+        let aspectRatio = texture.size().height / texture.size().width
+        let targetHeight = targetWidth * aspectRatio
+        let size = CGSize(width: targetWidth, height: targetHeight)
+        let stepable = Stepable(texture: texture, color: .clear, size: size)
+        
         stepable.name = "Stepable"
         stepable.position = position
         stepable.userData = ["obstacleType": "stepable"]

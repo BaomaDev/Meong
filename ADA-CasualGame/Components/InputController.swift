@@ -32,7 +32,7 @@ extension GameScene {
             let swipeThreshold: CGFloat = 30.0
             
             // ✅ Intercept swipes during catnip mode
-            if player.isInCatnipMode {
+            if player.currentState == .flying {
                 let targetY: CGFloat
                 if deltaY < -swipeThreshold {
                     // Swipe up → go to Y = 280

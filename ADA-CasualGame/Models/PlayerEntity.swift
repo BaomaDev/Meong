@@ -26,13 +26,12 @@ class PlayerEntity: SKSpriteNode {
     var distance: Int = 3
     var hearts: Int = 9
     var coins: Int = 0
-    
+
     var isInvincible: Bool = false
-    var isInCatnipMode: Bool = false
     
     // Particles
-    private var lastRunParticleTime: TimeInterval = 0
-    private let runParticleInterval: TimeInterval = 0.5
+    var lastParticleTime: TimeInterval = 0
+    let particleInterval: TimeInterval = 0.05
     
     // MARK: - Initialization
     static func create(at position: CGPoint) -> PlayerEntity {
@@ -73,7 +72,8 @@ class PlayerEntity: SKSpriteNode {
         GameState.shared.playerDistance = newDistance
     }
     
-    func handleProjectileHit() {
+    func handleProjectileHit(projectileNode: SKNode) {
+        knockAway(node: projectileNode)
         guard !isInvincible else { return }
         
         hearts -= 1
@@ -109,7 +109,8 @@ class PlayerEntity: SKSpriteNode {
         //        print("Player was hit by a projectile!")
     }
     
-    func handleObstacleHit() {
+    func handleObstacleHit(obstacleNode: SKNode) {
+        knockAway(node: obstacleNode)
         guard !isInvincible else { return }
 
         hearts -= 1
@@ -153,16 +154,15 @@ class PlayerEntity: SKSpriteNode {
     }
     
     func applyCatnip() {
+        let isInCatnipMode = currentState == .flying
         guard !isInCatnipMode else { return }
-        isInCatnipMode = true
+        currentState = .flying
         isInvincible = true
 
-        // --- NEW: Restore player's visual and physics state BEFORE applying catnip effects ---
         // This ensures the player is not stuck in a blinking, stretched, or ducked state.
         self.removeAllActions() // Stop any ongoing visual animations (like blinking or stretching)
         self.alpha = 1.0        // Ensure player is fully visible
         restoreOriginalShape()  // Reset size and physics body to default
-        // --- END NEW ---
 
         // Modify physics and game settings
         gameSpeed *= 2.0
@@ -192,7 +192,7 @@ class PlayerEntity: SKSpriteNode {
                 // Clean up catnip specific actions/states
                 self.removeAction(forKey: "catnipModeSequence") // Remove the sequence itself
                 self.isInvincible = false
-                self.isInCatnipMode = false
+                self.currentState = .airborne
                 gameSpeed /= 2.0
                 
                 // Restore original physics and visual state
@@ -204,5 +204,24 @@ class PlayerEntity: SKSpriteNode {
         ])
 
         self.run(catnipTimer, withKey: "catnipModeSequence")
+    }
+    
+    private func knockAway(node: SKNode) {
+        // 1. Change the physics so the object can fly freely.
+        node.physicsBody?.collisionBitMask = PhysicsCategory.none
+        node.physicsBody?.contactTestBitMask = PhysicsCategory.none
+        node.physicsBody?.affectedByGravity = true
+        
+        // 2. Apply a strong upward and rightward impulse to send it flying off-screen.
+        let knockbackImpulse = CGVector(dx: 150, dy: 300)
+        node.physicsBody?.applyImpulse(knockbackImpulse)
+        
+        // 3. Apply a comical rotation effect.
+        let spinAction = SKAction.repeatForever(SKAction.rotate(byAngle: .pi * 2, duration: 0.5))
+        node.run(spinAction)
+        
+        // TODO: Play knock sound effect
+        
+        // The existing cleanup logic in GameScene's update() will remove the node once it's off-screen.
     }
 }

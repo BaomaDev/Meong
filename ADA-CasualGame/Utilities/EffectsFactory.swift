@@ -6,6 +6,7 @@ class EffectsFactory {
     // MARK: - Assets
     private let groundParticleTextures = ["dirt_01", "dirt_02", "dirt_03"]
     private let platformParticleTextures = ["smoke_01", "smoke_02", "smoke_03"]
+    private let starParticleTextures = ["star_01", "star_02", "star_03"]
     
     // MARK: - Singleton Instance
     static let shared = EffectsFactory()
@@ -178,76 +179,75 @@ class EffectsFactory {
     }
     
     // MARK: - Particle Handler
-    /// - Parameters:
-    ///   - at: The position where the effect should spawn.
-    ///   - surfaceType: The type of surface, used to determine the particle color.
-    ///   - amount: The number of particles to emit.
-    func createParticleEffect(at position: CGPoint, amount: Int, surfaceType: SurfaceType) {
-        guard let scene = scene else { return }
-        
-        var textureName: String?
+    func createParticleEffect(at position: CGPoint, key: String, amount: Int) {
+            guard let scene = scene else { return }
+            
+            let emitter = SKEmitterNode()
+            emitter.position = position
+            emitter.numParticlesToEmit = amount
+            emitter.zPosition = -1
+            emitter.particlePositionRange = CGVector(dx: playerHitboxWidth, dy: 0)
+            
+            // --- Customize particle appearance and behavior based on the key ---
+            switch key {
+            case "dirt":
+                let initialSize: CGFloat = 0.05
+                
+                emitter.particleTexture = SKTexture(imageNamed: groundParticleTextures.randomElement() ?? "dirt_01")
+                emitter.particleColor = .brown
+                emitter.particleColorBlendFactor = 0.8
+                emitter.particleLifetime = 0.6
+                emitter.particleSpeed = 80
+                emitter.emissionAngleRange = .pi / 8
+                emitter.xAcceleration = -gameSpeed
+                emitter.yAcceleration = -150
 
-        // Select a random texture name based on the surface type.
-        switch surfaceType {
-        case .ground:
-            textureName = groundParticleTextures.randomElement()
-        case .semiSolidPlatform, .solidPlatform:
-            textureName = platformParticleTextures.randomElement()
-        case .none:
-            return
-        }
-        
-        guard let selectedTextureName = textureName else {
-            print("Warning: Could not select a particle texture for surface type \(surfaceType).")
-            return
-        }
+                emitter.particleScaleSequence = SKKeyframeSequence(keyframeValues: [initialSize, initialSize * 0.2], times: [0, 1])
+                
+            case "smoke":
+                let initialSize: CGFloat = 0.1
 
-        let particleTexture = SKTexture(imageNamed: selectedTextureName)
-        let emitter = SKEmitterNode()
-        let spawnRadius = 20.0
-        emitter.particleTexture = particleTexture
-        
-        emitter.position = position
-        emitter.numParticlesToEmit = amount
-        
-        // --- Color Logic ---
-        switch surfaceType {
-        case .ground:
-            emitter.particleColor = .brown
-            emitter.particleColorBlendFactor = 0.8
-        case .semiSolidPlatform, .solidPlatform:
-            emitter.particleColor = .lightGray
-            emitter.particleColorBlendFactor = 1.0
-        case .none:
-            emitter.particleColor = .lightGray
-            emitter.particleColorBlendFactor = 1.0
-        }
-        
-        // --- Particle Behavior ---
-        emitter.zPosition = 10
-        emitter.particleLifetime = 0.5
-        emitter.particleBirthRate = 200
-        emitter.particleSpeed = 100
-        emitter.particleSpeedRange = 50
-        emitter.emissionAngle = .pi / 2 // Still points straight up on average
-        
-        emitter.particlePositionRange = CGVector(dx: spawnRadius, dy: spawnRadius/2)
-        emitter.emissionAngleRange = .pi / 2
-        
-        // **MODIFIED**: Apply a constant acceleration to the left to simulate being "left behind".
-        emitter.xAcceleration = -gameSpeed
-        emitter.yAcceleration = -200
-        
-        // --- Fading and Scaling ---
-        emitter.particleAlpha = 0.8
-        emitter.particleAlphaSequence = SKKeyframeSequence(keyframeValues: [0.8, 0], times: [0, 1])
-        emitter.particleScaleSequence = SKKeyframeSequence(keyframeValues: [0.1, 0.01], times: [0, 1])
+                emitter.particleTexture = SKTexture(imageNamed: platformParticleTextures.randomElement() ?? "smoke_01")
+                emitter.particleColor = SKColor(named: "DustColor") ?? .lightGray
+                emitter.particleColorBlendFactor = 0.35
+                emitter.particleLifetime = 0.5
+                emitter.particleSpeed = 100
+                emitter.emissionAngleRange = .pi / 8
+                emitter.xAcceleration = -gameSpeed
+                emitter.yAcceleration = -200
+                
+                emitter.particleScaleSequence = SKKeyframeSequence(keyframeValues: [initialSize, initialSize * 0.2], times: [0, 1])
+                
+            case "star":
+                let initialSize: CGFloat = 0.1
 
-        // --- Cleanup ---
-        let waitAction = SKAction.wait(forDuration: 1.5)
-        let removeAction = SKAction.removeFromParent()
-        
-        scene.addChild(emitter)
-        emitter.run(SKAction.sequence([waitAction, removeAction]))
-    }
+                emitter.particleTexture = SKTexture(imageNamed: starParticleTextures.randomElement() ?? "star_01")
+                emitter.particleLifetime = 1.0
+                emitter.particleSpeed = 0
+                emitter.xAcceleration = -gameSpeed
+                emitter.yAcceleration = 0
+                emitter.particleScaleSequence = SKKeyframeSequence(keyframeValues: [initialSize, initialSize * 0.7], times: [0, 1]) // Shrinks less
+                
+                let rainbowColors: [SKColor] = [.red, .orange, .yellow, .green, .blue, .purple]
+                let keyframeTimes: [NSNumber] = [0.0, 0.2, 0.4, 0.6, 0.8, 1.0]
+                emitter.particleColorSequence = SKKeyframeSequence(keyframeValues: rainbowColors, times: keyframeTimes)
+                emitter.particleColorBlendFactor = 1.0
+                emitter.particleBlendMode = .add
+                
+            default:
+                print("Warning: Unknown particle key '\(key)'")
+                return
+            }
+            
+            // --- Common Properties ---
+            emitter.particleBirthRate = 200
+            emitter.particleAlphaSequence = SKKeyframeSequence(keyframeValues: [0.8, 0], times: [0, 1])
+            
+            // --- Cleanup ---
+            let waitAction = SKAction.wait(forDuration: 1.5)
+            let removeAction = SKAction.removeFromParent()
+            
+            scene.addChild(emitter)
+            emitter.run(SKAction.sequence([waitAction, removeAction]))
+        }
 }

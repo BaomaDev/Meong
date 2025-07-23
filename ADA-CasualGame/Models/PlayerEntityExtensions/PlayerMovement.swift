@@ -141,7 +141,7 @@ extension PlayerEntity {
     }
     
     private func performDive() {
-        guard !isInCatnipMode else { return }
+        guard !(currentState == .flying) else { return }
         
         guard isCloseToGround() == false else {
             self.queuedAction = .duck
@@ -236,6 +236,21 @@ extension PlayerEntity {
         
         let particlePosition = CGPoint(x: self.position.x, y: self.position.y - self.size.height / 2)
         
+        // Ignore landing / jumping logic when flying
+        if currentState == .flying {
+            if let scene = self.scene as? GameScene {
+                // Check if the interval has passed since the last star was released.
+                if scene.lastUpdateTime - lastParticleTime > particleInterval {
+                    // Update the timer to now.
+                    lastParticleTime = scene.lastUpdateTime
+                    
+                    // Call the factory to create a single star particle at the player's center.
+                    EffectsFactory.shared.createParticleEffect(at: self.position, key: "star", amount: 1)
+                }
+            }
+            return
+        }
+        
         // If a duck command is queued, perform that first.
         if self.currentState != .ducking && self.queuedAction == .duck {
             if self.currentState == .airborne { // Override checking
@@ -247,20 +262,30 @@ extension PlayerEntity {
             return
         }
         
-        if currentSurface.isGrounded && !previousSurface.isGrounded {
-            // Check HOW we landed.
+        let isLanding = currentSurface.isGrounded && !previousSurface.isGrounded
+        if isLanding {
+            let onGround = currentSurface == .ground
+            let surfaceKey = onGround ? "dirt" : "smoke"
+            var amount: Int
             if previousState == .diving {
                 hardLanding()
-                EffectsFactory.shared.createParticleEffect(at: particlePosition, amount: 4, surfaceType: currentSurface)
+                amount = onGround ? 8 : 4
             } else {
                 softLanding()
-                EffectsFactory.shared.createParticleEffect(at: particlePosition, amount: 2, surfaceType: currentSurface)
+                amount = onGround ? 4 : 2
             }
+            EffectsFactory.shared.createParticleEffect(at: particlePosition, key: surfaceKey, amount: amount)
             canJump = true
             
-        } else if !currentSurface.isGrounded && previousSurface.isGrounded {
+        }
+       
+        let isJumping = !currentSurface.isGrounded && previousSurface.isGrounded
+        if isJumping {
             handleGoingAirborne()
-            EffectsFactory.shared.createParticleEffect(at: particlePosition, amount: 2, surfaceType: currentSurface)
+            let fellFromPlatform = currentSurface == .none && previousSurface.isPlatform
+            if fellFromPlatform {  // No effects when dropping off
+                EffectsFactory.shared.createParticleEffect(at: particlePosition, key: "smoke", amount: 2)
+            }
         }
         
         self.currentSurface = currentSurface

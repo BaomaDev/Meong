@@ -209,17 +209,17 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 //                background.position.x += background.size.width * 2
 //            }
 //        }
+        
+//        print(player.isInvincible)
     }
     
     // MARK: - SKPhysicsContactDelegate
     func didBegin(_ contact: SKPhysicsContact) {
-//        worldMoveDistance = self.size.width * 2
         guard gamePhase == .playing else { return }
         
         var firstBody: SKPhysicsBody
         var secondBody: SKPhysicsBody
         
-        // Order the bodies by their category bitmask for consistent checks
         if contact.bodyA.categoryBitMask < contact.bodyB.categoryBitMask {
             firstBody = contact.bodyA
             secondBody = contact.bodyB
@@ -227,87 +227,77 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             firstBody = contact.bodyB
             secondBody = contact.bodyA
         }
-        
-        // Check for collision between player and projectile
-        if firstBody.categoryBitMask == PhysicsCategory.player && secondBody.categoryBitMask == PhysicsCategory.projectile {
-            player?.handleProjectileHit()
-            secondBody.node?.removeFromParent()
-            checkGameOver()
-        }
-        
-        // Check for collision between player and obstacle
-        if firstBody.categoryBitMask == PhysicsCategory.player && secondBody.categoryBitMask == PhysicsCategory.obstacle {
-            // Check what type of obstacle zone was hit
-            if let obstacleNode = secondBody.node {
-                if obstacleNode.name == "damageZone" {
-                    // This is a damage zone from stepable obstacle
-                    if let parentStepable = obstacleNode.parent as? Stepable {
-                        player?.handleObstacleHit()
-                        parentStepable.removeFromParent() // Remove the entire stepable obstacle
-                        
-                        // ✅ Notify UI about health change
-                        if let updatedHealth = player?.hearts {
-                            print("Health decreased to: \(updatedHealth)")
-                            healthUpdateHandler?(updatedHealth)
-                        }
 
-                        checkGameOver()
-                    }
-                } else if obstacleNode.name == "collisionZone" {
-                    // This is a collision zone from duckable obstacle
-                    if let parentDuckable = obstacleNode.parent as? Duckable {
-                        player?.handleObstacleHit()
-                        parentDuckable.removeFromParent() // Remove the entire duckable obstacle
-                        
-                        // ✅ Notify UI about health change
-                        if let updatedHealth = player?.hearts {
-                            print("Health decreased to: \(updatedHealth)")
-                            healthUpdateHandler?(updatedHealth)
-                        }
-
-                        checkGameOver()
-                    }
-                } else {
-                    // This is a regular obstacle (like NoTouch)
-                    player?.handleObstacleHit()
-                    secondBody.node?.removeFromParent()
-                    
-                    // ✅ Notify UI about health change
-                    if let updatedHealth = player?.hearts {
-                        print("Health decreased to: \(updatedHealth)")
-                        healthUpdateHandler?(updatedHealth)
-                    }
-                    checkGameOver()
-                }
+        // Delegate handling to specific functions based on the collision type
+        if firstBody.categoryBitMask == PhysicsCategory.player {
+            switch secondBody.categoryBitMask {
+            case PhysicsCategory.projectile:
+                handlePlayerProjectileContact(projectileBody: secondBody)
+            case PhysicsCategory.obstacle:
+                handlePlayerObstacleContact(obstacleBody: secondBody)
+            case PhysicsCategory.coin, PhysicsCategory.powerUp, PhysicsCategory.catnip:
+                handlePlayerCollectibleContact(collectibleBody: secondBody)
+            default:
+                break
             }
         }
+    }
+    
+    private func handlePlayerProjectileContact(projectileBody: SKPhysicsBody) {
+        guard let projectileNode = projectileBody.node, let player = self.player else { return }
         
-        // MARK: - Character and Coin Contact
-        if (firstBody.categoryBitMask == PhysicsCategory.player && secondBody.categoryBitMask == PhysicsCategory.coin) ||
-            (firstBody.categoryBitMask == PhysicsCategory.coin && secondBody.categoryBitMask == PhysicsCategory.player) {
-            
-            let coinBody = firstBody.categoryBitMask == PhysicsCategory.coin ? firstBody : secondBody
-            coinBody.node?.removeFromParent()
-            
+        // The player's internal logic will decide whether to take damage or knock it away.
+        player.handleProjectileHit(projectileNode: projectileNode)
+        
+        // If the player took damage (i.e., was NOT invincible), the projectile is removed here.
+        // If the player was invincible, the projectile is left in the scene to be knocked away.
+        if !player.isInvincible {
+            projectileNode.removeFromParent()
+        }
+        
+        checkGameOver()
+    }
+    
+    private func handlePlayerObstacleContact(obstacleBody: SKPhysicsBody) {
+        guard let obstacleNode = obstacleBody.node, let player = self.player else { return }
+        
+        var nodeToHandle: SKNode = obstacleNode
+        
+        // Determine the correct node to handle (the parent for complex obstacles)
+        if obstacleNode.name == "damageZone", let parent = obstacleNode.parent as? Stepable {
+            nodeToHandle = parent
+        } else if obstacleNode.name == "collisionZone", let parent = obstacleNode.parent as? Duckable {
+            nodeToHandle = parent
+        }
+        
+        // The player's internal logic will decide what to do.
+        player.handleObstacleHit(obstacleNode: nodeToHandle)
+        
+        // Only remove the node if the player was NOT invincible when the hit occurred.
+        if !player.isInvincible {
+            nodeToHandle.removeFromParent()
+        }
+        
+        // **THE FIX**: Access player.hearts directly since we know player exists.
+        healthUpdateHandler?(player.hearts)
+        
+        checkGameOver()
+    }
+    
+    private func handlePlayerCollectibleContact(collectibleBody: SKPhysicsBody) {
+        switch collectibleBody.categoryBitMask {
+        case PhysicsCategory.coin:
             player?.coins += 1
             coinUpdateHandler?(player?.coins ?? 0)
-        }
-        
-        // MARK: - Character and Power-Up Contact
-        if (firstBody.categoryBitMask == PhysicsCategory.player && secondBody.categoryBitMask == PhysicsCategory.powerUp) ||
-            (firstBody.categoryBitMask == PhysicsCategory.powerUp && secondBody.categoryBitMask == PhysicsCategory.player) {
-            let powerUpNode = firstBody.categoryBitMask == PhysicsCategory.powerUp ? firstBody.node : secondBody.node
-            powerUpNode?.removeFromParent()
-            
+            collectibleBody.node?.removeFromParent()
+        case PhysicsCategory.powerUp:
             player?.applyPowerUp()
-        }
-        
-        if (firstBody.categoryBitMask == PhysicsCategory.player && secondBody.categoryBitMask == PhysicsCategory.catnip) ||
-            (firstBody.categoryBitMask == PhysicsCategory.catnip && secondBody.categoryBitMask == PhysicsCategory.player) {
-            let catnipNode = firstBody.categoryBitMask == PhysicsCategory.catnip ? firstBody.node : secondBody.node
-            catnipNode?.removeFromParent()
-            
+            collectibleBody.node?.removeFromParent()
+        case PhysicsCategory.catnip:
             player?.applyCatnip()
+            collectibleBody.node?.removeFromParent()
+        default:
+            break
         }
     }
     

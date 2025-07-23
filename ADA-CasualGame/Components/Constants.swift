@@ -14,6 +14,8 @@ let playerHitboxHeight: CGFloat = 34
 
 // MARK: - Movement Variables
 let longSwipeTreshold = 150.0           // Min. distance for pan input to trigger high jump
+let shortSwipeTreshold = 50.0           // Strokes shorter than this will not be registered
+
 let defaultJumpHeight: CGFloat = 120
 let defaultJumpDistance: CGFloat = 300
 let diveForce: CGFloat = 100            // Downward force applied during dive command
@@ -45,6 +47,7 @@ enum PlayerState {
     case diving
     case parrying
     case landing
+    case flying
 }
 
 enum MovementAction {
@@ -76,6 +79,10 @@ enum SurfaceType {
     
     var isGrounded: Bool {  // Variable used for control logic (grouped into is grounded / is falling
         return self != .none
+    }
+    
+    var isPlatform: Bool {
+        return self == .semiSolidPlatform || self == .solidPlatform
     }
 }
 

@@ -150,6 +150,14 @@ class TutorialManager {
         }
     }
     
+    private func cleanupTutorialMessageNodes() {
+        scene?.children.forEach { node in
+            if node.name == "TutorialMessage" {
+                node.removeFromParent()
+            }
+        }
+    }
+    
     private func waitForSuccess(duration: TimeInterval) {
         let wait = SKAction.wait(forDuration: duration)
         let advance = SKAction.run { self.advance() }
@@ -165,6 +173,7 @@ class TutorialManager {
         label.fontColor = .white
         label.position = CGPoint(x: camera.position.x, y: camera.position.y + 100)
         label.zPosition = 100
+        label.name = "TutorialMessage"
         messageNode = label
         scene.addChild(label)
     }
@@ -175,6 +184,7 @@ class TutorialManager {
         // Use a slight delay before calling the completion handler to let the message show
         let wait = SKAction.wait(forDuration: 2.0)
         let complete = SKAction.run { self.completionHandler?() }
-        scene?.run(SKAction.sequence([wait, complete]))
+        let removeMessage = SKAction.run { self.cleanupTutorialNodes()}
+        scene?.run(SKAction.sequence([wait, removeMessage, complete]))
     }
 }

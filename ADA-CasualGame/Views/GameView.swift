@@ -19,6 +19,7 @@ struct GameView: View {
         scene.scaleMode = .resizeFill
         return scene
     }()
+    @State private var gamePhase: GamePhase = .homeScreen
 
     var body: some View {
         ZStack {
@@ -37,33 +38,49 @@ struct GameView: View {
                     gameScene.healthUpdateHandler = { newHealth in
                         DispatchQueue.main.async { self.health = newHealth }
                     }
+                    gameScene.gameStateUpdateHandler = { self.gamePhase = $0 }
                 }
 
-                HStack {
+                switch gamePhase {
+                case .homeScreen:
+                    //Add UI in here
+                    EmptyView()
+                case .playing:
                     HStack {
-                        HealthBar(health: health)
-                        CoinIndicator(coinCount: coin)
+                        HStack {
+                            HealthBar(health: health)
+                            CoinIndicator(coinCount: coin)
+                        }
+                        Spacer()
                     }
-                    Spacer()
-                }
-                .padding(.top, 15)
+                    .padding(.top, 15)
 
-                HStack {
-                    Spacer()
-                    Text("\(score)")
-                        .font(.system(size: 32, weight: .bold))
-                        .foregroundColor(.white)
-                        .shadow(radius: 3)
-                    Spacer()
-                }
-                .padding(.top, 24)
-
-                HStack {
-                    PauseButton {
-                        pauseGame()
+                    HStack {
+                        Spacer()
+                        Text("\(score)")
+                            .font(.system(size: 32, weight: .bold))
+                            .foregroundColor(.white)
+                            .shadow(radius: 3)
+                        Spacer()
                     }
+                    .padding(.top, 24)
+
+                    HStack {
+                        PauseButton {
+                            pauseGame()
+                        }
+                    }
+                    .padding(.top, 24)
+                case .tutorial:
+                    HStack {
+                        PauseButton {
+                            pauseGame()
+                        }
+                    }
+                    .padding(.top, 24)
+                case .gameOver:
+                    EmptyView()
                 }
-                .padding(.top, 24)
             }
 
             if showPauseMenu {

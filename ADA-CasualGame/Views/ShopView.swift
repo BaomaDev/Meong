@@ -24,7 +24,7 @@ struct ShopView: View {
                 .onAppear {
                     shopScene.coinUpdateHandler = { self.coins = $0 }
                     shopScene.costumePurchasedHandler = { self.purchasedCostumes = $0 }
-                    shopScene.selectedCostumeHandle = { self.selectedCostume = $0 }
+                    shopScene.selectedCostumeHandler = { self.selectedCostume = $0 }
                 }
         }
         

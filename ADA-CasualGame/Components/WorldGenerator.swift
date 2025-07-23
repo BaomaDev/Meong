@@ -115,8 +115,9 @@ class WorldGenerator {
 
     private func createGround() {
         guard let scene = scene else { return }
+        let texture = SKTexture(imageNamed: "ground")
         let groundSize = CGSize(width: scene.size.width, height: groundHeight)
-        let ground = SKSpriteNode(color: .gray, size: groundSize)
+        let ground = SKSpriteNode(texture: texture, color: .gray, size: groundSize)
         ground.position = CGPoint(x: scene.size.width / 2, y: groundSize.height / 2)
         ground.physicsBody = SKPhysicsBody(rectangleOf: ground.size)
         ground.physicsBody?.isDynamic = false

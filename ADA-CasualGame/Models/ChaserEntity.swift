@@ -13,12 +13,12 @@ class ChaserEntity: SKSpriteNode {
     weak var player: PlayerEntity?
 
     init(player: PlayerEntity) {
-        let texture = SKTexture(imageNamed: "emak")
+        let texture = SKTexture(imageNamed: "Mak_Intro_00000")
 
         // Target width (for example)
-        let targetWidth: CGFloat = 80
+        let targetWidth: CGFloat = 110
         let aspectRatio = texture.size().height / texture.size().width
-        let targetHeight = targetWidth * aspectRatio
+        let targetHeight : CGFloat = 110
 
         super.init(texture: texture, color: .clear, size: CGSize(width: targetWidth, height: targetHeight))  // ✅ calculated size
 
@@ -49,6 +49,34 @@ class ChaserEntity: SKSpriteNode {
         let newY = currentPosition.y + (targetY - currentPosition.y) * lerpFactor
 
         self.position = CGPoint(x: newX, y: newY)
+    }
+    
+    func startRunningAnimation() {
+        // Generate texture names based on your file naming
+        self.removeAllActions()
+        
+        let textureNames = (0...5).map { String(format: "Mak_Run_%05d", $0) }
+        let textures = textureNames.map { SKTexture(imageNamed: $0) }
+
+         // Create animation
+        let animation = SKAction.animate(with: textures, timePerFrame: 0.05, resize: false, restore: false)
+        let repeatAnimation = SKAction.repeatForever(animation)
+
+        self.run(repeatAnimation, withKey: "emakRunAnimation")
+    }
+    
+    func startIntroAnimation() {
+        // Generate texture names based on your file naming
+        self.removeAllActions()
+        
+        let textureNames = (0...23).map { String(format: "Mak_Intro_%05d", $0) }
+        let textures = textureNames.map { SKTexture(imageNamed: $0) }
+
+         // Create animation
+        let animation = SKAction.animate(with: textures, timePerFrame: 0.1, resize: false, restore: false)
+        let repeatAnimation = SKAction.repeatForever(animation)
+
+        self.run(repeatAnimation, withKey: "emakRunAnimation")
     }
 }
 

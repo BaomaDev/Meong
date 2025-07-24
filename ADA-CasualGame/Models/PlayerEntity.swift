@@ -35,7 +35,7 @@ class PlayerEntity: SKSpriteNode {
     
     // MARK: - Initialization
     static func create(at position: CGPoint) -> PlayerEntity {
-        let texture = SKTexture(imageNamed: "cat")
+        let texture = SKTexture(imageNamed: "CatRunning_00001")
         let playerSize = CGSize(width: playerHitboxWidth, height: playerHitboxHeight)
         let player = PlayerEntity(texture: texture, color: .clear, size: playerSize)
         player.name = "Player"
@@ -162,8 +162,12 @@ class PlayerEntity: SKSpriteNode {
         // This ensures the player is not stuck in a blinking, stretched, or ducked state.
         self.removeAllActions() // Stop any ongoing visual animations (like blinking or stretching)
         self.alpha = 1.0        // Ensure player is fully visible
-        restoreOriginalShape()  // Reset size and physics body to default
+        self.restoreOriginalShape2()  // Reset size and physics body to default
+        self.setScale(1.0)
 
+        // 🔽 Apply ducking animation here
+        startFlyingAnimation()
+        
         // Modify physics and game settings
         gameSpeed *= 2.0
         self.physicsBody?.affectedByGravity = false
@@ -190,7 +194,7 @@ class PlayerEntity: SKSpriteNode {
             SKAction.run { [weak self] in
                 guard let self = self else { return }
                 // Clean up catnip specific actions/states
-                self.removeAction(forKey: "catnipModeSequence") // Remove the sequence itself
+                self.removeAction(forKey: "catnipModeSequence")
                 self.isInvincible = false
                 self.currentState = .airborne
                 gameSpeed /= 2.0
@@ -198,8 +202,11 @@ class PlayerEntity: SKSpriteNode {
                 // Restore original physics and visual state
                 self.setupPhysics()
                 self.physicsBody?.affectedByGravity = true
-                self.alpha = 1.0 // Ensure alpha is reset if it wasn't already
-                self.restoreOriginalShape() // Crucial for resetting size after catnip
+                self.alpha = 1.0
+                self.restoreOriginalShape()
+                
+                // 🔁 Resume running animation
+                self.startRunningAnimation()
             }
         ])
 
@@ -223,5 +230,47 @@ class PlayerEntity: SKSpriteNode {
         // TODO: Play knock sound effect
         
         // The existing cleanup logic in GameScene's update() will remove the node once it's off-screen.
+    }
+    
+    func startRunningAnimation() {
+        // Generate texture names based on your file naming
+        self.removeAllActions()
+        
+        let textureNames = (1...12).map { String(format: "CatRunning_%05d", $0) }
+        let textures = textureNames.map { SKTexture(imageNamed: $0) }
+
+         // Create animation
+        let animation = SKAction.animate(with: textures, timePerFrame: 0.05, resize: false, restore: false)
+        let repeatAnimation = SKAction.repeatForever(animation)
+
+        self.run(repeatAnimation, withKey: "runAnimation")
+    }
+    
+    func startDuckingAnimation() {
+        // Generate texture names based on your file naming
+        self.removeAllActions()
+        
+        let textureNames = (0...14).map { String(format: "CatDucking_%05d", $0) }
+        let textures = textureNames.map { SKTexture(imageNamed: $0) }
+
+         // Create animation
+        let animation = SKAction.animate(with: textures, timePerFrame: 0.05, resize: false, restore: false)
+        let repeatAnimation = SKAction.repeatForever(animation)
+
+        self.run(repeatAnimation, withKey: "duckAnimation")
+    }
+    
+    func startFlyingAnimation() {
+        // Generate texture names based on your file naming
+        self.removeAllActions()
+        
+        let textureNames = (0...59).map { String(format: "CatFlying_%05d", $0) }
+        let textures = textureNames.map { SKTexture(imageNamed: $0) }
+
+         // Create animation
+        let animation = SKAction.animate(with: textures, timePerFrame: 0.05, resize: false, restore: false)
+        let repeatAnimation = SKAction.repeatForever(animation)
+
+        self.run(repeatAnimation, withKey: "flyingAnimation")
     }
 }

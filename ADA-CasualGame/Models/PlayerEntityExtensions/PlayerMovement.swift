@@ -57,10 +57,10 @@ extension PlayerEntity {
         let isJumping = !currentSurface.isGrounded && previousSurface.isGrounded
         if isJumping {
             handleGoingAirborne()
-            let fellFromPlatform = currentSurface == .none && previousSurface.isPlatform
-            if fellFromPlatform {  // No effects when dropping off
-                EffectsFactory.shared.createParticleEffect(at: particlePosition, key: "smoke", amount: 2)
-            }
+//            let fellFromPlatform = currentSurface == .none && previousSurface.isPlatform
+//            if fellFromPlatform {  // No effects when dropping off
+//                EffectsFactory.shared.createParticleEffect(at: particlePosition, key: "smoke", amount: 2)
+//            }
         }
         
         self.currentSurface = currentSurface
@@ -100,7 +100,8 @@ extension PlayerEntity {
         } else if surfaceType == .semiSolidPlatform {
             surfaceKey = "spark"
             amount = 3
-            EffectsFactory.shared.playSound(soundKey: "electricity.mp3", volumeKey: 0.5)
+            EffectsFactory.shared.playSound(soundKey: "landing_wire.mp3", volumeKey: 1.0)
+//            EffectsFactory.shared.playSound(soundKey: "electricity.mp3", volumeKey: 0.15)
         } else {
             surfaceKey = "smoke"
             amount = 4
@@ -151,7 +152,8 @@ extension PlayerEntity {
             } else if surfaceType == .semiSolidPlatform {
                 surfaceKey = "spark"
                 amount = 1
-                EffectsFactory.shared.playSound(soundKey: "electricity.mp3", volumeKey: 0.25)
+                EffectsFactory.shared.playSound(soundKey: "landing_wire.mp3", volumeKey: 1.0)
+//                EffectsFactory.shared.playSound(soundKey: "electricity.mp3", volumeKey: 0.15)
             } else {
                 surfaceKey = "smoke"
                 amount = 2
@@ -319,21 +321,24 @@ extension PlayerEntity {
     private func performDuck() {
         self.currentState = .ducking
         self.canDuck = false
-        
-        let adjustY = CGFloat(-playerHitboxHeight / 4)
-        applyHorizontalMovementTransformation(withYAdjustment: adjustY)
-        
+
+        // ✅ Play duck animation here
+        startDuckingAnimation()
+
+        // ✅ Play sound
         EffectsFactory.shared.playSound(soundKey: "duck.wav", volumeKey: 1.0)
-        
+
         // Restore after duration
         let wait = SKAction.wait(forDuration: 0.75)
         let restore = SKAction.run { [weak self] in
             guard let self = self else { return }
-            self.restoreOriginalShape(withYAdjustment: adjustY)
             self.currentState = .running
             self.canDuck = true
+
+            // ✅ Resume running animation
+            self.startRunningAnimation()
         }
-        
+
         run(SKAction.sequence([wait, restore]))
     }
     
@@ -486,6 +491,26 @@ extension PlayerEntity {
                                            duration: transformDuration)
         let moveAction = SKAction.moveBy(x: 0, y: adjustY, duration: transformDuration)
         
+        self.run(SKAction.group([resizeAction, moveAction]))
+    }
+    
+    func restoreOriginalShape2(withYAdjustment adjustY: CGFloat = 0) {
+        let originalSize = CGSize(width: playerHitboxWidth, height: playerHitboxHeight)
+
+        // 1. Restore the physics body
+        let physicsSize = CGSize(width: originalSize.width, height: originalSize.height)
+        self.physicsBody = SKPhysicsBody(rectangleOf: physicsSize)
+        setupPhysics()
+
+        // ✅ NEW: Reset scale so visuals go back to normal
+        self.setScale(1.0) // Resets xScale and yScale to default
+
+        // 2. Animate visual size restoration
+        let resizeAction = SKAction.resize(toWidth: originalSize.width,
+                                           height: originalSize.height,
+                                           duration: transformDuration)
+        let moveAction = SKAction.moveBy(x: 0, y: adjustY, duration: transformDuration)
+
         self.run(SKAction.group([resizeAction, moveAction]))
     }
 }

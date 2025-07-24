@@ -114,7 +114,7 @@ class WorldGenerator {
 
     private func createGround() {
         guard let scene = scene else { return }
-        let texture = SKTexture(imageNamed: "ground")
+        let texture = SKTexture(imageNamed: "Ground")
         let groundSize = CGSize(width: scene.size.width, height: groundHeight)
         let ground = SKSpriteNode(texture: texture, color: .gray, size: groundSize)
         ground.position = CGPoint(x: scene.size.width / 2, y: groundSize.height / 2)

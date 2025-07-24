@@ -27,6 +27,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     var lastUpdateTime: TimeInterval = 0
     
     var scoreUpdateHandler: ((Int) -> Void)?
+    var highscoreUpdateHandler: ((Int) -> Void)?
     var coinUpdateHandler: ((Int) -> Void)?
     var healthUpdateHandler: ((Int) -> Void)?
     var distanceUpdateHandler: ((Int) -> Void)?
@@ -104,29 +105,38 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         gamePhase = .homeScreen
         gameStateUpdateHandler?(gamePhase)
         
-        createPlayer(x: 20)
+        createPlayer(x: 10)
         createChaser()
-        
-        let startXChaser = size.width * 0.15  // ~15% from the left edge
-//        let startXPlayer = Float(50)  // ~15% from the left edge
-        let startY = size.height * 0.15
-        
-        chaser?.position = CGPoint(x: startXChaser, y: startY)
+
+        // Wait for next frame so layout and textures are fully applied
+        run(SKAction.wait(forDuration: 0.01)) { [weak self] in
+            guard let self = self, let chaser = self.chaser else { return }
+            let startXChaser = self.size.width * 0.15
+            let startY = self.size.height*0.2
+            chaser.position = CGPoint(x: startXChaser, y: startY)
+        }
+
     }
     
     private func startGameAfterTap() {
         guard let player = player else { return }
-        
+        guard let chaser = chaser else { return }
+
         isWaitingForTapToStart = false
         tapToStartLabel?.removeFromParent()
         tapToStartLabel = nil
-      
+
+        // Disable constraints while animating
         player.constraints = nil
-        
-        let wait = SKAction.wait(forDuration: 0.5)
-        let move = SKAction.moveTo(x: 90, duration: 1)
-        move.timingMode = .easeIn
-        
+
+        // Step 1: Start chaser intro animation first
+        chaser.startIntroAnimation()
+
+        // Step 2: Move player slightly forward
+        let moveToStart = SKAction.moveTo(x: 90, duration: 1)
+        moveToStart.timingMode = .easeIn
+
+        // Step 3: Bezier path animation (player jumping over the chaser)
         let path = UIBezierPath()
         let startPoint = CGPoint(x: 90, y: 125)
         let endPoint = CGPoint(x: 200, y: 125)
@@ -134,23 +144,31 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 
         path.move(to: startPoint)
         path.addQuadCurve(to: endPoint, controlPoint: controlPoint)
+
         let jump = SKAction.follow(path.cgPath, asOffset: false, orientToPath: false, duration: 1)
         jump.timingMode = .easeInEaseOut
-        
-        let xConstraint = SKConstraint.positionX(SKRange(constantValue: 200))
-        
-        let code = SKAction.run { [weak self] in
+
+        // Step 4: Finalize game start
+        let finalizeStart = SKAction.run { [weak self] in
             guard let self = self else { return }
+
+            // Lock player in place to prevent drift
+            let xConstraint = SKConstraint.positionX(SKRange(constantValue: 200))
             player.constraints = [xConstraint]
+
+            // Change game state and start game logic
             self.gamePhase = .playing
             self.gameStateUpdateHandler?(self.gamePhase)
-            self.setupGame()
+
+            player.startRunningAnimation()
+            chaser.startRunningAnimation() // Start chase animation now
+
+            self.setupGame() // Starts score and spawning logic
         }
-        
-        let sequence = SKAction.sequence([move, wait, jump, code])
-        player.run(sequence) {
-            print("Player finished playing animation")
-        }
+
+        // Step 5: Sequence it all together
+        let fullSequence = SKAction.sequence([moveToStart, .wait(forDuration: 0.1), jump, finalizeStart])
+        player.run(fullSequence)
     }
     
     private func setupProperties() {
@@ -185,9 +203,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         if player == nil {
             createPlayer()
+            player?.startRunningAnimation()
         }
         if chaser == nil {
             createChaser()
+            chaser?.startRunningAnimation()
         }
         
         setupSwipeRecognizers()
@@ -264,12 +284,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         if GameScene.isGamePaused {
             // Immediately pause the game.
             self.pauseGame()
-            
-            // Post the notification to show the SwiftUI HUD.
-            NotificationCenter.default.post(name: .gameDidAutoPause, object: nil)
-            
-            // Reset the flag so this only runs once.
-            GameScene.isGamePaused = false
+            return
         }
         guard gamePhase == .playing || gamePhase == .tutorial else { return }
         guard let player = player else { return }
@@ -444,11 +459,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         isPaused = true
         scoreTimer?.invalidate()
         scoreTimer = nil
-        
         gamePhase = .gameOver
         gameStateUpdateHandler?(gamePhase)
         playerData.highScore = internalScore > playerData.highScore ? internalScore : playerData.highScore
         playerData.coins += player?.coins ?? 0
+        highscoreUpdateHandler?(playerData.highScore)
         
         print(playerData.highScore)
         
@@ -471,7 +486,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
     
     func pauseGame() {
-        guard !GameScene.isGamePaused else { return }
         GameScene.isGamePaused = true
         isPaused = true
         scoreTimer?.invalidate()

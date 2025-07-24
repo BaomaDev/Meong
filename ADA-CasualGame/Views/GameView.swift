@@ -12,6 +12,7 @@ struct GameView: View {
     @State private var score: Int = 0
     @State private var coin: Int = 0
     @State private var health: Int = 9
+    @State private var highScore: Int = 0
 
     @State private var showPauseMenu = false
     @State private var gameScene: GameScene = {
@@ -36,6 +37,7 @@ struct GameView: View {
                         DispatchQueue.main.async { self.health = newHealth }
                     }
                     gameScene.gameStateUpdateHandler = { self.gamePhase = $0 }
+                    gameScene.highscoreUpdateHandler = { self.highScore = $0 }
                 }
 
             if gamePhase == .playing || gamePhase == .tutorial {
@@ -83,6 +85,7 @@ struct GameView: View {
                 
                 GameoverView(
                     scoreCount: score,
+                    highscoreCount: highScore,
                     onRestart: {
                         gameScene.restart()
                     },
@@ -107,6 +110,6 @@ struct GameView: View {
     }
 }
 
-#Preview {
-    GameView()
-}
+//#Preview {
+//    GameView()
+//}

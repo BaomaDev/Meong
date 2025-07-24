@@ -13,7 +13,7 @@ struct PauseButton: View {
         Button(action: {
             onPause()
         }) {
-            Image("PauseButton")
+            Image("Pause")
                 .resizable()
                 .aspectRatio(contentMode: .fit)
                 .frame(width: 50)

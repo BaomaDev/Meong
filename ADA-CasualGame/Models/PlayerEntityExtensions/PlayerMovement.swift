@@ -57,10 +57,10 @@ extension PlayerEntity {
         let isJumping = !currentSurface.isGrounded && previousSurface.isGrounded
         if isJumping {
             handleGoingAirborne()
-            let fellFromPlatform = currentSurface == .none && previousSurface.isPlatform
-            if fellFromPlatform {  // No effects when dropping off
-                EffectsFactory.shared.createParticleEffect(at: particlePosition, key: "smoke", amount: 2)
-            }
+//            let fellFromPlatform = currentSurface == .none && previousSurface.isPlatform
+//            if fellFromPlatform {  // No effects when dropping off
+//                EffectsFactory.shared.createParticleEffect(at: particlePosition, key: "smoke", amount: 2)
+//            }
         }
         
         self.currentSurface = currentSurface
@@ -100,7 +100,8 @@ extension PlayerEntity {
         } else if surfaceType == .semiSolidPlatform {
             surfaceKey = "spark"
             amount = 3
-            EffectsFactory.shared.playSound(soundKey: "electricity.mp3", volumeKey: 0.5)
+            EffectsFactory.shared.playSound(soundKey: "landing_wire.mp3", volumeKey: 1.0)
+//            EffectsFactory.shared.playSound(soundKey: "electricity.mp3", volumeKey: 0.15)
         } else {
             surfaceKey = "smoke"
             amount = 4
@@ -151,7 +152,8 @@ extension PlayerEntity {
             } else if surfaceType == .semiSolidPlatform {
                 surfaceKey = "spark"
                 amount = 1
-                EffectsFactory.shared.playSound(soundKey: "electricity.mp3", volumeKey: 0.25)
+                EffectsFactory.shared.playSound(soundKey: "landing_wire.mp3", volumeKey: 1.0)
+//                EffectsFactory.shared.playSound(soundKey: "electricity.mp3", volumeKey: 0.15)
             } else {
                 surfaceKey = "smoke"
                 amount = 2

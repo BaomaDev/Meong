@@ -18,7 +18,7 @@ let shortSwipeTreshold = 50.0           // Strokes shorter than this will not be
 
 let defaultJumpHeight: CGFloat = 120
 let defaultJumpDistance: CGFloat = 350
-let diveForce: CGFloat = 100            // Downward force applied during dive command
+let diveForce: CGFloat = 150            // Downward force applied during dive command
 let landingDuration: CGFloat = 0.25     // "Ministun" duration when dive landing
 let transformDuration: TimeInterval = 0.05  // Transition of hitbox between states
 let parryRadius: CGFloat = 100.0 // The area around the player to check for projectiles

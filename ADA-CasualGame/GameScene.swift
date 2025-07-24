@@ -120,17 +120,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         isWaitingForTapToStart = false
         tapToStartLabel?.removeFromParent()
         tapToStartLabel = nil
-        
-        gamePhase = .playing
-        gameStateUpdateHandler?(gamePhase)
-        setupGame()
-    }
-    
-    private func setupGame() {
-        // Reset properties
-        internalScore = 0
-        lastDistanceBonusScore = 0
-        gameSpeed = baseGameSpeed
       
         player.constraints = nil
         

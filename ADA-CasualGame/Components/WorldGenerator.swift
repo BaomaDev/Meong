@@ -297,15 +297,24 @@ class WorldGenerator {
 
     private func spawnProjectile() {
         guard let scene = scene else { return }
-        
         defer { currentStepProjectile += 1 }
 
         let chance = projectileNoiseMap.valueAt(atChunk: currentStepProjectile, layer: 0)
         let threshold = adaptiveThreshold(forStep: currentStepProjectile, base: 0.3)
         guard chance > threshold else { return }
 
-        let projectile = SpawnFactory.createProjectile(in: scene)
-        scene.addChild(projectile)
+        let (projectile, startPoint) = SpawnFactory.createProjectile(in: scene)
+
+        // Show alert
+        SpawnFactory.createMovingAlert(at: startPoint, in: scene)
+
+        // Delay the projectile spawn after the alert
+        let delay = SKAction.wait(forDuration: 0.7)
+        let spawn = SKAction.run {
+            scene.addChild(projectile)
+        }
+
+        scene.run(SKAction.sequence([delay, spawn]))
     }
 
     private func startSpawningCoinsAndPowerUps() {

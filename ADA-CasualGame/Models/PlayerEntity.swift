@@ -35,7 +35,7 @@ class PlayerEntity: SKSpriteNode {
     
     // MARK: - Initialization
     static func create(at position: CGPoint) -> PlayerEntity {
-        let texture = SKTexture(imageNamed: "cat")
+        let texture = SKTexture(imageNamed: "CatRunning_00000")
         let playerSize = CGSize(width: playerHitboxWidth, height: playerHitboxHeight)
         let player = PlayerEntity(texture: texture, color: .clear, size: playerSize)
         player.name = "Player"
@@ -51,6 +51,8 @@ class PlayerEntity: SKSpriteNode {
         
         let xConstraint = SKConstraint.positionX(SKRange(constantValue: player.position.x))
         player.constraints = [xConstraint]
+        
+        player.startRunningAnimation()
         
         return player
     }
@@ -223,5 +225,21 @@ class PlayerEntity: SKSpriteNode {
         // TODO: Play knock sound effect
         
         // The existing cleanup logic in GameScene's update() will remove the node once it's off-screen.
+    }
+    
+    func startRunningAnimation() {
+        // Generate texture names based on your file naming
+        let textureNames = (0...11).map { String(format: "CatRunning_%05d", $0) }
+        let textures = textureNames.map { SKTexture(imageNamed: $0) }
+
+        // Create animation
+        let animation = SKAction.animate(with: textures, timePerFrame: 0.08, resize: false, restore: false)
+        let repeatAnimation = SKAction.repeatForever(animation)
+
+        self.run(repeatAnimation, withKey: "runAnimation")
+    }
+    
+    func stopRunningAnimation() {
+        self.removeAction(forKey: "runAnimation")
     }
 }

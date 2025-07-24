@@ -9,8 +9,8 @@ let platformHeight = 240.0
 let platformThickness = 7.0
 
 // MARK: - Player Variables
-let playerHitboxWidth: CGFloat = 50
-let playerHitboxHeight: CGFloat = 34
+let playerHitboxWidth: CGFloat = 70
+let playerHitboxHeight: CGFloat = 49
 
 // MARK: - Movement Variables
 let longSwipeTreshold = 150.0           // Min. distance for pan input to trigger high jump

@@ -3,6 +3,7 @@ import GameplayKit
 
 enum GamePhase {
     case tutorial
+    case homeScreen
     case playing
     case gameOver
 }
@@ -29,6 +30,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     var coinUpdateHandler: ((Int) -> Void)?
     var healthUpdateHandler: ((Int) -> Void)?
     var distanceUpdateHandler: ((Int) -> Void)?
+    var gameStateUpdateHandler: ((GamePhase) -> Void)?
 
     private var scoreTimer: Timer?
     private var internalScore: Int = 0
@@ -42,13 +44,16 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     private var tutorialManager: TutorialManager?
     private(set) var gamePhase: GamePhase = .tutorial
     private static var isFirstLaunch = true
+    private var tapToStartLabel: SKLabelNode?
+    private var isWaitingForTapToStart = false
     
     private var playerData: PlayerData!
     
     // MARK: - Scene Lifecycle (Initializers)
     override func didMove(to view: SKView) {
+        playerData = SaveManager.shared.load()
+        
         NotificationCenter.default.addObserver(self, selector: #selector(appWillResignActive), name: UIApplication.willResignActiveNotification, object: nil)
-        setupGame()
         
         NotificationCenter.default.addObserver(
             self,
@@ -63,8 +68,57 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             name: UIApplication.didEnterBackgroundNotification,
             object: nil
         )
-
+        
+        if playerData.isFirstTimeInstall {
+            setupGame()
+        } else{
+            showTapToStart()
+        }
+        
     }
+    
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        if isWaitingForTapToStart {
+            startGameAfterTap()
+        }
+    }
+    
+    private func showTapToStart() {
+        isWaitingForTapToStart = true
+        tapToStartLabel = SKLabelNode(text: "Tap to Start")
+        tapToStartLabel?.fontSize = 42
+        tapToStartLabel?.fontName = "AvenirNext-Bold"
+        tapToStartLabel?.position = CGPoint(x: size.width / 2, y: size.height / 2)
+        tapToStartLabel?.fontColor = .white
+        tapToStartLabel?.zPosition = 1000
+        addChild(tapToStartLabel!)
+        
+        gamePhase = .homeScreen
+        gameStateUpdateHandler?(gamePhase)
+    }
+    
+    private func startGameAfterTap() {
+        isWaitingForTapToStart = false
+        tapToStartLabel?.removeFromParent()
+        tapToStartLabel = nil
+
+        gamePhase = .playing
+        gameStateUpdateHandler?(gamePhase)
+        setupGame()
+    }
+    
+//    private func setupProperties() {
+//        physicsWorld.gravity = CGVector(dx: 0, dy: customGravity)
+//        physicsWorld.contactDelegate = self
+//
+//        let cameraNode = SKCameraNode()
+//        cameraNode.position = CGPoint(x: self.size.width / 2, y: self.size.height / 2)
+//        self.addChild(cameraNode)
+//        self.camera = cameraNode
+//
+//        playerData = SaveManager.shared.load()
+//        worldGenerator = WorldGenerator(scene: self)
+//    }
     
     private func setupGame() {
         // Reset properties
@@ -75,9 +129,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         // Basic scene setup
         backgroundView = BackgroundView(scene: self)
         backgroundView?.setupScrollingBackground(imageNamed: "background")
-//        backgroundView?.spawnRandomClouds()
-        
-        playerData = SaveManager.shared.load()
+        //        backgroundView?.spawnRandomClouds()
         
         // Basic scene setup
         physicsWorld.gravity = CGVector(dx: 0, dy: customGravity)
@@ -100,8 +152,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         // 4. ADD THIS LOGIC TO START THE TUTORIAL OR THE GAME
         if playerData.isFirstTimeInstall {
             gamePhase = .tutorial
+            gameStateUpdateHandler?(gamePhase)
             worldGenerator?.stopAllSpawning() // <-- STOPS spawning during tutorial
-//            GameScene.isFirstLaunch = false // Ensure tutorial only runs once
             
             tutorialManager = TutorialManager(scene: self)
             // The tutorial manager will call endTutorial when it's done
@@ -111,10 +163,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         } else {
             // If not the first launch, start the game directly
             gamePhase = .playing
+            gameStateUpdateHandler?(gamePhase)
             endTutorial() // This function now also starts the main game
         }
-        
-        
     }
     
     override func willMove(from view: SKView) {
@@ -135,6 +186,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     func endTutorial() {
         playerData.isFirstTimeInstall = false
         gamePhase = .playing
+        gameStateUpdateHandler?(gamePhase)
         worldGenerator?.startProceduralSpawning()
         startScoreTimer()
     }
@@ -215,8 +267,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     // MARK: - SKPhysicsContactDelegate
     func didBegin(_ contact: SKPhysicsContact) {
         //        worldMoveDistance = self.size.width * 2
-        guard gamePhase == .playing else { return }
-        
+        guard gamePhase != .gameOver else { return }
+
         var firstBody: SKPhysicsBody
         var secondBody: SKPhysicsBody
         
@@ -245,6 +297,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     private func handlePlayerProjectileContact(projectileBody: SKPhysicsBody) {
         guard let projectileNode = projectileBody.node, let player = self.player else { return }
+        
+        if gamePhase == .tutorial {
+            tutorialManager?.playerDidFail()
+            projectileNode.removeFromParent()
+            return
+        }
         
         // The player's internal logic will decide whether to take damage or knock it away.
         player.handleProjectileHit(projectileNode: projectileNode)
@@ -321,7 +379,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     func gameOver() {
         gamePhase = .gameOver
-        
+        gameStateUpdateHandler?(gamePhase)
         playerData.highScore = internalScore > playerData.highScore ? internalScore : playerData.highScore
         playerData.coins += player?.coins ?? 0
         

@@ -99,7 +99,6 @@ class WorldGenerator {
 
     func setupEnvironment() {
         createGround()
-        startProceduralSpawning()
     }
     
     func stopAllSpawning() {

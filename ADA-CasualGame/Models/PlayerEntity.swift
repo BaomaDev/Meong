@@ -35,7 +35,7 @@ class PlayerEntity: SKSpriteNode {
     
     // MARK: - Initialization
     static func create(at position: CGPoint) -> PlayerEntity {
-        let texture = SKTexture(imageNamed: "CatRunning_00000")
+        let texture = SKTexture(imageNamed: "CatRunning_00001")
         let playerSize = CGSize(width: playerHitboxWidth, height: playerHitboxHeight)
         let player = PlayerEntity(texture: texture, color: .clear, size: playerSize)
         player.name = "Player"
@@ -152,6 +152,7 @@ class PlayerEntity: SKSpriteNode {
     
     func applyPowerUp() {
         distance += 1
+        hearts += 1
         updateDistance(distance)
     }
     
@@ -229,17 +230,29 @@ class PlayerEntity: SKSpriteNode {
     
     func startRunningAnimation() {
         // Generate texture names based on your file naming
-        let textureNames = (0...11).map { String(format: "CatRunning_%05d", $0) }
+        self.removeAllActions()
+        
+        let textureNames = (1...12).map { String(format: "CatRunning_%05d", $0) }
         let textures = textureNames.map { SKTexture(imageNamed: $0) }
 
-        // Create animation
-        let animation = SKAction.animate(with: textures, timePerFrame: 0.08, resize: false, restore: false)
+         // Create animation
+        let animation = SKAction.animate(with: textures, timePerFrame: 0.05, resize: false, restore: false)
         let repeatAnimation = SKAction.repeatForever(animation)
 
         self.run(repeatAnimation, withKey: "runAnimation")
     }
     
-    func stopRunningAnimation() {
-        self.removeAction(forKey: "runAnimation")
+    func startDuckingAnimation() {
+        // Generate texture names based on your file naming
+        self.removeAllActions()
+        
+        let textureNames = (0...25).map { String(format: "CatDucking_%05d", $0) }
+        let textures = textureNames.map { SKTexture(imageNamed: $0) }
+
+         // Create animation
+        let animation = SKAction.animate(with: textures, timePerFrame: 0.04, resize: false, restore: false)
+        let repeatAnimation = SKAction.repeatForever(animation)
+
+        self.run(repeatAnimation, withKey: "duckAnimation")
     }
 }

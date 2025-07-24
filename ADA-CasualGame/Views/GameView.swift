@@ -58,9 +58,9 @@ struct GameView: View {
                             
                             Spacer()
                             
-                            PauseButton {
-                                pauseGame()
-                            }
+//                            PauseButton {
+//                                pauseGame()
+//                            }
                         }
                     }
                     .padding(.horizontal)

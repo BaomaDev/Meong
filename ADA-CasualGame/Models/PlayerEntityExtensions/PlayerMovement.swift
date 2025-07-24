@@ -319,21 +319,24 @@ extension PlayerEntity {
     private func performDuck() {
         self.currentState = .ducking
         self.canDuck = false
-        
-        let adjustY = CGFloat(-playerHitboxHeight / 4)
-        applyHorizontalMovementTransformation(withYAdjustment: adjustY)
-        
+
+        // ✅ Play duck animation here
+        startDuckingAnimation()
+
+        // ✅ Play sound
         EffectsFactory.shared.playSound(soundKey: "duck.wav", volumeKey: 1.0)
-        
+
         // Restore after duration
         let wait = SKAction.wait(forDuration: 0.75)
         let restore = SKAction.run { [weak self] in
             guard let self = self else { return }
-            self.restoreOriginalShape(withYAdjustment: adjustY)
             self.currentState = .running
             self.canDuck = true
+
+            // ✅ Resume running animation
+            self.startRunningAnimation()
         }
-        
+
         run(SKAction.sequence([wait, restore]))
     }
     

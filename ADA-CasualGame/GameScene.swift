@@ -51,7 +51,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     // MARK: - Scene Lifecycle (Initializers)
     override func didMove(to view: SKView) {
-        playerData = SaveManager.shared.load()
+        setupProperties()
         
         NotificationCenter.default.addObserver(self, selector: #selector(appWillResignActive), name: UIApplication.willResignActiveNotification, object: nil)
         
@@ -103,9 +103,20 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         gamePhase = .homeScreen
         gameStateUpdateHandler?(gamePhase)
+        
+        createPlayer(x: 20)
+        createChaser()
+        
+        let startXChaser = size.width * 0.15  // ~15% from the left edge
+//        let startXPlayer = Float(50)  // ~15% from the left edge
+        let startY = size.height * 0.15
+        
+        chaser?.position = CGPoint(x: startXChaser, y: startY)
     }
     
     private func startGameAfterTap() {
+        guard let player = player else { return }
+        
         isWaitingForTapToStart = false
         tapToStartLabel?.removeFromParent()
         tapToStartLabel = nil
@@ -115,25 +126,45 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         setupGame()
     }
     
-    //    private func setupProperties() {
-    //        physicsWorld.gravity = CGVector(dx: 0, dy: customGravity)
-    //        physicsWorld.contactDelegate = self
-    //
-    //        let cameraNode = SKCameraNode()
-    //        cameraNode.position = CGPoint(x: self.size.width / 2, y: self.size.height / 2)
-    //        self.addChild(cameraNode)
-    //        self.camera = cameraNode
-    //
-    //        playerData = SaveManager.shared.load()
-    //        worldGenerator = WorldGenerator(scene: self)
-    //    }
-    
     private func setupGame() {
         // Reset properties
         internalScore = 0
         lastDistanceBonusScore = 0
         gameSpeed = baseGameSpeed
+      
+        player.constraints = nil
         
+        let wait = SKAction.wait(forDuration: 0.5)
+        let move = SKAction.moveTo(x: 90, duration: 1)
+        move.timingMode = .easeIn
+        
+        let path = UIBezierPath()
+        let startPoint = CGPoint(x: 90, y: 125)
+        let endPoint = CGPoint(x: 200, y: 125)
+        let controlPoint = CGPoint(x: (90 + 200) / 2, y: 260)
+
+        path.move(to: startPoint)
+        path.addQuadCurve(to: endPoint, controlPoint: controlPoint)
+        let jump = SKAction.follow(path.cgPath, asOffset: false, orientToPath: false, duration: 1)
+        jump.timingMode = .easeInEaseOut
+        
+        let xConstraint = SKConstraint.positionX(SKRange(constantValue: 200))
+        
+        let code = SKAction.run { [weak self] in
+            guard let self = self else { return }
+            player.constraints = [xConstraint]
+            self.gamePhase = .playing
+            self.gameStateUpdateHandler?(self.gamePhase)
+            self.setupGame()
+        }
+        
+        let sequence = SKAction.sequence([move, wait, jump, code])
+        player.run(sequence) {
+            print("Player finished playing animation")
+        }
+    }
+    
+    private func setupProperties() {
         // Basic scene setup
         backgroundView = BackgroundView(scene: self)
         backgroundView?.setupScrollingBackground(imageNamed: "Background")
@@ -151,18 +182,29 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         EffectsFactory.shared.initialize(with: self)
         
         worldGenerator = WorldGenerator(scene: self)
-        worldGenerator?.setupEnvironment() // This creates the ground and starts spawning
+        playerData = SaveManager.shared.load()
+        worldGenerator?.setupEnvironment() // This creates the ground
+    }
+    
+    private func setupGame() {
+        // Reset properties
+        internalScore = 0
+        lastDistanceBonusScore = 0
+        gameSpeed = baseGameSpeed
         
-        createPlayer()
-        createChaser()
+        worldGenerator?.stopAllSpawning() // <-- STOPS spawning during tutorial
+        
+        if player == nil && chaser == nil {
+            createPlayer()
+            createChaser()
+        }
+        
         setupSwipeRecognizers()
         
         // 4. ADD THIS LOGIC TO START THE TUTORIAL OR THE GAME
         if playerData.isFirstTimeInstall {
             gamePhase = .tutorial
             gameStateUpdateHandler?(gamePhase)
-            worldGenerator?.stopAllSpawning() // <-- STOPS spawning during tutorial
-            
             tutorialManager = TutorialManager(scene: self)
             // The tutorial manager will call endTutorial when it's done
             tutorialManager?.start { [weak self] in
@@ -182,6 +224,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
     
     @objc private func appWillResignActive() {
+        guard gamePhase == .playing || gamePhase == .tutorial else { return }
+        
         print("App is resigning active, pausing game.")
         GameScene.isGamePaused = true
         // 1. Pause the game's internal logic.
@@ -237,7 +281,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             // Reset the flag so this only runs once.
             GameScene.isGamePaused = false
         }
-        
+        guard gamePhase == .playing || gamePhase == .tutorial else { return }
         guard let player = player else { return }
         self.lastUpdateTime = currentTime
         
@@ -412,6 +456,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         distanceUpdateHandler?(player?.distance ?? 3)
         
         // 3. Call the setup function to rebuild and restart the game.
+        setupProperties()
         setupGame()
         
         // 4. Ensure the game is unpaused.
@@ -437,8 +482,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     func didEnd(_ contact: SKPhysicsContact) { }
     
     // MARK: - Player Creation
-    func createPlayer() {
-        let spawnPoint = CGPoint(x: 200, y: 125)
+    func createPlayer(x: CGFloat = 200, y: CGFloat = 126) {
+        let spawnPoint = CGPoint(x: x, y: y)
         player = PlayerEntity.create(at: spawnPoint)
         self.addChild(player!)
     }

@@ -148,11 +148,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             self.setupGame()
         }
         
-        let runAnimation = SKAction.run {
-            player.startRunningAnimation()
-        }
-        
-        let sequence = SKAction.sequence([runAnimation, move, wait, jump, code])
+        let sequence = SKAction.sequence([move, wait, jump, code])
         player.run(sequence) {
             print("Player finished playing animation")
         }
@@ -445,7 +441,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         isPaused = true
         scoreTimer?.invalidate()
         scoreTimer = nil
-        player?.stopRunningAnimation()
         gamePhase = .gameOver
         gameStateUpdateHandler?(gamePhase)
         playerData.highScore = internalScore > playerData.highScore ? internalScore : playerData.highScore

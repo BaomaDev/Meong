@@ -183,8 +183,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         worldGenerator?.stopAllSpawning() // <-- STOPS spawning during tutorial
         
-        // ✅ SIMPLIFIED LOGIC: Create player/chaser only if they don't exist.
-        // This works for first launch AND for restarts.
         if player == nil {
             createPlayer()
         }
@@ -422,26 +420,20 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
     
     func restart() {
-        // 1. Clear all nodes from the previous game.
         self.removeAllChildren()
         
-        // 🔴 CRITICAL FIX: Nil out the references to the old entities.
         player = nil
         chaser = nil
 
-        // 2. Reset the score and timers.
         scoreTimer?.invalidate()
         internalScore = 0
         scoreUpdateHandler?(internalScore)
-        healthUpdateHandler?(9) // Reset to default health
-        distanceUpdateHandler?(3) // Reset to default distance
+        healthUpdateHandler?(9)
+        distanceUpdateHandler?(3)
         
-        // 3. Call the setup functions to rebuild and restart the game.
-        // This will now work correctly because the old references are gone.
         setupProperties()
         setupGame()
         
-        // 4. Ensure the game is unpaused.
         self.isPaused = false
         GameScene.isGamePaused = false
     }
@@ -464,20 +456,16 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
     
     func returnToHomeScreen() {
-        // 1. Perform the same full cleanup as the restart function.
         self.removeAllChildren()
         player = nil
         chaser = nil
         scoreTimer?.invalidate()
         internalScore = 0
         
-        // 2. Re-run setupProperties to rebuild the essential nodes (background, camera, ground).
         setupProperties()
         
-        // 3. Now, call showTapToStart() on a completely clean scene.
         showTapToStart()
         
-        // 4. Ensure the scene is unpaused and ready for interaction.
         self.isPaused = false
         GameScene.isGamePaused = false
     }

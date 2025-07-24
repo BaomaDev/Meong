@@ -339,7 +339,7 @@ class SpawnFactory {
     
     // MARK: - Projectiles
 
-    static func createProjectile(in scene: SKScene) -> SKSpriteNode {
+    static func createProjectile(in scene: SKScene) -> (node: SKSpriteNode, startPoint: CGPoint) {
         let texture = SKTexture(imageNamed: "Sendal")
         
         let targetWidth: CGFloat = 30
@@ -389,8 +389,7 @@ class SpawnFactory {
             endPoint = CGPoint(x: endX, y: 150)
             controlPoint = CGPoint(x: scene.size.width * 0.8, y: 475)
         default:
-            // This case should not be reached.
-            return projectile
+            return (projectile, .zero)
         }
         
         let path = CGMutablePath()
@@ -403,7 +402,7 @@ class SpawnFactory {
         projectile.position = startPoint
         projectile.run(SKAction.sequence([followAction, removeAction]))
         
-        return projectile
+        return (projectile, startPoint)
     }
     
     static func createTutorialProjectile(in scene: SKScene) -> SKSpriteNode {

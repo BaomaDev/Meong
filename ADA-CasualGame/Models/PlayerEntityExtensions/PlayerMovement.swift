@@ -493,4 +493,24 @@ extension PlayerEntity {
         
         self.run(SKAction.group([resizeAction, moveAction]))
     }
+    
+    func restoreOriginalShape2(withYAdjustment adjustY: CGFloat = 0) {
+        let originalSize = CGSize(width: playerHitboxWidth, height: playerHitboxHeight)
+
+        // 1. Restore the physics body
+        let physicsSize = CGSize(width: originalSize.width, height: originalSize.height)
+        self.physicsBody = SKPhysicsBody(rectangleOf: physicsSize)
+        setupPhysics()
+
+        // ✅ NEW: Reset scale so visuals go back to normal
+        self.setScale(1.0) // Resets xScale and yScale to default
+
+        // 2. Animate visual size restoration
+        let resizeAction = SKAction.resize(toWidth: originalSize.width,
+                                           height: originalSize.height,
+                                           duration: transformDuration)
+        let moveAction = SKAction.moveBy(x: 0, y: adjustY, duration: transformDuration)
+
+        self.run(SKAction.group([resizeAction, moveAction]))
+    }
 }

@@ -17,6 +17,7 @@ import SwiftUI
 
 struct GameoverView: View {
     let scoreCount: Int
+    let highscoreCount: Int
     var onRestart: () -> Void
     var onGoHome: () -> Void
 
@@ -29,6 +30,10 @@ struct GameoverView: View {
 
             Text("Score: \(scoreCount)")
                 .font(.title)
+                .foregroundColor(.white)
+            
+            Text("Highscore: \(highscoreCount)")
+                .font(.title2)
                 .foregroundColor(.white)
 
             HStack(spacing: 30) {
@@ -63,6 +68,6 @@ struct GameoverView: View {
 #Preview {
     ZStack {
         Color.blue.ignoresSafeArea()
-        GameoverView(scoreCount: 123, onRestart: {}, onGoHome: {})
+        GameoverView(scoreCount: 201, highscoreCount: 200, onRestart: {}, onGoHome: {})
     }
 }

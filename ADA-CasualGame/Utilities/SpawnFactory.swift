@@ -166,21 +166,33 @@ class SpawnFactory {
     }
     
     static func createMoving(at position: CGPoint) -> SKSpriteNode {
-        let textureName = Bool.random() ? "Chicken" : "gojek"
-        let texture = SKTexture(imageNamed: "Chicken")
-        let desiredSize = CGSize(width: 50, height: 50)
-        let moving = SKSpriteNode(texture: texture, color: .clear, size: desiredSize)
+        let isChicken = Bool.random()
+        let textureName = isChicken ? "Ayam" : "Sepeda 2"
+        let initialTexture = SKTexture(imageNamed: "\(textureName)_00000") // use first frame of animation
+        var desiredSize = CGSize(width: 50, height: 50)
+        var desiredPosition = position
+        
+        switch textureName{
+            case "Sepeda 2":
+                desiredSize = CGSize(width: 100, height: 100)
+                desiredPosition = CGPoint(x: position.x, y: position.y + 25)
+            default:
+                desiredSize = CGSize(width: 50, height: 50)
+                desiredPosition = position
+            break
+        }
+        let moving = SKSpriteNode(texture: initialTexture, color: .clear, size: desiredSize)
         
         moving.name = textureName
+        moving.position = desiredPosition
 
-        moving.position = position
-        
         moving.physicsBody = SKPhysicsBody(rectangleOf: moving.size)
         moving.physicsBody?.isDynamic = false
         moving.physicsBody?.categoryBitMask = PhysicsCategory.obstacle
         moving.physicsBody?.contactTestBitMask = PhysicsCategory.player
         moving.physicsBody?.collisionBitMask = PhysicsCategory.none
 
+        // Position & movement setup
         let startX = position.x + 100
         let endX: CGFloat = -100
         moving.position.x = startX
@@ -190,19 +202,30 @@ class SpawnFactory {
         let duration = TimeInterval(distance / movementSpeed)
         
         let moveAction = SKAction.moveTo(x: endX, duration: duration)
-        
+
+        // Bobbing
         let bobUp = SKAction.moveBy(x: 0, y: 5, duration: 0.3)
         let bobDown = SKAction.moveBy(x: 0, y: -5, duration: 0.3)
         let bobSequence = SKAction.sequence([bobUp, bobDown])
         let bobRepeat = SKAction.repeatForever(bobSequence)
-        
+
+        // 🟨 Animation setup
+        let frameCount = isChicken ? 6 : 8  // Adjust if Chicken/gojek have different frame counts
+        let texturePrefix = "\(textureName)_"
+        let textureNames = (0..<frameCount).map { String(format: "\(texturePrefix)%05d", $0) }
+        let textures = textureNames.map { SKTexture(imageNamed: $0) }
+        let animation = SKAction.animate(with: textures, timePerFrame: 0.05, resize: false, restore: false)
+        let repeatAnimation = SKAction.repeatForever(animation)
+
+        // 🟦 Combine all actions
+        moving.run(repeatAnimation, withKey: "moveAnim")
         let group = SKAction.group([moveAction, bobRepeat])
         let removeAction = SKAction.removeFromParent()
-        
         moving.run(SKAction.sequence([group, removeAction]), withKey: MoveKey.obstacle)
-        
+
         return moving
     }
+
     
     static func createDuckable(at position: CGPoint) -> Duckable {
         let textureNames = ["BoxBuah", "GerobakSayur"]

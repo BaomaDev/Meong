@@ -7,6 +7,7 @@ class EffectsFactory {
     private let groundParticleTextures = ["dirt_01", "dirt_02", "dirt_03"]
     private let platformParticleTextures = ["smoke_01", "smoke_02", "smoke_03"]
     private let starParticleTextures = ["star_01", "star_02", "star_03"]
+    private let sparkParticleTextures = ["spark_01", "spark_02", "spark_03"]
     
     // MARK: - Singleton Instance
     static let shared = EffectsFactory()
@@ -42,11 +43,23 @@ class EffectsFactory {
     /// - Parameter soundKey: The filename of the sound to play (e.g., "jump.wav").
     func playSound(soundKey: String, volumeKey: Float) {
         guard let scene = scene else { return }
-        // playSoundFileNamed is a simple way to play a short sound effect.
-        // 'waitForCompletion: false' allows the game to continue without waiting for the sound to finish.
-        let soundAction = SKAction.playSoundFileNamed(soundKey, waitForCompletion: false)
-
-        scene.run(soundAction)
+        
+        // 1. Create an audio node
+        let audioNode = SKAudioNode(fileNamed: soundKey)
+        audioNode.autoplayLooped = false // Prevent looping
+        
+        // 2. Set volume (0.0 to 1.0)
+        audioNode.run(SKAction.changeVolume(to: volumeKey, duration: 0))
+        
+        // 3. Add to the scene
+        scene.addChild(audioNode)
+        
+        // 4. Play the sound once
+        audioNode.run(SKAction.sequence([
+            SKAction.play(),  // Explicitly play the sound
+            SKAction.wait(forDuration: 0.5), // Brief delay to ensure playback
+            SKAction.removeFromParent() // Remove after playing
+        ]))
     }
     
     /// Triggers haptic feedback on the device.
@@ -188,7 +201,6 @@ class EffectsFactory {
             emitter.zPosition = -1
             emitter.particlePositionRange = CGVector(dx: playerHitboxWidth, dy: 0)
             
-            // --- Customize particle appearance and behavior based on the key ---
             switch key {
             case "dirt":
                 let initialSize: CGFloat = 0.05
@@ -219,20 +231,33 @@ class EffectsFactory {
                 emitter.particleScaleSequence = SKKeyframeSequence(keyframeValues: [initialSize, initialSize * 0.2], times: [0, 1])
                 
             case "star":
-                let initialSize: CGFloat = 0.1
+                let initialSize: CGFloat = 0.075
 
                 emitter.particleTexture = SKTexture(imageNamed: starParticleTextures.randomElement() ?? "star_01")
                 emitter.particleLifetime = 1.0
                 emitter.particleSpeed = 0
-                emitter.xAcceleration = -gameSpeed
-                emitter.yAcceleration = 0
+                emitter.xAcceleration = -gameSpeed*2
+                emitter.yAcceleration = -50
                 emitter.particleScaleSequence = SKKeyframeSequence(keyframeValues: [initialSize, initialSize * 0.7], times: [0, 1]) // Shrinks less
                 
                 let rainbowColors: [SKColor] = [.red, .orange, .yellow, .green, .blue, .purple]
                 let keyframeTimes: [NSNumber] = [0.0, 0.2, 0.4, 0.6, 0.8, 1.0]
                 emitter.particleColorSequence = SKKeyframeSequence(keyframeValues: rainbowColors, times: keyframeTimes)
                 emitter.particleColorBlendFactor = 1.0
-                emitter.particleBlendMode = .add
+                
+            case "spark":
+                let initialSize: CGFloat = 0.1
+
+                emitter.particleTexture = SKTexture(imageNamed: sparkParticleTextures.randomElement() ?? "spark_01")
+                emitter.particleColor = .yellow
+                emitter.particleColorBlendFactor = 0.8
+                emitter.particleLifetime = 0.6
+                emitter.particleSpeed = 80
+                emitter.emissionAngleRange = .pi / 8
+                emitter.xAcceleration = -gameSpeed
+                emitter.yAcceleration = 0
+
+                emitter.particleScaleSequence = SKKeyframeSequence(keyframeValues: [initialSize, initialSize * 0.2], times: [0, 1])
                 
             default:
                 print("Warning: Unknown particle key '\(key)'")

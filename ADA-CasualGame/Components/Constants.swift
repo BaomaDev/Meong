@@ -17,7 +17,7 @@ let longSwipeTreshold = 150.0           // Min. distance for pan input to trigge
 let shortSwipeTreshold = 50.0           // Strokes shorter than this will not be registered
 
 let defaultJumpHeight: CGFloat = 120
-let defaultJumpDistance: CGFloat = 300
+let defaultJumpDistance: CGFloat = 350
 let diveForce: CGFloat = 100            // Downward force applied during dive command
 let landingDuration: CGFloat = 0.25     // "Ministun" duration when dive landing
 let transformDuration: TimeInterval = 0.05  // Transition of hitbox between states
@@ -77,7 +77,7 @@ enum SurfaceType {
     case semiSolidPlatform  // Can jump up and drop down
     case solidPlatform      // Cannot jump up directly from below, cannot drop down
     
-    var isGrounded: Bool {  // Variable used for control logic (grouped into is grounded / is falling
+    var isGrounded: Bool {  // Variable used for control logic (grouped into is grounded / is falling)
         return self != .none
     }
     

@@ -9,6 +9,163 @@ import Foundation
 import SpriteKit
 
 extension PlayerEntity {
+    // MARK: - State Management
+    func updateState(currentSurface: SurfaceType) {
+        guard self.currentState != .landing else {return}
+        let previousState = self.currentState
+        let previousSurface = self.currentSurface
+        
+        let particlePosition = CGPoint(x: self.position.x, y: self.position.y - self.size.height / 2)
+        
+        // Ignore landing / jumping logic when flying
+        if currentState == .flying {
+            if let scene = self.scene as? GameScene {
+                // Check if the interval has passed since the last star was released.
+                if scene.lastUpdateTime - lastParticleTime > particleInterval {
+                    // Update the timer to now.
+                    lastParticleTime = scene.lastUpdateTime
+                    
+                    // Call the factory to create a single star particle at the player's center.
+                    EffectsFactory.shared.createParticleEffect(at: self.position, key: "star", amount: 1)
+                }
+            }
+            return
+        }
+        
+        // If a duck command is queued, perform that first.
+        if self.currentState != .ducking && self.queuedAction == .duck {
+            if self.currentState == .airborne { // Override checking
+                self.performDuck()
+            } else {
+                self.duck()
+            }
+            self.queuedAction = nil
+            return
+        }
+        
+        let isLanding = currentSurface.isGrounded && !previousSurface.isGrounded && (self.physicsBody?.velocity.dy ?? 0) <= 0
+        if isLanding {
+            if previousState == .diving {
+                hardLanding(surfaceType: currentSurface)
+            } else {
+                softLanding(surfaceType: currentSurface)
+            }
+            canJump = true
+            
+        }
+       
+        let isJumping = !currentSurface.isGrounded && previousSurface.isGrounded
+        if isJumping {
+            handleGoingAirborne()
+            let fellFromPlatform = currentSurface == .none && previousSurface.isPlatform
+            if fellFromPlatform {  // No effects when dropping off
+                EffectsFactory.shared.createParticleEffect(at: particlePosition, key: "smoke", amount: 2)
+            }
+        }
+        
+        self.currentSurface = currentSurface
+        updateColor()
+    }
+    
+    private func updateColor() {
+        if isParrying {
+            color = .green
+            return
+        }
+        switch currentState {
+        case .running:
+            color = .orange
+        case .airborne:
+            color = .orange
+        case .ducking:
+            color = .red
+        case .diving:
+            color = .orange
+        case .landing:
+            color = .red
+        default:
+            color = .orange
+        }
+    }
+    
+    private func hardLanding(surfaceType: SurfaceType) {
+        let particlePosition = CGPoint(x: self.position.x, y: self.position.y - self.size.height / 2)
+        
+        let amount: Int
+        let surfaceKey: String
+        if surfaceType == .ground {
+            surfaceKey = "dirt"
+            amount = 12
+            EffectsFactory.shared.playSound(soundKey: "landing.mp3", volumeKey: 1.0)
+        } else if surfaceType == .semiSolidPlatform {
+            surfaceKey = "spark"
+            amount = 3
+            EffectsFactory.shared.playSound(soundKey: "electricity.mp3", volumeKey: 0.5)
+        } else {
+            surfaceKey = "smoke"
+            amount = 4
+            EffectsFactory.shared.playSound(soundKey: "landingConcrete.mp3", volumeKey: 1.0)
+        }
+        
+        restoreOriginalShape()
+        // If we landed from a dive, enter the .landing state via an action.
+        self.currentState = .landing
+        EffectsFactory.shared.screenShake(strength: 0.3)
+        
+        let wait = SKAction.wait(forDuration: landingDuration)
+        let transitionToRunning = SKAction.run {
+            if self.currentState == .landing {
+                self.currentState = .running
+            }
+        }
+        
+        EffectsFactory.shared.playHaptic(intensity: 1.0, sharpness: 0.1, type: .hapticTransient)
+        // Particle
+        EffectsFactory.shared.createParticleEffect(at: particlePosition, key: surfaceKey, amount: amount)
+        
+        self.run(SKAction.sequence([wait, transitionToRunning]))
+    }
+    
+    private func softLanding(surfaceType: SurfaceType) {
+        // If a queued action exists, perform that first
+        if let action = self.queuedAction {
+            switch action {
+            case .normalJump:
+                self.normalJump()
+            case .highJump:
+                self.highJump()
+            default:
+                break
+            }
+            // Clear the queue after executing.
+            self.queuedAction = nil
+            return
+        } else {
+            let particlePosition = CGPoint(x: self.position.x, y: self.position.y - self.size.height / 2)
+            let amount: Int
+            let surfaceKey: String
+            if surfaceType == .ground {
+                surfaceKey = "dirt"
+                amount = 6
+                EffectsFactory.shared.playSound(soundKey: "softLanding.mp3", volumeKey: 0.5)
+            } else if surfaceType == .semiSolidPlatform {
+                surfaceKey = "spark"
+                amount = 1
+                EffectsFactory.shared.playSound(soundKey: "electricity.mp3", volumeKey: 0.25)
+            } else {
+                surfaceKey = "smoke"
+                amount = 2
+                EffectsFactory.shared.playSound(soundKey: "landingConcrete.mp3", volumeKey: 0.5)
+            }
+            
+            EffectsFactory.shared.createParticleEffect(at: particlePosition, key: surfaceKey, amount: amount)
+            
+            
+            // It was a normal landing, so we can run immediately.
+            self.currentState = .running
+        }
+    }
+    
     // MARK: - Jump
     func jump(swipeDistance: Double) {
         guard self.currentState != .landing else { return }
@@ -114,7 +271,6 @@ extension PlayerEntity {
         }
         
         // Play effects for either jump type
-        EffectsFactory.shared.playSound(soundKey: "highjumpie.mp3", volumeKey: 1.0) // Or highJump.mp3
         EffectsFactory.shared.playSound(soundKey: "highJump.mp3", volumeKey: 1.0)
 //        EffectsFactory.shared.playHaptic(strength: 1.0)
         
@@ -226,130 +382,6 @@ extension PlayerEntity {
         run(SKAction.sequence([scaleUp, scaleDown, endParry]))
         
         return true
-    }
-    
-    // MARK: - State Management
-    func updateState(currentSurface: SurfaceType) {
-        guard self.currentState != .landing else {return}
-        let previousState = self.currentState
-        let previousSurface = self.currentSurface
-        
-        let particlePosition = CGPoint(x: self.position.x, y: self.position.y - self.size.height / 2)
-        
-        // Ignore landing / jumping logic when flying
-        if currentState == .flying {
-            if let scene = self.scene as? GameScene {
-                // Check if the interval has passed since the last star was released.
-                if scene.lastUpdateTime - lastParticleTime > particleInterval {
-                    // Update the timer to now.
-                    lastParticleTime = scene.lastUpdateTime
-                    
-                    // Call the factory to create a single star particle at the player's center.
-                    EffectsFactory.shared.createParticleEffect(at: self.position, key: "star", amount: 1)
-                }
-            }
-            return
-        }
-        
-        // If a duck command is queued, perform that first.
-        if self.currentState != .ducking && self.queuedAction == .duck {
-            if self.currentState == .airborne { // Override checking
-                self.performDuck()
-            } else {
-                self.duck()
-            }
-            self.queuedAction = nil
-            return
-        }
-        
-        let isLanding = currentSurface.isGrounded && !previousSurface.isGrounded
-        if isLanding {
-            let onGround = currentSurface == .ground
-            let surfaceKey = onGround ? "dirt" : "smoke"
-            var amount: Int
-            if previousState == .diving {
-                hardLanding()
-                amount = onGround ? 8 : 4
-            } else {
-                softLanding()
-                amount = onGround ? 4 : 2
-            }
-            EffectsFactory.shared.createParticleEffect(at: particlePosition, key: surfaceKey, amount: amount)
-            canJump = true
-            
-        }
-       
-        let isJumping = !currentSurface.isGrounded && previousSurface.isGrounded
-        if isJumping {
-            handleGoingAirborne()
-            let fellFromPlatform = currentSurface == .none && previousSurface.isPlatform
-            if fellFromPlatform {  // No effects when dropping off
-                EffectsFactory.shared.createParticleEffect(at: particlePosition, key: "smoke", amount: 2)
-            }
-        }
-        
-        self.currentSurface = currentSurface
-        updateColor()
-    }
-    
-    private func updateColor() {
-        if isParrying {
-            color = .green
-            return
-        }
-        switch currentState {
-        case .running:
-            color = .orange
-        case .airborne:
-            color = .orange
-        case .ducking:
-            color = .red
-        case .diving:
-            color = .orange
-        case .landing:
-            color = .red
-        default:
-            color = .orange
-        }
-    }
-    
-    private func hardLanding() {
-        restoreOriginalShape()
-        // If we landed from a dive, enter the .landing state via an action.
-        self.currentState = .landing
-        EffectsFactory.shared.screenShake(strength: 0.3)
-        
-        let wait = SKAction.wait(forDuration: landingDuration)
-        let transitionToRunning = SKAction.run {
-            if self.currentState == .landing {
-                self.currentState = .running
-            }
-        }
-        
-        EffectsFactory.shared.playSound(soundKey: "landing.mp3", volumeKey: 1.0)
-        EffectsFactory.shared.playHaptic(intensity: 1.0, sharpness: 0.1, type: .hapticTransient)
-        
-        self.run(SKAction.sequence([wait, transitionToRunning]))
-    }
-    
-    private func softLanding() {
-        // If a queued action exists, perform that first
-        if let action = self.queuedAction {
-            switch action {
-            case .normalJump:
-                self.normalJump()
-            case .highJump:
-                self.highJump()
-            default:
-                break
-            }
-            // Clear the queue after executing.
-            self.queuedAction = nil
-            return
-        } else {
-            // It was a normal landing, so we can run immediately.
-            self.currentState = .running
-        }
     }
     
     // MARK: - Helpers

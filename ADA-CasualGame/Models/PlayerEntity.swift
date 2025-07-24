@@ -162,7 +162,8 @@ class PlayerEntity: SKSpriteNode {
         // This ensures the player is not stuck in a blinking, stretched, or ducked state.
         self.removeAllActions() // Stop any ongoing visual animations (like blinking or stretching)
         self.alpha = 1.0        // Ensure player is fully visible
-        restoreOriginalShape()  // Reset size and physics body to default
+        self.restoreOriginalShape2()  // Reset size and physics body to default
+        self.setScale(1.0)
 
         // 🔽 Apply ducking animation here
         startFlyingAnimation()

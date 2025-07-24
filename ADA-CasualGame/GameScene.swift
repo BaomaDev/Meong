@@ -300,8 +300,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     // MARK: - SKPhysicsContactDelegate
     func didBegin(_ contact: SKPhysicsContact) {
         //        worldMoveDistance = self.size.width * 2
-        guard gamePhase == .playing else { return }
-        
+        guard gamePhase != .gameOver else { return }
+
         var firstBody: SKPhysicsBody
         var secondBody: SKPhysicsBody
         
@@ -330,6 +330,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     private func handlePlayerProjectileContact(projectileBody: SKPhysicsBody) {
         guard let projectileNode = projectileBody.node, let player = self.player else { return }
+        
+        if gamePhase == .tutorial {
+            tutorialManager?.playerDidFail()
+            projectileNode.removeFromParent()
+            return
+        }
         
         // The player's internal logic will decide whether to take damage or knock it away.
         player.handleProjectileHit(projectileNode: projectileNode)

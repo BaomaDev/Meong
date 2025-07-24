@@ -406,6 +406,53 @@ class SpawnFactory {
         return projectile
     }
     
+    static func createTutorialProjectile(in scene: SKScene) -> SKSpriteNode {
+        let texture = SKTexture(imageNamed: "Sendal")
+        
+        let targetWidth: CGFloat = 30
+        let aspectRatio = texture.size().height / texture.size().width
+        let targetHeight = targetWidth * aspectRatio
+        let size = CGSize(width: targetWidth, height: targetHeight)
+        let projectile = SKSpriteNode(texture: texture, color: .clear, size: size)
+        projectile.name = "Projectile"
+        
+        projectile.physicsBody = SKPhysicsBody(circleOfRadius: 10)
+        projectile.physicsBody?.categoryBitMask = PhysicsCategory.projectile
+        projectile.physicsBody?.isDynamic = false
+        projectile.physicsBody?.affectedByGravity = false
+        projectile.physicsBody?.contactTestBitMask = PhysicsCategory.player
+        projectile.physicsBody?.collisionBitMask = PhysicsCategory.none
+        
+        let rotate = SKAction.rotate(byAngle: .pi, duration: 0.2)
+        let spinForever = SKAction.repeatForever(rotate)
+        projectile.run(spinForever)
+        
+        let projectileSpeed: CGFloat = min(gameSpeed * 2, 800)
+        
+        var startPoint: CGPoint
+        var endPoint: CGPoint
+        var controlPoint: CGPoint
+
+        let startX = scene.size.width
+        let endX: CGFloat = 50
+
+        startPoint = CGPoint(x: startX, y: 75)
+        endPoint = CGPoint(x: endX, y: 50)
+        controlPoint = CGPoint(x: scene.size.width / 2, y: 200)
+        
+        let path = CGMutablePath()
+        path.move(to: startPoint)
+        path.addQuadCurve(to: endPoint, control: controlPoint)
+        
+        let followAction = SKAction.follow(path, asOffset: false, orientToPath: false, speed: projectileSpeed)
+        let removeAction = SKAction.removeFromParent()
+        
+        projectile.position = startPoint
+        projectile.run(SKAction.sequence([followAction, removeAction]))
+        
+        return projectile
+    }
+    
     // MARK: - Platform
     static func createSolidPlatform(at position: CGPoint, size: CGSize) -> SKSpriteNode {
         let platform = SKSpriteNode(color: .clear, size: size)

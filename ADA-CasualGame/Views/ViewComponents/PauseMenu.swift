@@ -20,7 +20,7 @@ struct PauseMenu: View {
 
             HStack {
                 RestartButton(){
-                    gameScene.gameOver()
+                    gameScene.restart()
                     showPauseMenu = false
                 }
                 .padding(2)

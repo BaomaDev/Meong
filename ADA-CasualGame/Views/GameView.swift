@@ -23,11 +23,8 @@ struct GameView: View {
 
     var body: some View {
         ZStack {
-            ZStack(alignment: .topTrailing) {
-                SpriteView(scene: gameScene)
-                    .ignoresSafeArea()
-                
-                // Update handlers (moved here to avoid re-initializing GameScene)
+            SpriteView(scene: gameScene)
+                .ignoresSafeArea()
                 .onAppear {
                     gameScene.scoreUpdateHandler = { newScore in
                         DispatchQueue.main.async { self.score = newScore }
@@ -41,45 +38,35 @@ struct GameView: View {
                     gameScene.gameStateUpdateHandler = { self.gamePhase = $0 }
                 }
 
-                switch gamePhase {
-                case .homeScreen:
-                    //Add UI in here
-                    EmptyView()
-                case .playing:
-                    HStack {
+            if gamePhase == .playing || gamePhase == .tutorial {
+                VStack {
+                    ZStack {
                         HStack {
-                            HealthBar(health: health)
-                            CoinIndicator(coinCount: coin)
+                            Spacer()
+                            Text("\(score)")
+                                .font(.system(size: 32, weight: .bold))
+                                .foregroundColor(.white)
+                                .shadow(radius: 3)
+                            Spacer()
                         }
-                        Spacer()
+                        
+                        HStack {
+                            HStack {
+                                HealthBar(health: health)
+                                CoinIndicator(coinCount: coin)
+                            }
+                            
+                            Spacer()
+                            
+                            PauseButton {
+                                pauseGame()
+                            }
+                        }
                     }
+                    .padding(.horizontal)
                     .padding(.top, 15)
-
-                    HStack {
-                        Spacer()
-                        Text("\(score)")
-                            .font(.system(size: 32, weight: .bold))
-                            .foregroundColor(.white)
-                            .shadow(radius: 3)
-                        Spacer()
-                    }
-                    .padding(.top, 24)
-
-                    HStack {
-                        PauseButton {
-                            pauseGame()
-                        }
-                    }
-                    .padding(.top, 24)
-                case .tutorial:
-                    HStack {
-                        PauseButton {
-                            pauseGame()
-                        }
-                    }
-                    .padding(.top, 24)
-                case .gameOver:
-                    EmptyView()
+                    
+                    Spacer()
                 }
             }
 
@@ -89,17 +76,34 @@ struct GameView: View {
                     .transition(.opacity)
 
                 PauseMenu(showPauseMenu: $showPauseMenu, gameScene: $gameScene)
+            } else if gamePhase == .gameOver {
+                Color.black.opacity(0.5)
+                    .ignoresSafeArea()
+                    .transition(.opacity)
+                
+                GameoverView(
+                    scoreCount: score,
+                    onRestart: {
+                        gameScene.restart()
+                    },
+                    onGoHome: {
+                        gameScene.returnToHomeScreen()
+                    }
+                )
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: .gameDidAutoPause)) { _ in
-            pauseGame()
+            if gamePhase != .gameOver {
+                pauseGame()
+            }
         }
     }
     
     private func pauseGame() {
-        self.showPauseMenu = true
-        self.gameScene.pauseGame()
-        self.gameScene.isPaused = true
+        if gamePhase == .playing || gamePhase == .tutorial {
+            self.showPauseMenu = true
+            self.gameScene.pauseGame()
+        }
     }
 }
 

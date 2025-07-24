@@ -91,7 +91,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
     }
     
-    private func showTapToStart() {
+    func showTapToStart() {
         isWaitingForTapToStart = true
         tapToStartLabel = SKLabelNode(text: "Tap to Start")
         tapToStartLabel?.fontSize = 42
@@ -183,24 +183,27 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         worldGenerator?.stopAllSpawning() // <-- STOPS spawning during tutorial
         
-        if player == nil && chaser == nil {
+        // ✅ SIMPLIFIED LOGIC: Create player/chaser only if they don't exist.
+        // This works for first launch AND for restarts.
+        if player == nil {
             createPlayer()
+        }
+        if chaser == nil {
             createChaser()
         }
         
         setupSwipeRecognizers()
         
-        // 4. ADD THIS LOGIC TO START THE TUTORIAL OR THE GAME
+        // This logic remains the same
         if playerData.isFirstTimeInstall {
             gamePhase = .tutorial
             gameStateUpdateHandler?(gamePhase)
             tutorialManager = TutorialManager(scene: self)
-            // The tutorial manager will call endTutorial when it's done
             tutorialManager?.start { [weak self] in
                 self?.endTutorial()
             }
         } else {
-            // If not the first launch, start the game directly
+            // This path is taken for both "Tap to Start" and "Restart"
             gamePhase = .playing
             gameStateUpdateHandler?(gamePhase)
             endTutorial() // This function now also starts the main game
@@ -418,7 +421,38 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
     }
     
+    func restart() {
+        // 1. Clear all nodes from the previous game.
+        self.removeAllChildren()
+        
+        // 🔴 CRITICAL FIX: Nil out the references to the old entities.
+        player = nil
+        chaser = nil
+
+        // 2. Reset the score and timers.
+        scoreTimer?.invalidate()
+        internalScore = 0
+        scoreUpdateHandler?(internalScore)
+        healthUpdateHandler?(9) // Reset to default health
+        distanceUpdateHandler?(3) // Reset to default distance
+        
+        // 3. Call the setup functions to rebuild and restart the game.
+        // This will now work correctly because the old references are gone.
+        setupProperties()
+        setupGame()
+        
+        // 4. Ensure the game is unpaused.
+        self.isPaused = false
+        GameScene.isGamePaused = false
+    }
+    
     func gameOver() {
+        guard !GameScene.isGamePaused else { return }
+        GameScene.isGamePaused = true
+        isPaused = true
+        scoreTimer?.invalidate()
+        scoreTimer = nil
+        
         gamePhase = .gameOver
         gameStateUpdateHandler?(gamePhase)
         playerData.highScore = internalScore > playerData.highScore ? internalScore : playerData.highScore
@@ -427,28 +461,23 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         print(playerData.highScore)
         
         savePlayerData()
-        
-        // 1. Clear all nodes from the previous game (player, platforms, etc.).
+    }
+    
+    func returnToHomeScreen() {
+        // 1. Perform the same full cleanup as the restart function.
         self.removeAllChildren()
-        
-        // 2. Reset the score and update the HUD.
+        player = nil
+        chaser = nil
         scoreTimer?.invalidate()
         internalScore = 0
-        // You might not need to reset these if createPlayer() does it, but it's safe to do so.
-        player?.coins = 0
-        player?.hearts = 9
-        player?.distance = 3
         
-        scoreUpdateHandler?(internalScore)
-        coinUpdateHandler?(player?.coins ?? 0)
-        healthUpdateHandler?(player?.hearts ?? 9)
-        distanceUpdateHandler?(player?.distance ?? 3)
-        
-        // 3. Call the setup function to rebuild and restart the game.
+        // 2. Re-run setupProperties to rebuild the essential nodes (background, camera, ground).
         setupProperties()
-        setupGame()
         
-        // 4. Ensure the game is unpaused.
+        // 3. Now, call showTapToStart() on a completely clean scene.
+        showTapToStart()
+        
+        // 4. Ensure the scene is unpaused and ready for interaction.
         self.isPaused = false
         GameScene.isGamePaused = false
     }

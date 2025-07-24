@@ -15,7 +15,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     // This class will now handle all the spawning logic
     var worldGenerator: WorldGenerator?
-
+    
     var backgrounds: [SKSpriteNode] = []
     private var backgroundView: BackgroundView?
     
@@ -31,7 +31,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     var healthUpdateHandler: ((Int) -> Void)?
     var distanceUpdateHandler: ((Int) -> Void)?
     var gameStateUpdateHandler: ((GamePhase) -> Void)?
-
+    
     private var scoreTimer: Timer?
     private var internalScore: Int = 0
     
@@ -61,7 +61,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             name: UIApplication.willTerminateNotification,
             object: nil
         )
-
+        
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(savePlayerData),
@@ -69,10 +69,18 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             object: nil
         )
         
-        if playerData.isFirstTimeInstall {
-            setupGame()
-        } else{
-            showTapToStart()
+        // 🔹 Preload background texture before setupGame
+        let backgroundTexture = SKTexture(imageNamed: "Background")
+        SKTexture.preload([backgroundTexture]) { [weak self] in
+            DispatchQueue.main.async {
+                guard let self = self else { return }
+                
+                if self.playerData.isFirstTimeInstall {
+                    self.setupGame()
+                } else {
+                    self.showTapToStart()
+                }
+            }
         }
         
     }
@@ -113,6 +121,17 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         tapToStartLabel?.removeFromParent()
         tapToStartLabel = nil
         
+        gamePhase = .playing
+        gameStateUpdateHandler?(gamePhase)
+        setupGame()
+    }
+    
+    private func setupGame() {
+        // Reset properties
+        internalScore = 0
+        lastDistanceBonusScore = 0
+        gameSpeed = baseGameSpeed
+      
         player.constraints = nil
         
         let wait = SKAction.wait(forDuration: 0.5)
@@ -148,7 +167,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     private func setupProperties() {
         // Basic scene setup
         backgroundView = BackgroundView(scene: self)
-        backgroundView?.setupScrollingBackground(imageNamed: "background")
+        backgroundView?.setupScrollingBackground(imageNamed: "Background")
         //        backgroundView?.spawnRandomClouds()
         
         // Basic scene setup
@@ -203,7 +222,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         super.willMove(from: view)
         NotificationCenter.default.removeObserver(self)
     }
-
+    
     @objc private func appWillResignActive() {
         guard gamePhase == .playing || gamePhase == .tutorial else { return }
         
@@ -226,24 +245,24 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     func startScoreTimer(resetScore: Bool = false) {
         scoreTimer?.invalidate()  // always clean up existing timer
-
+        
         if resetScore {
             internalScore = 0
             lastDistanceBonusScore = 0
         }
-
+        
         scoreTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
             
             guard let self = self, !GameScene.isGamePaused && !self.isPaused, let player = self.player else { return }
-
+            
             // **THE FIX**: Check both the static flag AND the scene's own isPaused property.
             // This is immune to the race condition.
-//            guard let self = self else { return }
-//            guard !GameScene.isGamePaused && !self.isPaused, let player = self.player else { return }
-
+            //            guard let self = self else { return }
+            //            guard !GameScene.isGamePaused && !self.isPaused, let player = self.player else { return }
+            
             self.internalScore += 1
             self.scoreUpdateHandler?(self.internalScore)
-
+            
             if self.internalScore % 50 == 0 && self.internalScore > self.lastDistanceBonusScore {
                 player.updateDistance(player.distance + 1)
                 self.lastDistanceBonusScore = self.internalScore
@@ -301,7 +320,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     func didBegin(_ contact: SKPhysicsContact) {
         //        worldMoveDistance = self.size.width * 2
         guard gamePhase != .gameOver else { return }
-
+        
         var firstBody: SKPhysicsBody
         var secondBody: SKPhysicsBody
         
@@ -312,7 +331,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             firstBody = contact.bodyB
             secondBody = contact.bodyA
         }
-
+        
         // Delegate handling to specific functions based on the collision type
         if firstBody.categoryBitMask == PhysicsCategory.player {
             switch secondBody.categoryBitMask {
@@ -452,7 +471,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         scoreTimer?.invalidate()
         scoreTimer = nil
     }
-
+    
     func resumeGame() {
         guard GameScene.isGamePaused else { return }
         GameScene.isGamePaused = false
@@ -499,7 +518,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         addChild(chaserNode)
         chaser = chaserNode
     }
-
+    
     func updateSpawningIfNeeded() {
         let newFactor = Double(gameSpeed / baseGameSpeed)
         guard abs(newFactor - lastSpeedFactor) >= 0.3 else { return }
@@ -512,10 +531,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         scene?.run(SKAction.sequence([
             SKAction.wait(forDuration: 2),
-                SKAction.run { [weak self] in
-                    self?.worldGenerator?.startProceduralSpawning()
-                }
-            ]))
+            SKAction.run { [weak self] in
+                self?.worldGenerator?.startProceduralSpawning()
+            }
+        ]))
     }
     
     @objc private func savePlayerData() {

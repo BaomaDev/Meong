@@ -49,7 +49,7 @@ class SpawnFactory {
     // MARK: - Collectibles
     
     static func createCoin(at position: CGPoint, characterCategory: UInt32, coinCategory: UInt32) -> SKSpriteNode {
-        let coin = SKSpriteNode(imageNamed: "coin")
+        let coin = SKSpriteNode(imageNamed: "Coin")
         coin.setScale(0.07)
         coin.position = position
         coin.zPosition = 1
@@ -66,8 +66,8 @@ class SpawnFactory {
     }
 
     static func createPowerUp(at position: CGPoint, characterCategory: UInt32, powerUpCategory: UInt32) -> SKSpriteNode {
-        let powerUp = SKSpriteNode(imageNamed: "cat food")
-        powerUp.setScale(0.015)
+        let powerUp = SKSpriteNode(imageNamed: "Whiskas")
+        powerUp.setScale(0.1)
         powerUp.position = position
         powerUp.zPosition = 1
 

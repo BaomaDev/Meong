@@ -14,7 +14,6 @@ class BackgroundView {
     
     init(scene: SKScene) {
         self.scene = scene
-        //        loadCloudTextures()
     }
     
     func setupScrollingBackground(imageNamed: String) {

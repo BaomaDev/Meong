@@ -264,12 +264,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         if GameScene.isGamePaused {
             // Immediately pause the game.
             self.pauseGame()
-            
-            // Post the notification to show the SwiftUI HUD.
-            NotificationCenter.default.post(name: .gameDidAutoPause, object: nil)
-            
-            // Reset the flag so this only runs once.
-            GameScene.isGamePaused = false
+            return
         }
         guard gamePhase == .playing || gamePhase == .tutorial else { return }
         guard let player = player else { return }
@@ -471,7 +466,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
     
     func pauseGame() {
-        guard !GameScene.isGamePaused else { return }
         GameScene.isGamePaused = true
         isPaused = true
         scoreTimer?.invalidate()

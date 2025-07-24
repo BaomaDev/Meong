@@ -52,8 +52,6 @@ class PlayerEntity: SKSpriteNode {
         let xConstraint = SKConstraint.positionX(SKRange(constantValue: player.position.x))
         player.constraints = [xConstraint]
         
-        player.startRunningAnimation()
-        
         return player
     }
     

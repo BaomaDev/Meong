@@ -27,6 +27,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     var lastUpdateTime: TimeInterval = 0
     
     var scoreUpdateHandler: ((Int) -> Void)?
+    var highscoreUpdateHandler: ((Int) -> Void)?
     var coinUpdateHandler: ((Int) -> Void)?
     var healthUpdateHandler: ((Int) -> Void)?
     var distanceUpdateHandler: ((Int) -> Void)?
@@ -147,7 +148,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             self.setupGame()
         }
         
-        let sequence = SKAction.sequence([move, wait, jump, code])
+        let runAnimation = SKAction.run {
+            player.startRunningAnimation()
+        }
+        
+        let sequence = SKAction.sequence([runAnimation, move, wait, jump, code])
         player.run(sequence) {
             print("Player finished playing animation")
         }
@@ -185,6 +190,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         if player == nil {
             createPlayer()
+            player?.startRunningAnimation()
         }
         if chaser == nil {
             createChaser()
@@ -439,11 +445,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         isPaused = true
         scoreTimer?.invalidate()
         scoreTimer = nil
-        
+        player?.stopRunningAnimation()
         gamePhase = .gameOver
         gameStateUpdateHandler?(gamePhase)
         playerData.highScore = internalScore > playerData.highScore ? internalScore : playerData.highScore
         playerData.coins += player?.coins ?? 0
+        highscoreUpdateHandler?(playerData.highScore)
         
         print(playerData.highScore)
         

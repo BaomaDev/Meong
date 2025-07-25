@@ -144,6 +144,21 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         guard let chaser = chaser else { return }
 
         isWaitingForTapToStart = false
+//         tapToStartLabel?.removeFromParent()
+//         tapToStartLabel = nil
+
+//         player.constraints = nil
+
+//         // Step 1: Intro animation before jump
+//         let startIntro = SKAction.run {
+//             player.startIntroAnimation()
+//             chaser.startIntroAnimation()
+//         }
+
+//         // Step 2: Move slightly forward
+//         let moveToStart = SKAction.moveTo(x: 90, duration: 1)
+//         moveToStart.timingMode = .easeIn
+
         tapToStartUI?.removeFromParent()
         tapToStartUI = nil
         titleUI?.removeFromParent()
@@ -159,9 +174,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         let moveBackgroundtoLeft = SKAction.moveTo(x: size.width * 0.15, duration: 1)
         moveBackgroundtoLeft.timingMode = .easeInEaseOut
         
-        
-        
-        
         //After position changed to far left
         let makMarah = SKAction.run {
             chaser.startIntroAnimation()
@@ -174,23 +186,42 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         let startPoint = CGPoint(x: 90, y: 125)
         let endPoint = CGPoint(x: 200, y: 125)
         let controlPoint = CGPoint(x: (90 + 200) / 2, y: 260)
-
         path.move(to: startPoint)
         path.addQuadCurve(to: endPoint, controlPoint: controlPoint)
-
         let jump = SKAction.follow(path.cgPath, asOffset: false, orientToPath: false, duration: 1)
         jump.timingMode = .easeInEaseOut
 
+        // Step 4: After intro + jump, switch to running
+//         let startRunning = SKAction.run {
+//             player.startRunningAnimation()
+//             chaser.startRunningAnimation()
+//         }
+
+        // Step 5: Finalize game start
+      
         let finalizeStart = SKAction.run { [weak self] in
             guard let self = self else { return }
 
-            // Lock player in place to prevent drift
             let xConstraint = SKConstraint.positionX(SKRange(constantValue: 200))
             player.constraints = [xConstraint]
 
-            // Change game state and start game logic
             self.gamePhase = .playing
             self.gameStateUpdateHandler?(self.gamePhase)
+
+//             self.setupGame()
+//         }
+
+//         // Full animation sequence
+//         let fullSequence = SKAction.sequence([
+//             startIntro,
+//             moveToStart,
+//             .wait(forDuration: 0.1),
+//             jump,
+//             .wait(forDuration: 0.0),
+//             startRunning,
+//             .wait(forDuration: 0.2),
+//             finalizeStart
+//         ])
 
             chaser.startRunningAnimation() // Start chase animation now
 

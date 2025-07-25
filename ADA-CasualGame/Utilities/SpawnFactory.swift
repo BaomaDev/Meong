@@ -93,8 +93,13 @@ class SpawnFactory {
         switch textureName {
             case "BapakMainCatur":
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
                 targetWidth = 125
                 objectPosition = CGPoint(x: position.x, y: position.y - 15)
+=======
+                targetWidth = 120
+                objectPosition = CGPoint(x: position.x, y: position.y - 5)
+>>>>>>> Stashed changes
 =======
                 targetWidth = 120
                 objectPosition = CGPoint(x: position.x, y: position.y - 5)

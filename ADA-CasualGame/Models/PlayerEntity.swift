@@ -427,7 +427,22 @@ class PlayerEntity: SKSpriteNode {
         self.run(repeatAnimation, withKey: "idleAnimation")
     }
     
+    func startTiptoeAnimation() {
+        // Generate texture names based on your file naming
+        stopAllAnimations()
+        
+        let textureNames = (0...50).map { String(format: "CatWalk_%05d", $0) }
+        let textures = textureNames.map { SKTexture(imageNamed: $0) }
+
+         // Create animation
+        let animation = SKAction.animate(with: textures, timePerFrame: 0.085, resize: false, restore: false)
+        let repeatAnimation = SKAction.repeatForever(animation)
+
+        self.run(repeatAnimation, withKey: "tiptoeAnimation")
+    }
+    
     func stopAllAnimations() {
+        self.removeAction(forKey: "tiptoeAnimation")
         self.removeAction(forKey: "idleAnimation")
         self.removeAction(forKey: "stealingAnimation")
         self.removeAction(forKey: "introAnimation")

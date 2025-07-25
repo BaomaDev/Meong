@@ -16,6 +16,7 @@ struct GameView: View {
 
     @State private var showPauseMenu = false
     @State private var showShop = false
+    @State private var showSettings = false
     @State private var gameScene: GameScene = {
         let scene = GameScene(size: UIScreen.main.bounds.size)
         scene.scaleMode = .resizeFill
@@ -74,9 +75,9 @@ struct GameView: View {
                 }
             }
             
-            if gamePhase == .homeScreen {
-               EmptyView()
-            }
+//            if gamePhase == .homeScreen {
+//               EmptyView()
+//            }
             
             if gamePhase == .none {
                 EmptyView()
@@ -87,15 +88,22 @@ struct GameView: View {
                     .ignoresSafeArea()
                     .transition(.opacity)
 
-                ShopView()
+                ShopView(isShowing: $showShop)
             }
 
             if showPauseMenu {
                 Color.black.opacity(0.5)
                     .ignoresSafeArea()
                     .transition(.opacity)
-
+                
                 PauseMenu(showPauseMenu: $showPauseMenu, gameScene: $gameScene)
+            } else if gamePhase == .homeScreen {
+                HomeMenu(
+                    openShop: { showShop = true },
+                    openSettings: { showSettings = true },
+                    openLeaderboard: { showSettings = true },
+                    openAchievements: { showSettings = true },
+                )
             } else if gamePhase == .gameOver {
                 Color.black.opacity(0.5)
                     .ignoresSafeArea()

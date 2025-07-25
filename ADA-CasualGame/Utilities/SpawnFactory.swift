@@ -92,8 +92,13 @@ class SpawnFactory {
         
         switch textureName {
             case "BapakMainCatur":
+<<<<<<< Updated upstream
                 targetWidth = 125
                 objectPosition = CGPoint(x: position.x, y: position.y - 15)
+=======
+                targetWidth = 120
+                objectPosition = CGPoint(x: position.x, y: position.y - 5)
+>>>>>>> Stashed changes
             case "BoxPisang":
                 targetWidth = 70
                 objectPosition = CGPoint(x: position.x, y: position.y - 15)
@@ -161,9 +166,38 @@ class SpawnFactory {
     }
     
     static func createDuckable(at position: CGPoint) -> Duckable {
+<<<<<<< Updated upstream
         let duckable = Duckable(texture: nil, color: .purple, size: CGSize(width: 20, height: 60))
         duckable.name = "Duckable"
         duckable.position = position
+=======
+        let textureNames = ["BoxBuah"]
+        let textureName = textureNames.randomElement()!
+        let texture = SKTexture(imageNamed: textureName)
+        
+        var targetWidth: CGFloat = 0
+        var objectPosition = position
+        
+        switch textureName {
+            case "BoxBuah":
+                targetWidth = 65
+                objectPosition = CGPoint(x: position.x, y: position.y + 5)
+//            case "GerobakSayur":
+//                targetWidth = 160
+//                objectPosition = CGPoint(x: position.x, y: position.y + 30)
+            default:
+                targetWidth = 50
+                objectPosition = CGPoint(x: position.x, y: position.y - 10)
+        }
+        
+        let aspectRatio = texture.size().height / texture.size().width
+        let targetHeight = targetWidth * aspectRatio
+        let size = CGSize(width: targetWidth, height: targetHeight)
+        
+        let duckable = Duckable(texture: texture, color: .clear, size: size)
+        duckable.name = textureName
+        duckable.position = objectPosition
+>>>>>>> Stashed changes
         duckable.userData = ["obstacleType": "duckable"]
         
         let collisionHeight = duckable.size.height * 0.4
@@ -190,9 +224,44 @@ class SpawnFactory {
     }
     
     static func createStepable(at position: CGPoint) -> Stepable {
+<<<<<<< Updated upstream
         let stepable = Stepable(texture: nil, color: .blue, size: CGSize(width: 60, height: 30))
         stepable.name = "Stepable"
         stepable.position = position
+=======
+        let textureNames = ["Tong", "Box", "BoxBerdiri", "GerobakSayur"]
+        let textureName = textureNames.randomElement()!
+        let texture = SKTexture(imageNamed: textureName)
+        
+        var targetWidth: CGFloat = 0
+        var objectPosition = position
+        
+        switch textureName {
+            case "Tong":
+                targetWidth = 50
+                objectPosition = position
+            case "Box":
+                targetWidth = 50
+                objectPosition = CGPoint(x: position.x, y: position.y - 10)
+            case "BoxBerdiri":
+                targetWidth = 40
+                objectPosition = CGPoint(x: position.x, y: position.y - 10)
+            case "GerobakSayur":
+                targetWidth = 160
+                objectPosition = CGPoint(x: position.x, y: position.y + 40)
+            default:
+                targetWidth = 50
+                objectPosition = CGPoint(x: position.x, y: position.y - 10)
+        }
+        
+        let aspectRatio = texture.size().height / texture.size().width
+        let targetHeight = targetWidth * aspectRatio
+        let size = CGSize(width: targetWidth, height: targetHeight)
+        let stepable = Stepable(texture: texture, color: .clear, size: size)
+        
+        stepable.name = textureName
+        stepable.position = objectPosition
+>>>>>>> Stashed changes
         stepable.userData = ["obstacleType": "stepable"]
 
         let safeZoneHeight: CGFloat = 15
@@ -247,9 +316,19 @@ class SpawnFactory {
     
     // MARK: - Projectiles
 
+<<<<<<< Updated upstream
     static func createProjectile(in scene: SKScene) -> SKSpriteNode {
         let texture = SKTexture(imageNamed: "sendal")
         let size = CGSize(width: 40, height: 40)
+=======
+    static func createProjectile(in scene: SKScene) -> (node: SKSpriteNode, startPoint: CGPoint) {
+        let texture = SKTexture(imageNamed: "sendal")
+        
+        let targetWidth: CGFloat = 30
+        let aspectRatio = texture.size().height / texture.size().width
+        let targetHeight = targetWidth * aspectRatio
+        let size = CGSize(width: targetWidth, height: targetHeight)
+>>>>>>> Stashed changes
         let projectile = SKSpriteNode(texture: texture, color: .clear, size: size)
         projectile.name = "Projectile"
         
@@ -307,6 +386,56 @@ class SpawnFactory {
         projectile.position = startPoint
         projectile.run(SKAction.sequence([followAction, removeAction]))
         
+<<<<<<< Updated upstream
+=======
+        return (projectile, startPoint)
+    }
+    
+    static func createTutorialProjectile(in scene: SKScene) -> SKSpriteNode {
+        let texture = SKTexture(imageNamed: "sendal")
+        
+        let targetWidth: CGFloat = 30
+        let aspectRatio = texture.size().height / texture.size().width
+        let targetHeight = targetWidth * aspectRatio
+        let size = CGSize(width: targetWidth, height: targetHeight)
+        let projectile = SKSpriteNode(texture: texture, color: .clear, size: size)
+        projectile.name = "Projectile"
+        
+        projectile.physicsBody = SKPhysicsBody(circleOfRadius: 10)
+        projectile.physicsBody?.categoryBitMask = PhysicsCategory.projectile
+        projectile.physicsBody?.isDynamic = false
+        projectile.physicsBody?.affectedByGravity = false
+        projectile.physicsBody?.contactTestBitMask = PhysicsCategory.player
+        projectile.physicsBody?.collisionBitMask = PhysicsCategory.none
+        
+        let rotate = SKAction.rotate(byAngle: .pi, duration: 0.2)
+        let spinForever = SKAction.repeatForever(rotate)
+        projectile.run(spinForever)
+        
+        let projectileSpeed: CGFloat = min(gameSpeed * 2, 800)
+        
+        var startPoint: CGPoint
+        var endPoint: CGPoint
+        var controlPoint: CGPoint
+
+        let startX = scene.size.width
+        let endX: CGFloat = 50
+
+        startPoint = CGPoint(x: startX, y: 75)
+        endPoint = CGPoint(x: endX, y: 50)
+        controlPoint = CGPoint(x: scene.size.width / 2, y: 200)
+        
+        let path = CGMutablePath()
+        path.move(to: startPoint)
+        path.addQuadCurve(to: endPoint, control: controlPoint)
+        
+        let followAction = SKAction.follow(path, asOffset: false, orientToPath: false, speed: projectileSpeed)
+        let removeAction = SKAction.removeFromParent()
+        
+        projectile.position = startPoint
+        projectile.run(SKAction.sequence([followAction, removeAction]))
+        
+>>>>>>> Stashed changes
         return projectile
     }
     

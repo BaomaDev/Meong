@@ -6,14 +6,13 @@ enum GamePhase {
     case homeScreen
     case playing
     case gameOver
+    case none
 }
 
 class GameScene: SKScene, SKPhysicsContactDelegate {
     // MARK: - Properties
     var player: PlayerEntity?
     var chaser: ChaserEntity?
-    var gerobakIkan: SKSpriteNode?
-    var backgroundHome: SKSpriteNode?
     
     // This class will now handle all the spawning logic
     var worldGenerator: WorldGenerator?
@@ -47,9 +46,13 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     private var tutorialManager: TutorialManager?
     private(set) var gamePhase: GamePhase = .tutorial
     private static var isFirstLaunch = true
-    private var tapToStartUI: SKSpriteNode?
+    private var tapToStartUI: SKLabelNode?
     private var titleUI: SKSpriteNode?
     private var isWaitingForTapToStart = false
+    private var isWaitingForAnimationHome = true
+    
+    private var backgroundHome: SKSpriteNode?
+    private var gerobakIkan: SKSpriteNode?
     
     private var playerData: PlayerData!
     
@@ -82,6 +85,13 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 if self.playerData.isFirstTimeInstall {
                     self.setupGame()
                 } else {
+                    self.camera?.position = CGPoint(x: self.size.width / 2, y: 1000)
+                    self.backgroundColor = SKColor(
+                        red: 191.0 / 255.0,
+                        green: 226.0 / 255.0,
+                        blue: 238.0 / 255.0,
+                        alpha: 1.0
+                    )
                     self.showTapToStart()
                 }
             }
@@ -96,6 +106,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
     
     func showTapToStart() {
+// <<<<<<< derend3
         isWaitingForTapToStart = true
 
         // MARK: - Tap to Start Label (Text-based)
@@ -119,6 +130,15 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         label.name = "TapToStartLabel"
         addChild(label)
         tapToStartUI = nil
+// =======
+//         tapToStartUI = SKLabelNode(text: "Tap to Start")
+//         tapToStartUI?.fontSize = 38
+//         tapToStartUI?.fontName = "Comic Lemon"
+//         tapToStartUI?.position = CGPoint(x: size.width / 2, y: size.height * 0.05)
+//         tapToStartUI?.fontColor = .white
+//         tapToStartUI?.zPosition = 1000
+//         addChild(tapToStartUI!)
+// >>>>>>> main
         
         // Optionally add a subtle animation
         let fadeInOut = SKAction.sequence([
@@ -132,9 +152,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         titleUI?.position = CGPoint(x: size.width / 2, y: size.height * 0.8)
         titleUI?.setScale(0.3)
         titleUI?.zPosition = 1000
+        titleUI?.alpha = 0
         addChild(titleUI!)
-
-        // MARK: - Background
+        
+        gamePhase = .none
+        gameStateUpdateHandler?(gamePhase)
+        
         let backgroundHome = SKSpriteNode(imageNamed: "Background_Home")
         backgroundHome.zPosition = -1
         backgroundHome.position = CGPoint(x: size.width / 2, y: size.height / 2)
@@ -142,8 +165,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         addChild(backgroundHome)
         self.backgroundHome = backgroundHome
 
-        gamePhase = .homeScreen
-        gameStateUpdateHandler?(gamePhase)
+//         gamePhase = .homeScreen
+//         gameStateUpdateHandler?(gamePhase)
 
         createPlayer(x: 10)
         createChaser()
@@ -168,6 +191,36 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             player?.position.x = chaser.position.x - 120
             player?.startIdleAnimation()
             player?.constraints = nil
+            
+            if self.isWaitingForAnimationHome {
+                let moveCamera = SKAction.moveTo(y: size.height / 2, duration: 3)
+                self.camera?.run(moveCamera, completion: {
+                    let moveTitle = SKAction.moveTo(y: self.size.height * 0.8, duration: 2)
+                    let changeOpacityTitle = SKAction.fadeAlpha(to: 1.0, duration: 0.0)
+                    let sequenceTitle = SKAction.sequence([changeOpacityTitle, moveTitle])
+                    self.titleUI?.run(sequenceTitle)
+                    self.titleUI?.run(moveTitle, completion: {
+                        self.gamePhase = .homeScreen
+                        self.gameStateUpdateHandler?(self.gamePhase)
+                        let fadeIn = SKAction.fadeIn(withDuration: 3)
+                        let fadeOut = SKAction.fadeOut(withDuration: 3)
+                        let repeatAnimation = SKAction.repeatForever(SKAction.sequence([fadeIn, fadeOut]))
+                        self.tapToStartUI?.run(repeatAnimation)
+                        self.isWaitingForTapToStart = true
+                    })
+                })
+            } else {
+                self.gamePhase = .homeScreen
+                self.gameStateUpdateHandler?(self.gamePhase)
+                let fadeIn = SKAction.fadeIn(withDuration: 3)
+                let fadeOut = SKAction.fadeOut(withDuration: 3)
+                let repeatAnimation = SKAction.repeatForever(SKAction.sequence([fadeIn, fadeOut]))
+                self.tapToStartUI?.run(repeatAnimation)
+                self.titleUI?.alpha = 1.0
+                self.titleUI?.position.y = self.size.height * 0.8
+                self.camera?.position.y = self.size.height / 2
+                self.isWaitingForTapToStart = true
+            }
         }
     }
     
@@ -176,6 +229,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         guard let chaser = chaser else { return }
 
         isWaitingForTapToStart = false
+// <<<<<<< derend3
 
          // Step 1: Intro animation before jump
          let startIntro = SKAction.run {
@@ -185,8 +239,16 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 
         childNode(withName: "TapToStartLabel")?.removeFromParent()
         childNode(withName: "TapToStartShadowLabel")?.removeFromParent()
+// =======
+        isWaitingForAnimationHome = false
+//         tapToStartUI?.removeFromParent()
+//         tapToStartUI = nil
+// >>>>>>> main
         titleUI?.removeFromParent()
         titleUI = nil
+        
+        gamePhase = .none
+        gameStateUpdateHandler?(gamePhase)
         
         //Move all to the far left
         let movePlayertoLeft = SKAction.moveTo(x: 10, duration: 1)
@@ -207,15 +269,19 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             chaser.startIntroAnimation()
         }
 
+        // Step 2: Move player slightly forward
         let moveToStart = SKAction.moveTo(x: 90, duration: 1)
         moveToStart.timingMode = .easeIn
 
+        // Step 3: Bezier path animation (player jumping over the chaser)
         let path = UIBezierPath()
         let startPoint = CGPoint(x: 90, y: 125)
         let endPoint = CGPoint(x: 200, y: 125)
         let controlPoint = CGPoint(x: (90 + 200) / 2, y: 260)
+
         path.move(to: startPoint)
         path.addQuadCurve(to: endPoint, controlPoint: controlPoint)
+
         let jump = SKAction.follow(path.cgPath, asOffset: false, orientToPath: false, duration: 1)
         jump.timingMode = .easeInEaseOut
 
@@ -225,24 +291,27 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
              chaser.startRunningAnimation()
          }
 
-        // Step 5: Finalize game start
         let finalizeStart = SKAction.run { [weak self] in
             guard let self = self else { return }
 
+            // Lock player in place to prevent drift
             let xConstraint = SKConstraint.positionX(SKRange(constantValue: 200))
             player.constraints = [xConstraint]
 
+            // Change game state and start game logic
             self.gamePhase = .playing
             self.gameStateUpdateHandler?(self.gamePhase)
-            self.setupGame() // Starts score and spawning logic
+//             chaser.startRunningAnimation() // Start chase animation now
             
-            removeHomeObjects()
+            self.cleanupObjectHome()
+
+            self.setupGame() // Starts score and spawning logic
         }
         
         let runAnimation = SKAction.run {
             player.startIntroAnimation()
         }
-        
+
         // Step 5: Sequence it all together
         let fullSequence = SKAction.sequence([
             startIntro,
@@ -258,18 +327,22 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             startRunning,
             finalizeStart
         ])
+//         let fullSequence = SKAction.sequence([movePlayertoLeft, runAnimation, moveToStart, .wait(forDuration: 0.1), jump, makMarah, .wait(forDuration: 1), finalizeStart])
+
         chaser.run(moveMaktoLeft)
         backgroundHome?.run(moveBackgroundtoLeft)
         gerobakIkan?.run(moveGerobaktoLeft)
         player.run(fullSequence)
     }
     
-    private func removeHomeObjects(){
-        let move = SKAction.moveTo(x: -500, duration: 2)
-        let remove = SKAction.removeFromParent()
-        let sequence = SKAction.sequence([move, remove])
+    private func cleanupObjectHome(){
+        let moveToLeft = SKAction.moveTo(x: -200, duration: 1.1)
+        let moveToLeftBG = SKAction.moveTo(x: -500, duration: 2)
+        let deleteObjects = SKAction.removeFromParent()
+        let sequence = SKAction.sequence([moveToLeft, deleteObjects])
+        let sequenceBG = SKAction.sequence([moveToLeftBG, deleteObjects])
+        backgroundHome?.run(sequenceBG)
         gerobakIkan?.run(sequence)
-        backgroundHome?.run(sequence)
     }
     
     private func setupProperties() {
@@ -315,7 +388,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         // This logic remains the same
         if playerData.isFirstTimeInstall {
-            removeHomeObjects()
             gamePhase = .tutorial
             gameStateUpdateHandler?(gamePhase)
             tutorialManager = TutorialManager(scene: self)
@@ -421,8 +493,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         if let chaser = chaser {
             chaser.updateFollowPosition()
         }
-        
-        print(player.currentState)
+//
+//        print(player.currentState)
+//        print(currentSurface)
     }
     
     // MARK: - SKPhysicsContactDelegate
@@ -473,8 +546,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         if !player.isInvincible {
             projectileNode.removeFromParent()
         }
-        
-        healthUpdateHandler?(player.hearts)
         
         checkGameOver()
     }
@@ -552,7 +623,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         scoreUpdateHandler?(internalScore)
         healthUpdateHandler?(9)
         distanceUpdateHandler?(3)
-        coinUpdateHandler?(0)   
         
         setupProperties()
         setupGame()
@@ -613,8 +683,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     func createPlayer(x: CGFloat = 200, y: CGFloat = 126) {
         let spawnPoint = CGPoint(x: x, y: y)
         player = PlayerEntity.create(at: spawnPoint)
-        self.addChild(player!)
         player?.zPosition = 3
+        self.addChild(player!)
     }
     
     // MARK: - Surface Detection
@@ -649,6 +719,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         chaser?.zPosition = 1
         
         guard gamePhase != .tutorial else { return }
+//         let gerobakIkan = SKSpriteNode(imageNamed: "TokoIkan")
+//         gerobakIkan.setScale(0.2)
+//         gerobakIkan.position = chaser?.position ?? CGPoint.zero
+//         gerobakIkan.zPosition = 2
+//         self.gerobakIkan = gerobakIkan
+//         addChild(gerobakIkan)
     }
     
     func updateSpawningIfNeeded() {

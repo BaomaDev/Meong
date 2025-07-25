@@ -73,8 +73,12 @@ class PlayerEntity: SKSpriteNode {
     }
     
     func handleProjectileHit(projectileNode: SKNode) {
-        knockAway(node: projectileNode)
-        guard !isInvincible else { return }
+        guard !isInvincible else {
+            if currentState == .flying {
+                knockAway(node: projectileNode)
+            }
+            return
+        }
         
         hearts -= 1
         distance -= 1
@@ -201,6 +205,7 @@ class PlayerEntity: SKSpriteNode {
                 
                 // 🔁 Resume running animation
                 self.startRunningAnimation()
+                applyHitInvincibility()
             }
         ])
 
@@ -229,6 +234,10 @@ class PlayerEntity: SKSpriteNode {
         let surprisedSoundKeys = ["surprised1.mp3", "surprised2.mp3", "surprised3.mp3"]
         let crashSoundKeys = ["crash1.mp3", "crash2.mp3", "crash3.mp3"]
         switch objectName {
+        case "Projectile":
+            EffectsFactory.shared.playSound(soundKey: "parry2.mp3", volumeKey: 1.0)
+            knockType = "expel"
+            
         case "BapakMainCatur":
             EffectsFactory.shared.playSound(soundKey: surprisedSoundKeys.randomElement()!, volumeKey: 1.0)
             EffectsFactory.shared.playSound(soundKey: crashSoundKeys.randomElement()!, volumeKey: 0.6)
@@ -236,10 +245,13 @@ class PlayerEntity: SKSpriteNode {
             
         case "Ayam":
             EffectsFactory.shared.playSound(soundKey: "chickenHit.mp3", volumeKey: 1.0)
+            EffectsFactory.shared.createParticleEffect(at: self.position, key: "feather", amount: 8)
+            EffectsFactory.shared.createParticleEffect(at: self.position, key: "smoke", amount: 2)
             knockType = "expel"
             
         case "Sepeda 2":
-            EffectsFactory.shared.playSound(soundKey: "surprised2", volumeKey: 1.0)
+            EffectsFactory.shared.playSound(soundKey: "surprised2.mp3", volumeKey: 1.0)
+            EffectsFactory.shared.playSound(soundKey: "bikeCrash.mp3", volumeKey: 1.0)
             knockType = "flip"
             
         case "BoxPisang":
@@ -269,12 +281,12 @@ class PlayerEntity: SKSpriteNode {
             
         default:
             EffectsFactory.shared.playSound(soundKey: crashSoundKeys.randomElement()!, volumeKey: 1.0)
-            knockType = "flip"
+            knockType = "fallOver"
         }
         
         switch knockType {
         case "flip":
-            moveDistance = CGVector(dx: 100, dy: -20)
+            moveDistance = CGVector(dx: 100, dy: -40)
             moveDuration = 0.3
             spin = SKAction.rotate(byAngle: .pi, duration: 0.25)
         case "expel":
@@ -285,6 +297,10 @@ class PlayerEntity: SKSpriteNode {
             moveDistance = CGVector(dx: 0, dy: 0)
             moveDuration = 0.1
             spin = SKAction.rotate(byAngle: 0, duration: 0.1)
+        case "fallOver":
+            moveDistance = CGVector(dx: 100, dy: -60)
+            moveDuration = 0.3
+            spin = SKAction.rotate(byAngle: .pi/3, duration: 0.25)
         default:
             moveDistance = CGVector(dx: 100, dy: -20)
             moveDuration = 0.3

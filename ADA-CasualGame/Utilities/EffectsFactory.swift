@@ -260,15 +260,18 @@ class EffectsFactory {
                 emitter.particleScaleSequence = SKKeyframeSequence(keyframeValues: [initialSize, initialSize * 0.2], times: [0, 1])
                 
             case "banana":
-                let initialSize: CGFloat = 5.0
+                let initialSize: CGFloat = 0.4
 
                 emitter.particleTexture = SKTexture(imageNamed: "Banana")
-                emitter.particleColorBlendFactor = 1.0
-                emitter.particleLifetime = 0.6
-                emitter.particleSpeed = 80
+                emitter.particleLifetime = 2.0
+                emitter.particleSpeed = 200
                 emitter.emissionAngleRange = .pi / 8
-                emitter.xAcceleration = -gameSpeed
-                emitter.yAcceleration = 0
+                emitter.xAcceleration = -gameSpeed*2
+                emitter.yAcceleration = -800
+                
+                // **NEW**: Add these two lines to make the particles spin.
+                emitter.particleRotationRange = .pi * 2 // Random starting angle (0 to 360 degrees)
+                emitter.particleRotationSpeed = 5.0      // Spin speed in radians per second
 
                 emitter.particleScaleSequence = SKKeyframeSequence(keyframeValues: [initialSize, initialSize * 0.2], times: [0, 1])
                 
@@ -284,6 +287,23 @@ class EffectsFactory {
                 emitter.xAcceleration = -gameSpeed
                 emitter.yAcceleration = 0
                 emitter.particlePositionRange = CGVector(dx: 10, dy: 0)
+
+                emitter.particleScaleSequence = SKKeyframeSequence(keyframeValues: [initialSize, initialSize * 0.2], times: [0, 1])
+                
+            case "feather":
+                let initialSize: CGFloat = 0.1
+
+                emitter.particleTexture = SKTexture(imageNamed: "bulu")
+                emitter.particleLifetime = 2.0
+                emitter.particleSpeed = 200
+                emitter.emissionAngleRange = .pi / 8
+                emitter.xAcceleration = -gameSpeed*2
+                emitter.yAcceleration = -800
+                
+                // **NEW**: Add these two lines to make the particles spin.
+                emitter.particleRotationRange = .pi * 2 // Random starting angle (0 to 360 degrees)
+                emitter.particleRotationSpeed = 5.0      // Spin speed in radians per second
+                emitter.particlePositionRange = CGVector(dx: 20, dy: 20)
 
                 emitter.particleScaleSequence = SKKeyframeSequence(keyframeValues: [initialSize, initialSize * 0.2], times: [0, 1])
                 

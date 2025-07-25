@@ -15,8 +15,6 @@ extension PlayerEntity {
         let previousState = self.currentState
         let previousSurface = self.currentSurface
         
-        let particlePosition = CGPoint(x: self.position.x, y: self.position.y - self.size.height / 2)
-        
         // Ignore landing / jumping logic when flying
         if currentState == .flying {
             if let scene = self.scene as? GameScene {
@@ -43,6 +41,12 @@ extension PlayerEntity {
             return
         }
         
+        let isOnGround = (currentSurface == previousSurface) && (currentSurface == .ground) && (previousSurface == .ground)
+        if isOnGround {
+            self.currentState = .running
+            self.canJump = true
+        }
+        
         let isLanding = currentSurface.isGrounded && !previousSurface.isGrounded && (self.physicsBody?.velocity.dy ?? 0) <= 0
         if isLanding {
             if previousState == .diving {
@@ -57,10 +61,6 @@ extension PlayerEntity {
         let isJumping = !currentSurface.isGrounded && previousSurface.isGrounded
         if isJumping {
             handleGoingAirborne()
-//            let fellFromPlatform = currentSurface == .none && previousSurface.isPlatform
-//            if fellFromPlatform {  // No effects when dropping off
-//                EffectsFactory.shared.createParticleEffect(at: particlePosition, key: "smoke", amount: 2)
-//            }
         }
         
         self.currentSurface = currentSurface
@@ -124,6 +124,8 @@ extension PlayerEntity {
         // Particle
         EffectsFactory.shared.createParticleEffect(at: particlePosition, key: surfaceKey, amount: amount)
         
+        self.startRunningAnimation()
+        
         self.run(SKAction.sequence([wait, transitionToRunning]))
     }
     
@@ -166,6 +168,8 @@ extension PlayerEntity {
             // It was a normal landing, so we can run immediately.
             self.currentState = .running
         }
+        
+        self.startRunningAnimation()
     }
     
     // MARK: - Jump
@@ -196,8 +200,11 @@ extension PlayerEntity {
         canJump = false
         self.currentState = .airborne
         
-        let adjustY = playerHitboxHeight * -0.125
-        applyVerticalMovementTransformation(withYAdjustment: adjustY)
+//        let adjustY = playerHitboxHeight * -0.125
+//        applyVerticalMovementTransformation(withYAdjustment: adjustY)
+        
+        // Start jump animation
+        startJumpingAnimation()
         
         // --- Define Jump Parameters ---
         let jumpHeight = defaultJumpHeight
@@ -210,8 +217,6 @@ extension PlayerEntity {
         self.physicsBody?.affectedByGravity = false
         
         EffectsFactory.shared.playSound(soundKey: "jump.mp3", volumeKey: 1.0)
-//        EffectsFactory.shared.playSound(soundKey: "normaljump.mp3")
-//        EffectsFactory.shared.playHaptic(strength: 0.5)
         
         let jumpAction = SKAction.customAction(withDuration: duration) { (node, elapsedTime) in
             let t = elapsedTime / duration
@@ -225,8 +230,7 @@ extension PlayerEntity {
             self.canJump = true
         }
         
-        self.run(SKAction.sequence([jumpAction, completion]))
-    }
+        self.run(SKAction.sequence([jumpAction, completion]), withKey: "jumpAction")    }
     
     private func highJump() {
         guard self.position.y <= platformHeight else {
@@ -244,8 +248,12 @@ extension PlayerEntity {
         // --- 1. Set up the common properties for any jump ---
         canJump = false
         self.currentState = .airborne
-        let adjustY = playerHitboxHeight * -0.125
-        applyVerticalMovementTransformation(withYAdjustment: adjustY)
+        
+//        let adjustY = playerHitboxHeight * -0.125
+//        applyVerticalMovementTransformation(withYAdjustment: adjustY)
+
+        // Start jump animation
+        startHighJumpingAnimation()
 
         // --- 2. Decide which type of jump to perform ---
         if checkForSolidPlatform() {
@@ -257,11 +265,11 @@ extension PlayerEntity {
             wait = SKAction.wait(forDuration: 0.5)
 
         } else {
-            let jumpHeight = defaultJumpHeight * 2
+            let jumpHeight = defaultJumpHeight * 1.75
             let horizontalDistance = defaultJumpDistance + gameSpeed/2
             
             let startY = self.position.y
-            let duration = horizontalDistance / 4 / gameSpeed
+            let duration = horizontalDistance / 3.5 / gameSpeed
             
             jumpAction = SKAction.customAction(withDuration: duration) { (node, elapsedTime) in
                 let t = elapsedTime / duration
@@ -277,7 +285,7 @@ extension PlayerEntity {
 //        EffectsFactory.shared.playHaptic(strength: 1.0)
         
         // Run the chosen jumpAction followed by its corresponding completion action.
-        self.run(SKAction.sequence([jumpAction, wait, restoreAction]))
+        self.run(SKAction.sequence([jumpAction, wait, restoreAction]), withKey: "jumpAction")
     }
     
     // MARK: - Duck / Dive
@@ -299,12 +307,26 @@ extension PlayerEntity {
     }
     
     private func performDive() {
-        guard !(currentState == .flying) else { return }
-        
-        guard isCloseToGround() == false else {
-            self.queuedAction = .duck
+        // We can only dive if we are currently airborne.
+        guard self.currentState == .airborne else {
+            // If not airborne, check if a duck is queued (e.g., from being too close to the ground).
+            if isCloseToGround() {
+                self.queuedAction = .duck
+            }
             return
         }
+        
+        // --- 1. Cancel the Current Jump ---
+        
+        // Remove any ongoing scripted jump action. This is the core of the fix.
+        self.removeAction(forKey: "jumpAction")
+        
+        // A jump action disables gravity and changes the player's shape.
+        // We must manually restore these states before we can dive.
+        self.physicsBody?.affectedByGravity = true
+        self.restoreOriginalShape()
+        
+        // --- 2. Perform the Dive ---
         
         self.currentState = .diving
         self.canDive = false
@@ -312,7 +334,7 @@ extension PlayerEntity {
         let adjustY = self.size.height * (0.34/2)
         applyVerticalMovementTransformation(withYAdjustment: adjustY)
         
-        // 3. Apply a sharp downward impulse.
+        // Apply a sharp downward impulse.
         // Resetting vertical velocity first makes the dive feel consistent.
         self.physicsBody?.velocity.dy = 0
         self.physicsBody?.applyImpulse(CGVector(dx: 0, dy: -diveForce))

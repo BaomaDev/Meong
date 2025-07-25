@@ -13,8 +13,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     // MARK: - Properties
     var player: PlayerEntity?
     var chaser: ChaserEntity?
-    var gerobakIkan: SKSpriteNode?
-    var backgroundHome: SKSpriteNode?
     
     // This class will now handle all the spawning logic
     var worldGenerator: WorldGenerator?
@@ -135,7 +133,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         // Wait for next frame so layout and textures are fully applied
         run(SKAction.wait(forDuration: 0.01)) { [weak self] in
             guard let self = self, let chaser = self.chaser else { return }
-            let startXChaser = self.size.width / 2
+            let startXChaser = self.size.width * 0.15
             let startY = self.size.height*0.2
             chaser.position = CGPoint(x: startXChaser, y: startY)
             gerobakIkan?.position.x = chaser.position.x
@@ -197,18 +195,16 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         moveGerobaktoLeft.timingMode = .easeInEaseOut
         let moveBackgroundtoLeft = SKAction.moveTo(x: size.width * 0.15, duration: 1)
         moveBackgroundtoLeft.timingMode = .easeInEaseOut
-        
-        
-        
-        
-        //After position changed to far left
+      
         let makMarah = SKAction.run {
             chaser.startIntroAnimation()
         }
 
+        // Step 2: Move player slightly forward
         let moveToStart = SKAction.moveTo(x: 90, duration: 1)
         moveToStart.timingMode = .easeIn
 
+        // Step 3: Bezier path animation (player jumping over the chaser)
         let path = UIBezierPath()
         let startPoint = CGPoint(x: 90, y: 125)
         let endPoint = CGPoint(x: 200, y: 125)
@@ -220,6 +216,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         let jump = SKAction.follow(path.cgPath, asOffset: false, orientToPath: false, duration: 1)
         jump.timingMode = .easeInEaseOut
 
+        // Step 4: Finalize game start
         let finalizeStart = SKAction.run { [weak self] in
             guard let self = self else { return }
 
@@ -234,28 +231,15 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             chaser.startRunningAnimation() // Start chase animation now
 
             self.setupGame() // Starts score and spawning logic
-            
-            removeHomeObjects()
         }
         
         let runAnimation = SKAction.run {
             player.startRunningAnimation()
         }
-        
+
         // Step 5: Sequence it all together
-        let fullSequence = SKAction.sequence([movePlayertoLeft, .wait(forDuration: 0.1), runAnimation, moveToStart, .wait(forDuration: 0.1), jump, makMarah, .wait(forDuration: 1), finalizeStart])
-        chaser.run(moveMaktoLeft)
-        backgroundHome?.run(moveBackgroundtoLeft)
-        gerobakIkan?.run(moveGerobaktoLeft)
+        let fullSequence = SKAction.sequence([runAnimation, moveToStart, .wait(forDuration: 0.1), jump, makMarah, .wait(forDuration: 1), finalizeStart])
         player.run(fullSequence)
-    }
-    
-    private func removeHomeObjects(){
-        let move = SKAction.moveTo(x: -500, duration: 2)
-        let remove = SKAction.removeFromParent()
-        let sequence = SKAction.sequence([move, remove])
-        gerobakIkan?.run(sequence)
-        backgroundHome?.run(sequence)
     }
     
     private func setupProperties() {
@@ -301,7 +285,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         // This logic remains the same
         if playerData.isFirstTimeInstall {
-            removeHomeObjects()
             gamePhase = .tutorial
             gameStateUpdateHandler?(gamePhase)
             tutorialManager = TutorialManager(scene: self)
@@ -407,6 +390,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         if let chaser = chaser {
             chaser.updateFollowPosition()
         }
+//        
+//        print(player.currentState)
+//        print(currentSurface)
     }
     
     // MARK: - SKPhysicsContactDelegate
@@ -503,6 +489,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         case PhysicsCategory.coin:
             player?.coins += 1
             coinUpdateHandler?(player?.coins ?? 0)
+            player?.takeCoin()
             collectibleBody.node?.removeFromParent()
         case PhysicsCategory.powerUp:
             player?.applyPowerUp()
@@ -594,7 +581,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         let spawnPoint = CGPoint(x: x, y: y)
         player = PlayerEntity.create(at: spawnPoint)
         self.addChild(player!)
-        player?.zPosition = 3
     }
     
     // MARK: - Surface Detection
@@ -626,15 +612,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         let chaserNode = ChaserEntity(player: player)
         addChild(chaserNode)
         chaser = chaserNode
-        chaser?.zPosition = 1
-        
-        guard gamePhase != .tutorial else { return }
-        let gerobakIkan = SKSpriteNode(imageNamed: "TokoIkan")
-        gerobakIkan.position = CGPoint(x: 126, y: 135)
-        gerobakIkan.setScale(0.2)
-        gerobakIkan.zPosition = 2
-        addChild(gerobakIkan)
-        self.gerobakIkan = gerobakIkan
     }
     
     func updateSpawningIfNeeded() {

@@ -83,8 +83,8 @@ class SpawnFactory {
     }
     
     static func createCatnip(at position: CGPoint, characterCategory: UInt32, catnipCategory: UInt32) -> SKSpriteNode {
-        let catnip = SKSpriteNode(imageNamed: "catnip")
-        catnip.setScale(0.07)
+        let catnip = SKSpriteNode(imageNamed: "Catnip")
+        catnip.setScale(0.03)
         catnip.position = position
         catnip.zPosition = 1
 
@@ -111,7 +111,7 @@ class SpawnFactory {
         
         switch textureName {
             case "BapakMainCatur":
-                targetWidth = 150
+                targetWidth = 130
                 objectPosition = CGPoint(x: position.x, y: position.y + 10)
             case "BoxPisang":
                 targetWidth = 70
@@ -126,7 +126,7 @@ class SpawnFactory {
         let size = CGSize(width: targetWidth, height: targetHeight)
         
         let noTouch = SKSpriteNode(texture: texture, color: .clear, size: size)
-        noTouch.name = "NoTouch"
+        noTouch.name = textureName
         noTouch.position = objectPosition
         
         noTouch.physicsBody = SKPhysicsBody(rectangleOf: noTouch.size)
@@ -225,10 +225,9 @@ class SpawnFactory {
 
         return moving
     }
-
     
     static func createDuckable(at position: CGPoint) -> Duckable {
-        let textureNames = ["BoxBuah", "GerobakSayur"]
+        let textureNames = ["BoxBuah"]
         let textureName = textureNames.randomElement()!
         let texture = SKTexture(imageNamed: textureName)
         
@@ -238,9 +237,9 @@ class SpawnFactory {
         switch textureName {
             case "BoxBuah":
                 targetWidth = 65
-            case "GerobakSayur":
-                targetWidth = 160
-                objectPosition = CGPoint(x: position.x, y: position.y + 30)
+//            case "GerobakSayur":
+//                targetWidth = 160
+//                objectPosition = CGPoint(x: position.x, y: position.y + 30)
             default:
                 targetWidth = 50
                 objectPosition = CGPoint(x: position.x, y: position.y - 10)
@@ -251,7 +250,7 @@ class SpawnFactory {
         let size = CGSize(width: targetWidth, height: targetHeight)
         
         let duckable = Duckable(texture: texture, color: .clear, size: size)
-        duckable.name = "Duckable"
+        duckable.name = textureName
         duckable.position = objectPosition
         duckable.userData = ["obstacleType": "duckable"]
         
@@ -279,7 +278,7 @@ class SpawnFactory {
     }
     
     static func createStepable(at position: CGPoint) -> Stepable {
-        let textureNames = ["Tong", "Box", "BoxBerdiri"]
+        let textureNames = ["Tong", "Box", "BoxBerdiri", "GerobakSayur"]
         let textureName = textureNames.randomElement()!
         let texture = SKTexture(imageNamed: textureName)
         
@@ -296,6 +295,9 @@ class SpawnFactory {
             case "BoxBerdiri":
                 targetWidth = 40
                 objectPosition = CGPoint(x: position.x, y: position.y - 10)
+            case "GerobakSayur":
+                targetWidth = 160
+                objectPosition = CGPoint(x: position.x, y: position.y + 30)
             default:
                 targetWidth = 50
                 objectPosition = CGPoint(x: position.x, y: position.y - 10)
@@ -306,7 +308,7 @@ class SpawnFactory {
         let size = CGSize(width: targetWidth, height: targetHeight)
         let stepable = Stepable(texture: texture, color: .clear, size: size)
         
-        stepable.name = "Stepable"
+        stepable.name = textureName
         stepable.position = objectPosition
         stepable.userData = ["obstacleType": "stepable"]
 

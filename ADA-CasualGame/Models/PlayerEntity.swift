@@ -35,7 +35,7 @@ class PlayerEntity: SKSpriteNode {
     
     // MARK: - Initialization
     static func create(at position: CGPoint) -> PlayerEntity {
-        let texture = SKTexture(imageNamed: "CatRunning_00001")
+        let texture = SKTexture(imageNamed: "CatWithoutFish_00000")
         let playerSize = CGSize(width: playerHitboxWidth, height: playerHitboxHeight)
         let player = PlayerEntity(texture: texture, color: .clear, size: playerSize)
         player.name = "Player"
@@ -73,62 +73,56 @@ class PlayerEntity: SKSpriteNode {
     }
     
     func handleProjectileHit(projectileNode: SKNode) {
-        knockAway(node: projectileNode)
-        guard !isInvincible else { return }
+        guard !isInvincible else {
+            if currentState == .flying {
+                knockAway(node: projectileNode)
+            }
+            return
+        }
         
         hearts -= 1
         distance -= 1
-        updateDistance(distance)  // ✅ Implementasikan updateDistance sesuai kebutuhan
+        updateDistance(distance)
         isInvincible = true
         
         // Nonaktifkan kontak sementara dengan projectile
         physicsBody?.contactTestBitMask &= ~PhysicsCategory.projectile
         physicsBody?.collisionBitMask &= ~PhysicsCategory.projectile
         
-        EffectsFactory.shared.playSound(soundKey: "hurt.mp3", volumeKey: 1.5)
+        EffectsFactory.shared.playSound(soundKey: "parry2.mp3", volumeKey: 1.0)     // Smack sound
+        EffectsFactory.shared.playSound(soundKey: "hurt.mp3", volumeKey: 1.0)
         EffectsFactory.shared.playHaptic(intensity: 1.0, sharpness: 0.1, type: .hapticContinuous, duration: 0.3)
         
-        // Blink effect
-        let blink = SKAction.sequence([
-            SKAction.fadeAlpha(to: 0.2, duration: 0.1),
-            SKAction.fadeAlpha(to: 1.0, duration: 0.1)
-        ])
-        let repeatBlink = SKAction.repeat(blink, count: 5)
-        self.run(repeatBlink)
-        
-        // Waktu invincibility
-        let wait = SKAction.wait(forDuration: 1.0)
-        let reset = SKAction.run { [weak self] in
-            guard let self = self else { return }
-            self.isInvincible = false
-            self.setupPhysics() // Kembalikan bitmask ke default
-        }
-        
-        self.run(SKAction.sequence([wait, reset]))
-        
-        //        print("Player was hit by a projectile!")
+        applyHitInvincibility()
     }
     
     func handleObstacleHit(obstacleNode: SKNode) {
-        knockAway(node: obstacleNode)
-        guard !isInvincible else { return }
+        guard !isInvincible else {
+            if currentState == .flying {
+                knockAway(node: obstacleNode)
+            }
+            return
+        }
 
+        knockAway(node: obstacleNode)
+        
         hearts -= 1
         distance -= 1
         updateDistance(distance)
         isInvincible = true
 
-        // ✅ Safely unwrap physicsBody before modifying
         if let body = self.physicsBody {
             body.contactTestBitMask &= ~PhysicsCategory.obstacle
             body.collisionBitMask &= ~PhysicsCategory.obstacle
-        } else {
-            print("⚠️ Warning: physicsBody is nil during obstacle hit!")
         }
         
-        EffectsFactory.shared.playSound(soundKey: "hurt.mp3", volumeKey: 1.5)
+        EffectsFactory.shared.playSound(soundKey: "hurt.mp3", volumeKey: 1.0)
         EffectsFactory.shared.playHaptic(intensity: 2.0, sharpness: 0.1, type: .hapticContinuous, duration: 0.3)
 
+        applyHitInvincibility()
+    }
+    
+    private func applyHitInvincibility() {
         // Blink effect
         let blink = SKAction.sequence([
             SKAction.fadeAlpha(to: 0.2, duration: 0.1),
@@ -144,13 +138,16 @@ class PlayerEntity: SKSpriteNode {
             self.isInvincible = false
             self.setupPhysics()
         }
-
+        
         self.run(SKAction.sequence([wait, reset]))
     }
     
-    func applyPowerUp() {
+    func applyPowerUp() {   // Whiskas
         distance += 1
         updateDistance(distance)
+        
+        EffectsFactory.shared.playSound(soundKey: "munch.mp3", volumeKey: 1.0)
+        EffectsFactory.shared.playSound(soundKey: "speedBoost.mp3", volumeKey: 1.0)
     }
     
     func applyCatnip() {
@@ -158,6 +155,8 @@ class PlayerEntity: SKSpriteNode {
         guard !isInCatnipMode else { return }
         currentState = .flying
         isInvincible = true
+        
+        EffectsFactory.shared.playSound(soundKey: "powerUp.mp3", volumeKey: 1.0)
 
         // This ensures the player is not stuck in a blinking, stretched, or ducked state.
         self.removeAllActions() // Stop any ongoing visual animations (like blinking or stretching)
@@ -165,7 +164,6 @@ class PlayerEntity: SKSpriteNode {
         self.restoreOriginalShape2()  // Reset size and physics body to default
         self.setScale(1.0)
 
-        // 🔽 Apply ducking animation here
         startFlyingAnimation()
         
         // Modify physics and game settings
@@ -207,35 +205,120 @@ class PlayerEntity: SKSpriteNode {
                 
                 // 🔁 Resume running animation
                 self.startRunningAnimation()
+                applyHitInvincibility()
             }
         ])
 
         self.run(catnipTimer, withKey: "catnipModeSequence")
     }
     
+    func takeCoin() {
+        EffectsFactory.shared.playSound(soundKey: "coin.mp3", volumeKey: 1.0)
+        EffectsFactory.shared.createParticleEffect(at: self.position, key: "bling", amount: 3)
+    }
+    
     private func knockAway(node: SKNode) {
-        // 1. Change the physics so the object can fly freely.
         node.physicsBody?.collisionBitMask = PhysicsCategory.none
         node.physicsBody?.contactTestBitMask = PhysicsCategory.none
-        node.physicsBody?.affectedByGravity = true
+        node.physicsBody?.affectedByGravity = false
         
-        // 2. Apply a strong upward and rightward impulse to send it flying off-screen.
-        let knockbackImpulse = CGVector(dx: 150, dy: 300)
-        node.physicsBody?.applyImpulse(knockbackImpulse)
+        // 2 variables to adjust knock speed and direction
+        let moveDistance: CGVector
+        let moveDuration: TimeInterval
+        let spin: SKAction
+        let knockType: String
         
-        // 3. Apply a comical rotation effect.
-        let spinAction = SKAction.repeatForever(SKAction.rotate(byAngle: .pi * 2, duration: 0.5))
-        node.run(spinAction)
+        let objectName = node.name
         
-        // TODO: Play knock sound effect
+        // Shared Sounds
+        let surprisedSoundKeys = ["surprised1.mp3", "surprised2.mp3", "surprised3.mp3"]
+        let crashSoundKeys = ["crash1.mp3", "crash2.mp3", "crash3.mp3"]
+        switch objectName {
+        case "Projectile":
+            EffectsFactory.shared.playSound(soundKey: "parry2.mp3", volumeKey: 1.0)
+            knockType = "expel"
+            
+        case "BapakMainCatur":
+            EffectsFactory.shared.playSound(soundKey: surprisedSoundKeys.randomElement()!, volumeKey: 1.0)
+            EffectsFactory.shared.playSound(soundKey: crashSoundKeys.randomElement()!, volumeKey: 0.6)
+            knockType = "inplace"
+            
+        case "Ayam":
+            EffectsFactory.shared.playSound(soundKey: "chickenHit.mp3", volumeKey: 1.0)
+            EffectsFactory.shared.createParticleEffect(at: self.position, key: "feather", amount: 8)
+            EffectsFactory.shared.createParticleEffect(at: self.position, key: "smoke", amount: 2)
+            knockType = "expel"
+            
+        case "Sepeda 2":
+            EffectsFactory.shared.playSound(soundKey: "surprised2.mp3", volumeKey: 1.0)
+            EffectsFactory.shared.playSound(soundKey: "bikeCrash.mp3", volumeKey: 1.0)
+            knockType = "flip"
+            
+        case "BoxPisang":
+            EffectsFactory.shared.createParticleEffect(at: self.position, key: "banana", amount: 3)
+            EffectsFactory.shared.playSound(soundKey: "cardboard.mp3", volumeKey: 1.0)
+            knockType = "flip"
+
+//        case "BoxBuah":
+//            EffectsFactory.shared.playSound(soundKey: crashSoundKeys.randomElement()!, volumeKey: 1.0)
+//            spin = SKAction.rotate(byAngle: 90, duration: 0.5)
+//
+//        case "GerobakSayur":
+//            EffectsFactory.shared.playSound(soundKey: crashSoundKeys.randomElement()!, volumeKey: 1.0)
+//            spin = SKAction.rotate(byAngle: 90, duration: 0.5)
+//
+//        case "Tong":
+//            EffectsFactory.shared.playSound(soundKey: crashSoundKeys.randomElement()!, volumeKey: 1.0)
+//            spin = SKAction.rotate(byAngle: 90, duration: 0.5)
+
+        case "Box":
+            EffectsFactory.shared.playSound(soundKey: "cardboard.mp3", volumeKey: 1.0)
+            knockType = "expel"
+
+        case "BoxBerdiri":
+            EffectsFactory.shared.playSound(soundKey: "cardboard.mp3", volumeKey: 1.0)
+            knockType = "expel"
+            
+        default:
+            EffectsFactory.shared.playSound(soundKey: crashSoundKeys.randomElement()!, volumeKey: 1.0)
+            knockType = "fallOver"
+        }
         
-        // The existing cleanup logic in GameScene's update() will remove the node once it's off-screen.
+        switch knockType {
+        case "flip":
+            moveDistance = CGVector(dx: 100, dy: -40)
+            moveDuration = 0.3
+            spin = SKAction.rotate(byAngle: .pi, duration: 0.25)
+        case "expel":
+            moveDistance = CGVector(dx: 800, dy: 600)
+            moveDuration = 1.0
+            spin = SKAction.repeatForever(SKAction.rotate(byAngle: .pi, duration: 0.5))
+        case "inplace":
+            moveDistance = CGVector(dx: 0, dy: 0)
+            moveDuration = 0.1
+            spin = SKAction.rotate(byAngle: 0, duration: 0.1)
+        case "fallOver":
+            moveDistance = CGVector(dx: 100, dy: -60)
+            moveDuration = 0.3
+            spin = SKAction.rotate(byAngle: .pi/3, duration: 0.25)
+        default:
+            moveDistance = CGVector(dx: 100, dy: -20)
+            moveDuration = 0.3
+            spin = SKAction.rotate(byAngle: .pi, duration: 0.25)
+        }
+        
+        let moveAction = SKAction.move(by: moveDistance, duration: moveDuration)
+        moveAction.timingMode = .easeOut
+        
+//        let spinAction = SKAction.repeatForever(spin)
+        let groupAction = SKAction.group([moveAction, spin])
+
+        node.run(groupAction)
     }
     
     func startRunningAnimation() {
         // Generate texture names based on your file naming
-        self.removeAction(forKey: "flyingAnimation")
-        self.removeAction(forKey: "duckAnimation")
+        stopAllAnimations()
         
         let textureNames = (1...12).map { String(format: "CatRunning_%05d", $0) }
         let textures = textureNames.map { SKTexture(imageNamed: $0) }
@@ -249,8 +332,7 @@ class PlayerEntity: SKSpriteNode {
     
     func startDuckingAnimation() {
         // Generate texture names based on your file naming
-        self.removeAction(forKey: "runAnimation")
-        self.removeAction(forKey: "flyingAnimation")
+        stopAllAnimations()
         
         let textureNames = (0...14).map { String(format: "CatDucking_%05d", $0) }
         let textures = textureNames.map { SKTexture(imageNamed: $0) }
@@ -263,9 +345,7 @@ class PlayerEntity: SKSpriteNode {
     }
     
     func startFlyingAnimation() {
-        // Generate texture names based on your file naming
-        self.removeAction(forKey: "runAnimation")
-        self.removeAction(forKey: "duckAnimation")
+        stopAllAnimations()
         
         let textureNames = (0...59).map { String(format: "CatFlying_%05d", $0) }
         let textures = textureNames.map { SKTexture(imageNamed: $0) }
@@ -276,4 +356,55 @@ class PlayerEntity: SKSpriteNode {
 
         self.run(repeatAnimation, withKey: "flyingAnimation")
     }
+    
+    func startJumpingAnimation() {
+        // Generate texture names based on your file naming
+        stopAllAnimations()
+        
+        let textureNames = (0...22).map { String(format: "CatJumping_%05d", $0) }
+        let textures = textureNames.map { SKTexture(imageNamed: $0) }
+
+         // Create animation
+        let animation = SKAction.animate(with: textures, timePerFrame: 0.05, resize: false, restore: false)
+        let repeatAnimation = SKAction.repeatForever(animation)
+
+        self.run(repeatAnimation, withKey: "jumpAnimation")
+    }
+    
+    func startHighJumpingAnimation() {
+        // Generate texture names based on your file naming
+        stopAllAnimations()
+        
+        let textureNames = (0...22).map { String(format: "CatJumping_%05d", $0) }
+        let textures = textureNames.map { SKTexture(imageNamed: $0) }
+
+         // Create animation
+        let animation = SKAction.animate(with: textures, timePerFrame: 0.085, resize: false, restore: false)
+        let repeatAnimation = SKAction.repeatForever(animation)
+
+        self.run(repeatAnimation, withKey: "jumpAnimation")
+    }
+    
+    func startIntroAnimation() {
+        // Generate texture names based on your file naming
+        stopAllAnimations()
+        
+        let textureNames = (0...11).map { String(format: "CatWithoutFish_%05d", $0) }
+        let textures = textureNames.map { SKTexture(imageNamed: $0) }
+
+         // Create animation
+        let animation = SKAction.animate(with: textures, timePerFrame: 0.05, resize: false, restore: false)
+        let repeatAnimation = SKAction.repeatForever(animation)
+
+        self.run(repeatAnimation, withKey: "introAnimation")
+    }
+    
+    func stopAllAnimations() {
+        self.removeAction(forKey: "introAnimation")
+        self.removeAction(forKey: "runAnimation")
+        self.removeAction(forKey: "duckAnimation")
+        self.removeAction(forKey: "flyingAnimation")
+        self.removeAction(forKey: "jumpAnimation")
+    }
+
 }

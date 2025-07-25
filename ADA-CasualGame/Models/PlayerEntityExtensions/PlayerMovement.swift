@@ -32,7 +32,7 @@ extension PlayerEntity {
         
         // If a duck command is queued, perform that first.
         if self.currentState != .ducking && self.queuedAction == .duck {
-            if self.currentState == .airborne { // Override checking
+            if self.currentState == .airborne || self.currentState == .running { // Override checking
                 self.performDuck()
             } else {
                 self.duck()
@@ -41,30 +41,36 @@ extension PlayerEntity {
             return
         }
         
-        let isOnGround = (currentSurface == previousSurface) && (currentSurface == .ground) && (previousSurface == .ground)
-        if isOnGround {
-            self.currentState = .running
-            self.canJump = true
-        }
-        
-        let isLanding = currentSurface.isGrounded && !previousSurface.isGrounded && (self.physicsBody?.velocity.dy ?? 0) <= 0
-        if isLanding {
-            if previousState == .diving {
-                hardLanding(surfaceType: currentSurface)
-            } else {
-                softLanding(surfaceType: currentSurface)
+        if currentState != .ducking {
+            if currentSurface.isGrounded {
+                if self.currentState == .diving {
+                    self.currentState = .running
+                    self.canJump = true
+                    self.startRunningAnimation()
+                }
+                if self.size.height >= playerHitboxHeight {
+                    self.restoreOriginalShape()
+                }
             }
-            canJump = true
             
+            let isLanding = currentSurface.isGrounded && !previousSurface.isGrounded && (self.physicsBody?.velocity.dy ?? 0) <= 0
+            if isLanding {
+                if previousState == .diving {
+                    hardLanding(surfaceType: currentSurface)
+                } else {
+                    softLanding(surfaceType: currentSurface)
+                }
+                canJump = true
+                
+            }
+           
+            let isJumping = !currentSurface.isGrounded && previousSurface.isGrounded
+            if isJumping {
+                handleGoingAirborne()
+            }
+            
+            self.currentSurface = currentSurface
         }
-       
-        let isJumping = !currentSurface.isGrounded && previousSurface.isGrounded
-        if isJumping {
-            handleGoingAirborne()
-        }
-        
-        self.currentSurface = currentSurface
-        updateColor()
     }
     
     private func updateColor() {
@@ -207,7 +213,7 @@ extension PlayerEntity {
         startJumpingAnimation()
         
         // --- Define Jump Parameters ---
-        let jumpHeight = defaultJumpHeight
+        let jumpHeight = (self.position.y <= platformHeight) ? defaultJumpHeight : defaultJumpHeight*0.75
         let horizontalDistance = defaultJumpDistance
         
         // --- Create and Run the Scripted Jump Action ---
@@ -241,7 +247,7 @@ extension PlayerEntity {
         var jumpAction: SKAction
         var wait: SKAction
         let restoreAction = SKAction.run {
-            self.restoreOriginalShape()
+//            self.restoreOriginalShape()
             self.canJump = true
         }
 
@@ -249,7 +255,7 @@ extension PlayerEntity {
         canJump = false
         self.currentState = .airborne
         
-//        let adjustY = playerHitboxHeight * -0.125
+//        let adjustY = playerHitboxHeight * -0.17
 //        applyVerticalMovementTransformation(withYAdjustment: adjustY)
 
         // Start jump animation
@@ -269,7 +275,7 @@ extension PlayerEntity {
             let horizontalDistance = defaultJumpDistance + gameSpeed/2
             
             let startY = self.position.y
-            let duration = horizontalDistance / 3.5 / gameSpeed
+            let duration = horizontalDistance / 3 / gameSpeed
             
             jumpAction = SKAction.customAction(withDuration: duration) { (node, elapsedTime) in
                 let t = elapsedTime / duration
@@ -307,16 +313,18 @@ extension PlayerEntity {
     }
     
     private func performDive() {
-        // We can only dive if we are currently airborne.
-        guard self.currentState == .airborne else {
-            // If not airborne, check if a duck is queued (e.g., from being too close to the ground).
-            if isCloseToGround() {
-                self.queuedAction = .duck
-            }
+        if isCloseToGround() {
+            self.queuedAction = .duck
             return
         }
         
-        // --- 1. Cancel the Current Jump ---
+        var shortDive = false   // if the dive is short, no need to transform
+        if let gameScene = self.scene as? GameScene {
+            let surfaceBelow = gameScene.getSurfaceType(rayLength: 80.0)
+            if surfaceBelow == .semiSolidPlatform || surfaceBelow == .solidPlatform {
+                shortDive = true
+            }
+        }
         
         // Remove any ongoing scripted jump action. This is the core of the fix.
         self.removeAction(forKey: "jumpAction")
@@ -325,14 +333,14 @@ extension PlayerEntity {
         // We must manually restore these states before we can dive.
         self.physicsBody?.affectedByGravity = true
         self.restoreOriginalShape()
-        
-        // --- 2. Perform the Dive ---
-        
-        self.currentState = .diving
         self.canDive = false
         
-        let adjustY = self.size.height * (0.34/2)
-        applyVerticalMovementTransformation(withYAdjustment: adjustY)
+        if !shortDive {
+            self.currentState = .diving
+            
+            let adjustY = self.size.height * (0.34/2)
+            applyVerticalMovementTransformation(withYAdjustment: adjustY)
+        }
         
         // Apply a sharp downward impulse.
         // Resetting vertical velocity first makes the dive feel consistent.
@@ -344,10 +352,7 @@ extension PlayerEntity {
         self.currentState = .ducking
         self.canDuck = false
 
-        // ✅ Play duck animation here
         startDuckingAnimation()
-
-        // ✅ Play sound
         EffectsFactory.shared.playSound(soundKey: "duck.wav", volumeKey: 1.0)
 
         // Restore after duration
@@ -457,7 +462,7 @@ extension PlayerEntity {
         let playerFeetY = self.position.y - (self.size.height / 2)
         let distanceToGround = playerFeetY - groundHeight
         
-        return distanceToGround <= (defaultJumpHeight / 2)
+        return distanceToGround <= (defaultJumpHeight / 3)
     }
     
     func applyHorizontalMovementTransformation(withYAdjustment adjustY: CGFloat = 0) {

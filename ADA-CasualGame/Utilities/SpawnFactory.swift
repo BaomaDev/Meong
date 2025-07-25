@@ -78,9 +78,38 @@ class SpawnFactory {
     // MARK: - Obstacles
 
     static func createNoTouch(at position: CGPoint) -> SKSpriteNode {
+<<<<<<< Updated upstream
         let noTouch = SKSpriteNode(color: .red, size: CGSize(width: 10, height: 30))
         noTouch.name = "NoTouch"
         noTouch.position = position
+=======
+        let textureNames = ["BapakMainCatur", "BoxPisang"]
+        let textureName = textureNames.randomElement()!
+        let texture = SKTexture(imageNamed: textureName)
+        
+        var targetWidth: CGFloat = 0
+        var objectPosition = position
+        
+        switch textureName {
+            case "BapakMainCatur":
+                targetWidth = 125
+                objectPosition = CGPoint(x: position.x, y: position.y - 15)
+            case "BoxPisang":
+                targetWidth = 70
+                objectPosition = CGPoint(x: position.x, y: position.y - 15)
+            default:
+                targetWidth = 50
+                objectPosition = CGPoint(x: position.x, y: position.y - 10)
+        }
+        
+        let aspectRatio = texture.size().height / texture.size().width
+        let targetHeight = targetWidth * aspectRatio
+        let size = CGSize(width: targetWidth, height: targetHeight)
+        
+        let noTouch = SKSpriteNode(texture: texture, color: .clear, size: size)
+        noTouch.name = textureName
+        noTouch.position = objectPosition
+>>>>>>> Stashed changes
         
         noTouch.physicsBody = SKPhysicsBody(rectangleOf: noTouch.size)
         noTouch.physicsBody?.categoryBitMask = PhysicsCategory.obstacle

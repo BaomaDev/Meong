@@ -15,6 +15,7 @@ struct GameView: View {
     @State private var highScore: Int = 0
 
     @State private var showPauseMenu = false
+    @State private var showShop = false
     @State private var gameScene: GameScene = {
         let scene = GameScene(size: UIScreen.main.bounds.size)
         scene.scaleMode = .resizeFill
@@ -52,6 +53,7 @@ struct GameView: View {
                             Spacer()
                         }
                         
+                        
                         HStack {
                             HStack {
                                 HealthBar(health: health)
@@ -78,6 +80,14 @@ struct GameView: View {
             
             if gamePhase == .none {
                 EmptyView()
+            }
+            
+            if showShop {
+                Color.black.opacity(0.5)
+                    .ignoresSafeArea()
+                    .transition(.opacity)
+
+                ShopView()
             }
 
             if showPauseMenu {
@@ -114,6 +124,12 @@ struct GameView: View {
         if gamePhase == .playing || gamePhase == .tutorial {
             self.showPauseMenu = true
             self.gameScene.pauseGame()
+        }
+    }
+    
+    private func showShopUI() {
+        if gamePhase == .homeScreen {
+            self.showShop = true
         }
     }
 }

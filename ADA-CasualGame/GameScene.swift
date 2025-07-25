@@ -51,6 +51,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     private var isWaitingForTapToStart = false
     private var isWaitingForAnimationHome = true
     
+    private var backgroundHome: SKSpriteNode?
+    private var gerobakIkan: SKSpriteNode?
+    
     private var playerData: PlayerData!
     
     // MARK: - Scene Lifecycle (Initializers)
@@ -133,7 +136,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         // Wait for next frame so layout and textures are fully applied
         run(SKAction.wait(forDuration: 0.01)) { [weak self] in
             guard let self = self, let chaser = self.chaser else { return }
-            let startXChaser = self.size.width * 0.15
+            let startXChaser = self.size.width / 2
             let startY = self.size.height*0.2
             chaser.position = CGPoint(x: startXChaser, y: startY)
             gerobakIkan?.position.x = chaser.position.x
@@ -229,6 +232,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             self.gameStateUpdateHandler?(self.gamePhase)
 
             chaser.startRunningAnimation() // Start chase animation now
+            
+            self.cleanupObjectHome()
 
             self.setupGame() // Starts score and spawning logic
         }
@@ -238,8 +243,21 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
 
         // Step 5: Sequence it all together
-        let fullSequence = SKAction.sequence([runAnimation, moveToStart, .wait(forDuration: 0.1), jump, makMarah, .wait(forDuration: 1), finalizeStart])
+        let fullSequence = SKAction.sequence([movePlayertoLeft, runAnimation, moveToStart, .wait(forDuration: 0.1), jump, makMarah, .wait(forDuration: 1), finalizeStart])
+        chaser.run(moveMaktoLeft)
+        backgroundHome?.run(moveBackgroundtoLeft)
+        gerobakIkan?.run(moveGerobaktoLeft)
         player.run(fullSequence)
+    }
+    
+    private func cleanupObjectHome(){
+        let moveToLeft = SKAction.moveTo(x: -200, duration: 1.1)
+        let moveToLeftBG = SKAction.moveTo(x: -500, duration: 2)
+        let deleteObjects = SKAction.removeFromParent()
+        let sequence = SKAction.sequence([moveToLeft, deleteObjects])
+        let sequenceBG = SKAction.sequence([moveToLeftBG, deleteObjects])
+        backgroundHome?.run(sequenceBG)
+        gerobakIkan?.run(sequence)
     }
     
     private func setupProperties() {
@@ -390,7 +408,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         if let chaser = chaser {
             chaser.updateFollowPosition()
         }
-//        
+//
 //        print(player.currentState)
 //        print(currentSurface)
     }
@@ -580,6 +598,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     func createPlayer(x: CGFloat = 200, y: CGFloat = 126) {
         let spawnPoint = CGPoint(x: x, y: y)
         player = PlayerEntity.create(at: spawnPoint)
+        player?.zPosition = 3
         self.addChild(player!)
     }
     
@@ -612,6 +631,14 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         let chaserNode = ChaserEntity(player: player)
         addChild(chaserNode)
         chaser = chaserNode
+        chaser?.zPosition = 1
+        
+        let gerobakIkan = SKSpriteNode(imageNamed: "TokoIkan")
+        gerobakIkan.setScale(0.2)
+        gerobakIkan.position = chaser?.position ?? CGPoint.zero
+        gerobakIkan.zPosition = 2
+        self.gerobakIkan = gerobakIkan
+        addChild(gerobakIkan)
     }
     
     func updateSpawningIfNeeded() {

@@ -229,7 +229,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         guard let chaser = chaser else { return }
 
         isWaitingForTapToStart = false
-// <<<<<<< derend3
 
          // Step 1: Intro animation before jump
          let startIntro = SKAction.run {
@@ -239,11 +238,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 
         childNode(withName: "TapToStartLabel")?.removeFromParent()
         childNode(withName: "TapToStartShadowLabel")?.removeFromParent()
-// =======
         isWaitingForAnimationHome = false
-//         tapToStartUI?.removeFromParent()
-//         tapToStartUI = nil
-// >>>>>>> main
         titleUI?.removeFromParent()
         titleUI = nil
         

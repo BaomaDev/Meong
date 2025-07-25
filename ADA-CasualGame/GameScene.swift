@@ -12,6 +12,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     // MARK: - Properties
     var player: PlayerEntity?
     var chaser: ChaserEntity?
+    var gerobakIkan: SKSpriteNode?
     
     // This class will now handle all the spawning logic
     var worldGenerator: WorldGenerator?
@@ -164,15 +165,24 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             chaser.startRunningAnimation() // Start chase animation now
 
             self.setupGame() // Starts score and spawning logic
+            
+            removeGerobak()
         }
         
         let runAnimation = SKAction.run {
             player.startRunningAnimation()
         }
-
+        
         // Step 5: Sequence it all together
         let fullSequence = SKAction.sequence([runAnimation, moveToStart, .wait(forDuration: 0.1), jump, makMarah, .wait(forDuration: 1), finalizeStart])
         player.run(fullSequence)
+    }
+    
+    private func removeGerobak(){
+        let move = SKAction.moveTo(x: -100, duration: 1)
+        let remove = SKAction.removeFromParent()
+        let sequence = SKAction.sequence([move, remove])
+        gerobakIkan?.run(sequence)
     }
     
     private func setupProperties() {
@@ -510,6 +520,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         let spawnPoint = CGPoint(x: x, y: y)
         player = PlayerEntity.create(at: spawnPoint)
         self.addChild(player!)
+        player?.zPosition = 3
     }
     
     // MARK: - Surface Detection
@@ -541,6 +552,14 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         let chaserNode = ChaserEntity(player: player)
         addChild(chaserNode)
         chaser = chaserNode
+        chaser?.zPosition = 1
+        
+        let gerobakIkan = SKSpriteNode(imageNamed: "TokoIkan")
+        gerobakIkan.position = CGPoint(x: 126, y: 135)
+        gerobakIkan.setScale(0.2)
+        gerobakIkan.zPosition = 2
+        addChild(gerobakIkan)
+        self.gerobakIkan = gerobakIkan
     }
     
     func updateSpawningIfNeeded() {

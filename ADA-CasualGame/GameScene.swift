@@ -351,10 +351,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             chaser.position = CGPoint(x: newX, y: newY)
         }
 <<<<<<< Updated upstream
-<<<<<<< Updated upstream
 =======
-=======
->>>>>>> Stashed changes
 <<<<<<< HEAD
         
         print(player.currentState)
@@ -363,9 +360,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 //        print(player.currentState)
 //        print(currentSurface)
 >>>>>>> f9a713aabd4f63001ab37d230631d80ed40f21db
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
 >>>>>>> Stashed changes
     }
     
@@ -545,21 +539,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         addChild(chaserNode)
         chaser = chaserNode
         chaser?.zPosition = 1
-<<<<<<< Updated upstream
-=======
-        
-        let gerobakIkan = SKSpriteNode(imageNamed: "TokoIkan")
-        gerobakIkan.setScale(0.2)
-        gerobakIkan.position = chaser?.position ?? CGPoint.zero
-        gerobakIkan.zPosition = 2
-        self.gerobakIkan = gerobakIkan
-        addChild(gerobakIkan)
-    }
-    
-    func updateSpawningIfNeeded() {
-        let newFactor = Double(gameSpeed / baseGameSpeed)
-        guard abs(newFactor - lastSpeedFactor) >= 0.3 else { return }
->>>>>>> Stashed changes
         
         let gerobakIkan = SKSpriteNode(imageNamed: "TokoIkan")
         gerobakIkan.setScale(0.2)

@@ -83,8 +83,8 @@ class SpawnFactory {
     }
     
     static func createCatnip(at position: CGPoint, characterCategory: UInt32, catnipCategory: UInt32) -> SKSpriteNode {
-        let catnip = SKSpriteNode(imageNamed: "catnip")
-        catnip.setScale(0.07)
+        let catnip = SKSpriteNode(imageNamed: "Catnip")
+        catnip.setScale(0.03)
         catnip.position = position
         catnip.zPosition = 1
 
@@ -111,7 +111,7 @@ class SpawnFactory {
         
         switch textureName {
             case "BapakMainCatur":
-                targetWidth = 115
+                targetWidth = 130
                 objectPosition = CGPoint(x: position.x, y: position.y + 10)
             case "BoxPisang":
                 targetWidth = 70
@@ -227,7 +227,7 @@ class SpawnFactory {
     }
     
     static func createDuckable(at position: CGPoint) -> Duckable {
-        let textureNames = ["BoxBuah", "GerobakSayur"]
+        let textureNames = ["BoxBuah"]
         let textureName = textureNames.randomElement()!
         let texture = SKTexture(imageNamed: textureName)
         
@@ -237,9 +237,9 @@ class SpawnFactory {
         switch textureName {
             case "BoxBuah":
                 targetWidth = 65
-            case "GerobakSayur":
-                targetWidth = 160
-                objectPosition = CGPoint(x: position.x, y: position.y + 30)
+//            case "GerobakSayur":
+//                targetWidth = 160
+//                objectPosition = CGPoint(x: position.x, y: position.y + 30)
             default:
                 targetWidth = 50
                 objectPosition = CGPoint(x: position.x, y: position.y - 10)
@@ -278,7 +278,7 @@ class SpawnFactory {
     }
     
     static func createStepable(at position: CGPoint) -> Stepable {
-        let textureNames = ["Tong", "Box", "BoxBerdiri"]
+        let textureNames = ["Tong", "Box", "BoxBerdiri", "GerobakSayur"]
         let textureName = textureNames.randomElement()!
         let texture = SKTexture(imageNamed: textureName)
         
@@ -295,6 +295,9 @@ class SpawnFactory {
             case "BoxBerdiri":
                 targetWidth = 40
                 objectPosition = CGPoint(x: position.x, y: position.y - 10)
+            case "GerobakSayur":
+                targetWidth = 160
+                objectPosition = CGPoint(x: position.x, y: position.y + 30)
             default:
                 targetWidth = 50
                 objectPosition = CGPoint(x: position.x, y: position.y - 10)

@@ -35,7 +35,7 @@ class PlayerEntity: SKSpriteNode {
     
     // MARK: - Initialization
     static func create(at position: CGPoint) -> PlayerEntity {
-        let texture = SKTexture(imageNamed: "CatRunning_00001")
+        let texture = SKTexture(imageNamed: "CatWithoutFish_00000")
         let playerSize = CGSize(width: playerHitboxWidth, height: playerHitboxHeight)
         let player = PlayerEntity(texture: texture, color: .clear, size: playerSize)
         player.name = "Player"
@@ -318,8 +318,7 @@ class PlayerEntity: SKSpriteNode {
     
     func startRunningAnimation() {
         // Generate texture names based on your file naming
-        self.removeAction(forKey: "flyingAnimation")
-        self.removeAction(forKey: "duckAnimation")
+        stopAllAnimations()
         
         let textureNames = (1...12).map { String(format: "CatRunning_%05d", $0) }
         let textures = textureNames.map { SKTexture(imageNamed: $0) }
@@ -333,8 +332,7 @@ class PlayerEntity: SKSpriteNode {
     
     func startDuckingAnimation() {
         // Generate texture names based on your file naming
-        self.removeAction(forKey: "runAnimation")
-        self.removeAction(forKey: "flyingAnimation")
+        stopAllAnimations()
         
         let textureNames = (0...14).map { String(format: "CatDucking_%05d", $0) }
         let textures = textureNames.map { SKTexture(imageNamed: $0) }
@@ -347,9 +345,7 @@ class PlayerEntity: SKSpriteNode {
     }
     
     func startFlyingAnimation() {
-        // Generate texture names based on your file naming
-        self.removeAction(forKey: "runAnimation")
-        self.removeAction(forKey: "duckAnimation")
+        stopAllAnimations()
         
         let textureNames = (0...59).map { String(format: "CatFlying_%05d", $0) }
         let textures = textureNames.map { SKTexture(imageNamed: $0) }
@@ -360,4 +356,55 @@ class PlayerEntity: SKSpriteNode {
 
         self.run(repeatAnimation, withKey: "flyingAnimation")
     }
+    
+    func startJumpingAnimation() {
+        // Generate texture names based on your file naming
+        stopAllAnimations()
+        
+        let textureNames = (0...22).map { String(format: "CatJumping_%05d", $0) }
+        let textures = textureNames.map { SKTexture(imageNamed: $0) }
+
+         // Create animation
+        let animation = SKAction.animate(with: textures, timePerFrame: 0.05, resize: false, restore: false)
+        let repeatAnimation = SKAction.repeatForever(animation)
+
+        self.run(repeatAnimation, withKey: "jumpAnimation")
+    }
+    
+    func startHighJumpingAnimation() {
+        // Generate texture names based on your file naming
+        stopAllAnimations()
+        
+        let textureNames = (0...22).map { String(format: "CatJumping_%05d", $0) }
+        let textures = textureNames.map { SKTexture(imageNamed: $0) }
+
+         // Create animation
+        let animation = SKAction.animate(with: textures, timePerFrame: 0.085, resize: false, restore: false)
+        let repeatAnimation = SKAction.repeatForever(animation)
+
+        self.run(repeatAnimation, withKey: "jumpAnimation")
+    }
+    
+    func startIntroAnimation() {
+        // Generate texture names based on your file naming
+        stopAllAnimations()
+        
+        let textureNames = (0...11).map { String(format: "CatWithoutFish_%05d", $0) }
+        let textures = textureNames.map { SKTexture(imageNamed: $0) }
+
+         // Create animation
+        let animation = SKAction.animate(with: textures, timePerFrame: 0.05, resize: false, restore: false)
+        let repeatAnimation = SKAction.repeatForever(animation)
+
+        self.run(repeatAnimation, withKey: "introAnimation")
+    }
+    
+    func stopAllAnimations() {
+        self.removeAction(forKey: "introAnimation")
+        self.removeAction(forKey: "runAnimation")
+        self.removeAction(forKey: "duckAnimation")
+        self.removeAction(forKey: "flyingAnimation")
+        self.removeAction(forKey: "jumpAnimation")
+    }
+
 }

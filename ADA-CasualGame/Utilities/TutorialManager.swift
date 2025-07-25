@@ -26,6 +26,8 @@ class TutorialManager {
     
     private var currentStep: TutorialStep = .welcome
     private let advanceActionKey = "advanceTutorialAction"
+    
+    private var fontName: String = "Comic Lemon"
 
     init(scene: GameScene) {
         self.scene = scene
@@ -196,9 +198,10 @@ class TutorialManager {
     private func showMessage(_ text: String) {
         guard let scene = scene, let camera = scene.camera else { return }
         messageNode?.removeFromParent()
-        let label = SKLabelNode(fontNamed: "Helvetica-Bold")
+        let label = SKLabelNode(fontNamed: fontName)
         label.text = text
-        label.fontSize = 28
+        label.fontSize = 20
+        label.numberOfLines = 2
         label.fontColor = .white
         label.position = CGPoint(x: camera.position.x, y: camera.position.y + 75)
         label.zPosition = 100

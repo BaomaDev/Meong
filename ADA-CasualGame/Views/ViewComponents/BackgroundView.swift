@@ -30,7 +30,7 @@ class BackgroundView {
                 height: scene.size.height
             )
             background.position = CGPoint(x: CGFloat(i) * background.size.width, y: 0)
-            background.zPosition = -1
+            background.zPosition = -9
             background.name = "scrollingBackground"
             scene.addChild(background)
             backgrounds.append(background)

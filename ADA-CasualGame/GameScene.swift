@@ -683,12 +683,14 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
     
     // MARK: - Surface Detection
-    func getSurfaceType() -> SurfaceType {
+    func getSurfaceType(rayLength: CGFloat = 5) -> SurfaceType {
         guard let player = player else { return .none }
         
         let playerHeight = player.size.height
         let rayStart = player.position
-        let rayEnd = CGPoint(x: player.position.x, y: player.position.y - playerHeight / 2 - 5)
+        
+        // The ray's end point is now calculated using the new parameter.
+        let rayEnd = CGPoint(x: player.position.x, y: player.position.y - playerHeight / 2 - rayLength)
         
         var surfaceType: SurfaceType = .none
         physicsWorld.enumerateBodies(alongRayStart: rayStart, end: rayEnd) { (body, point, normal, stop) in
@@ -706,6 +708,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
         return surfaceType
     }
+    
     func createChaser() {
         guard let player = player else { return }
         let chaserNode = ChaserEntity(player: player)

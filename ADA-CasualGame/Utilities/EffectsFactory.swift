@@ -331,7 +331,7 @@ class EffectsFactory {
         // 2. Set initial properties.
         haloNode.size = CGSize(width: haloSize, height: haloSize)
         haloNode.zPosition = -1
-        haloNode.alpha = 1.0 // Start at full opacity
+        haloNode.alpha = 0.67
         
         // This cancels out the parent's scaling.
         let initialScale = 1.0 / parentNode.xScale
@@ -353,7 +353,7 @@ class EffectsFactory {
         let repeatRotation = SKAction.repeatForever(rotateAction)
         
         // --- Opacity Pulsing ---
-        let fadeOutAction = SKAction.fadeAlpha(to: 0.5, duration: 0.5)
+        let fadeOutAction = SKAction.fadeAlpha(to: 0.34, duration: 0.5)
         let fadeInAction = SKAction.fadeAlpha(to: 1.0, duration: 0.5)
         let pulseSequence = SKAction.sequence([fadeOutAction, fadeInAction])
         let repeatPulse = SKAction.repeatForever(pulseSequence)

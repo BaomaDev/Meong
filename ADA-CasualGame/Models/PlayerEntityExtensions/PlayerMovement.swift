@@ -375,6 +375,7 @@ extension PlayerEntity {
         print("attemting to drop through")
         // This line makes the player ignore semi-solid platforms.
         self.isDropping = true
+        self.canJump = false
         physicsBody?.collisionBitMask = PhysicsCategory.ground | PhysicsCategory.solidPlatform
         
         // **NEW**: Create an action to move the player down quickly.
@@ -430,6 +431,7 @@ extension PlayerEntity {
         // Falling or jumping
         self.currentState = .airborne
         self.canDive = true
+        self.canJump = false
     }
     
     private func checkForSolidPlatform() -> Bool {

@@ -1,7 +1,7 @@
 {
   "images" : [
     {
-      "filename" : "cat food.png",
+      "filename" : "CatJumping_00003.png",
       "idiom" : "universal",
       "scale" : "1x"
     },
@@ -17,8 +17,5 @@
   "info" : {
     "author" : "xcode",
     "version" : 1
-  },
-  "properties" : {
-    "preserves-vector-representation" : true
   }
 }

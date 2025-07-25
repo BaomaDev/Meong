@@ -118,6 +118,8 @@ extension PlayerEntity {
         // Particle
         EffectsFactory.shared.createParticleEffect(at: particlePosition, key: surfaceKey, amount: amount)
         
+        self.startRunningAnimation()
+        
         self.run(SKAction.sequence([wait, transitionToRunning]))
     }
     
@@ -160,6 +162,8 @@ extension PlayerEntity {
             // It was a normal landing, so we can run immediately.
             self.currentState = .running
         }
+        
+        self.startRunningAnimation()
     }
     
     // MARK: - Jump
@@ -190,8 +194,11 @@ extension PlayerEntity {
         canJump = false
         self.currentState = .airborne
         
-        let adjustY = playerHitboxHeight * -0.125
-        applyVerticalMovementTransformation(withYAdjustment: adjustY)
+//        let adjustY = playerHitboxHeight * -0.125
+//        applyVerticalMovementTransformation(withYAdjustment: adjustY)
+        
+        // Start jump animation
+        startJumpingAnimation()
         
         // --- Define Jump Parameters ---
         let jumpHeight = defaultJumpHeight
@@ -238,8 +245,12 @@ extension PlayerEntity {
         // --- 1. Set up the common properties for any jump ---
         canJump = false
         self.currentState = .airborne
-        let adjustY = playerHitboxHeight * -0.125
-        applyVerticalMovementTransformation(withYAdjustment: adjustY)
+        
+//        let adjustY = playerHitboxHeight * -0.125
+//        applyVerticalMovementTransformation(withYAdjustment: adjustY)
+
+        // Start jump animation
+        startHighJumpingAnimation()
 
         // --- 2. Decide which type of jump to perform ---
         if checkForSolidPlatform() {

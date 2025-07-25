@@ -323,6 +323,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         if let chaser = chaser {
             chaser.updateFollowPosition()
         }
+        
+        print(player.currentState)
     }
     
     // MARK: - SKPhysicsContactDelegate
@@ -373,6 +375,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         if !player.isInvincible {
             projectileNode.removeFromParent()
         }
+        
+        healthUpdateHandler?(player.hearts)
         
         checkGameOver()
     }
@@ -450,6 +454,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         scoreUpdateHandler?(internalScore)
         healthUpdateHandler?(9)
         distanceUpdateHandler?(3)
+        coinUpdateHandler?(0)   
         
         setupProperties()
         setupGame()

@@ -129,8 +129,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         // Disable constraints while animating
         player.constraints = nil
 
-        // Step 1: Start chaser intro animation first
-        chaser.startIntroAnimation()
+        let makMarah = SKAction.run {
+            chaser.startIntroAnimation()
+        }
 
         // Step 2: Move player slightly forward
         let moveToStart = SKAction.moveTo(x: 90, duration: 1)
@@ -160,14 +161,17 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             self.gamePhase = .playing
             self.gameStateUpdateHandler?(self.gamePhase)
 
-            player.startRunningAnimation()
             chaser.startRunningAnimation() // Start chase animation now
 
             self.setupGame() // Starts score and spawning logic
         }
+        
+        let runAnimation = SKAction.run {
+            player.startRunningAnimation()
+        }
 
         // Step 5: Sequence it all together
-        let fullSequence = SKAction.sequence([moveToStart, .wait(forDuration: 0.1), jump, finalizeStart])
+        let fullSequence = SKAction.sequence([runAnimation, moveToStart, .wait(forDuration: 0.1), jump, makMarah, .wait(forDuration: 1), finalizeStart])
         player.run(fullSequence)
     }
     

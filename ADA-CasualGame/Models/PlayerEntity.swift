@@ -12,6 +12,7 @@ class PlayerEntity: SKSpriteNode {
     var canDuck = true
     var canDive = false
     var isParrying = false
+    var isDropping = false
     
     var queuedAction: MovementAction?
     

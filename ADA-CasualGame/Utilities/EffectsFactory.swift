@@ -240,7 +240,6 @@ class EffectsFactory {
                 emitter.yAcceleration = -50
                 emitter.particleScaleSequence = SKKeyframeSequence(keyframeValues: [initialSize, initialSize * 0.7], times: [0, 1]) // Shrinks less
                 
-                let rainbowColors: [SKColor] = [.red, .orange, .yellow, .green, .blue, .purple]
                 let keyframeTimes: [NSNumber] = [0.0, 0.2, 0.4, 0.6, 0.8, 1.0]
                 emitter.particleColorSequence = SKKeyframeSequence(keyframeValues: rainbowColors, times: keyframeTimes)
                 emitter.particleColorBlendFactor = 1.0
@@ -323,4 +322,53 @@ class EffectsFactory {
             scene.addChild(emitter)
             emitter.run(SKAction.sequence([waitAction, removeAction]))
         }
+
+    func createHaloEffect(on parentNode: SKNode) {
+        // 1. Create the halo node.
+        let haloNode = SKSpriteNode(imageNamed: "halo")
+        let haloSize = 75
+        
+        // 2. Set initial properties.
+        haloNode.size = CGSize(width: haloSize, height: haloSize)
+        haloNode.zPosition = -1
+        haloNode.alpha = 1.0 // Start at full opacity
+        
+        // This cancels out the parent's scaling.
+        let initialScale = 1.0 / parentNode.xScale
+        haloNode.setScale(initialScale)
+        
+        // 3. Create all repeating actions.
+        
+        // --- Color Cycling ---
+        let colorDuration: TimeInterval = 0.45
+        var colorActions: [SKAction] = []
+        for color in rainbowColors {
+            colorActions.append(SKAction.colorize(with: color, colorBlendFactor: 1.0, duration: colorDuration))
+        }
+        let colorSequence = SKAction.sequence(colorActions)
+        let repeatColorCycle = SKAction.repeatForever(colorSequence)
+        
+        // --- Rotation ---
+        let rotateAction = SKAction.rotate(byAngle: .pi, duration: 2.0)
+        let repeatRotation = SKAction.repeatForever(rotateAction)
+        
+        // --- Opacity Pulsing ---
+        let fadeOutAction = SKAction.fadeAlpha(to: 0.5, duration: 0.5)
+        let fadeInAction = SKAction.fadeAlpha(to: 1.0, duration: 0.5)
+        let pulseSequence = SKAction.sequence([fadeOutAction, fadeInAction])
+        let repeatPulse = SKAction.repeatForever(pulseSequence)
+
+        // --- Size Pulsing ---
+        let scaleUpAction = SKAction.scale(to: initialScale * 1.25, duration: 0.75)
+        let scaleDownAction = SKAction.scale(to: initialScale, duration: 0.75)
+        let scaleSequence = SKAction.sequence([scaleUpAction, scaleDownAction])
+        let repeatScale = SKAction.repeatForever(scaleSequence)
+
+        // 4. **THE FIX**: Group all four actions together to run them simultaneously.
+        let groupAction = SKAction.group([repeatColorCycle, repeatRotation, repeatPulse, repeatScale])
+
+        // 5. Run the combined animation and add the halo to the parent.
+        haloNode.run(groupAction)
+        parentNode.addChild(haloNode)
+    }
 }

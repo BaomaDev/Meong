@@ -1,5 +1,6 @@
 import Foundation
 import SwiftUI
+import SpriteKit
 
 // MARK: - Environment Variables
 let customGravity: CGFloat = -20
@@ -19,7 +20,7 @@ let shortSwipeTreshold = 50.0           // Strokes shorter than this will not be
 let defaultJumpHeight: CGFloat = 135
 let defaultJumpDistance: CGFloat = 350
 let diveForce: CGFloat = 150            // Downward force applied during dive command
-let landingDuration: CGFloat = 0.25     // "Ministun" duration when dive landing
+let landingDuration: CGFloat = 0.0     // "Ministun" duration when dive landing
 let transformDuration: TimeInterval = 0.05  // Transition of hitbox between states
 let parryRadius: CGFloat = 160.0 // The area around the player to check for projectiles
 let parryCooldown: TimeInterval = 2.0
@@ -39,6 +40,16 @@ let minPlatformDelay = 1.2
 let minObstacleDelay = 1.0
 let minProjectileDelay = 1.4
 let minCollectibleDelay = 1.3
+
+// MARK: - Colors
+let rainbowColors: [SKColor] = [
+    SKColor(hue: 0.85, saturation: 1.0, brightness: 1.0, alpha: 1.0), // Magenta
+    SKColor(hue: 0.66, saturation: 1.0, brightness: 1.0, alpha: 1.0), // Blue
+    SKColor(hue: 0.5, saturation: 1.0, brightness: 1.0, alpha: 1.0),  // Cyan
+    SKColor(hue: 0.33, saturation: 1.0, brightness: 1.0, alpha: 1.0), // Green
+    SKColor(hue: 0.16, saturation: 1.0, brightness: 1.0, alpha: 1.0), // Yellow
+    SKColor(hue: 0.0, saturation: 1.0, brightness: 1.0, alpha: 1.0),  // Red
+]
 
 enum PlayerState {
     case running

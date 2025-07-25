@@ -86,7 +86,7 @@ class SpawnFactory {
         let catnip = SKSpriteNode(imageNamed: "Catnip")
         catnip.setScale(0.03)
         catnip.position = position
-        catnip.zPosition = 1
+        catnip.zPosition = 1 // Catnip is in front
 
         catnip.physicsBody = SKPhysicsBody(circleOfRadius: catnip.size.width / 2)
         catnip.physicsBody?.isDynamic = false
@@ -94,6 +94,8 @@ class SpawnFactory {
         catnip.physicsBody?.contactTestBitMask = characterCategory
         catnip.physicsBody?.collisionBitMask = 0
         
+        EffectsFactory.shared.createHaloEffect(on: catnip)
+
         catnip.run(createMovementAction(distance: worldMoveDistance, speed: gameSpeed), withKey: MoveKey.collectible)
 
         return catnip

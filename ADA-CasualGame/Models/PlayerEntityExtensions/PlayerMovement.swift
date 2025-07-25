@@ -11,7 +11,9 @@ import SpriteKit
 extension PlayerEntity {
     // MARK: - State Management
     func updateState(currentSurface: SurfaceType) {
+        guard !isDropping else { return }
         guard self.currentState != .landing else {return}
+        
         let previousState = self.currentState
         let previousSurface = self.currentSurface
         
@@ -222,7 +224,7 @@ extension PlayerEntity {
         
         self.physicsBody?.affectedByGravity = false
         
-        EffectsFactory.shared.playSound(soundKey: "jump.mp3", volumeKey: 1.0)
+        EffectsFactory.shared.playSound(soundKey: "jump.mp3", volumeKey: 2.5)
         
         let jumpAction = SKAction.customAction(withDuration: duration) { (node, elapsedTime) in
             let t = elapsedTime / duration
@@ -275,7 +277,7 @@ extension PlayerEntity {
             let horizontalDistance = defaultJumpDistance + gameSpeed/2
             
             let startY = self.position.y
-            let duration = horizontalDistance / 3 / gameSpeed
+            let duration = horizontalDistance / 3.5 / gameSpeed
             
             jumpAction = SKAction.customAction(withDuration: duration) { (node, elapsedTime) in
                 let t = elapsedTime / duration
@@ -287,7 +289,7 @@ extension PlayerEntity {
         }
         
         // Play effects for either jump type
-        EffectsFactory.shared.playSound(soundKey: "highJump.mp3", volumeKey: 1.0)
+        EffectsFactory.shared.playSound(soundKey: "highJump.mp3", volumeKey: 2.5)
 //        EffectsFactory.shared.playHaptic(strength: 1.0)
         
         // Run the chosen jumpAction followed by its corresponding completion action.
@@ -370,7 +372,9 @@ extension PlayerEntity {
     }
     
     private func dropThroughPlatform() {
+        print("attemting to drop through")
         // This line makes the player ignore semi-solid platforms.
+        self.isDropping = true
         physicsBody?.collisionBitMask = PhysicsCategory.ground | PhysicsCategory.solidPlatform
         
         // **NEW**: Create an action to move the player down quickly.
@@ -379,7 +383,12 @@ extension PlayerEntity {
         // This is the existing action that restores the collision rules after a delay.
         let wait = SKAction.wait(forDuration: 0.33)
         let restoreCollision = SKAction.run {
+            EffectsFactory.shared.playSound(soundKey: "landing_wire.mp3", volumeKey: 1.0)
             self.setupPhysics()
+            self.currentState = .airborne
+            self.physicsBody?.velocity.dy = 0
+            self.physicsBody?.applyImpulse(CGVector(dx: 0, dy: -diveForce/2))
+            self.isDropping = false
         }
         let restoreSequence = SKAction.sequence([wait, restoreCollision])
         

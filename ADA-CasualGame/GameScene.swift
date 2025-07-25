@@ -415,6 +415,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         case PhysicsCategory.coin:
             player?.coins += 1
             coinUpdateHandler?(player?.coins ?? 0)
+            player?.takeCoin()
             collectibleBody.node?.removeFromParent()
         case PhysicsCategory.powerUp:
             player?.applyPowerUp()

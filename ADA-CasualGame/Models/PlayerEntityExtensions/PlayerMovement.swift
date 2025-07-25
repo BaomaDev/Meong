@@ -15,8 +15,6 @@ extension PlayerEntity {
         let previousState = self.currentState
         let previousSurface = self.currentSurface
         
-        let particlePosition = CGPoint(x: self.position.x, y: self.position.y - self.size.height / 2)
-        
         // Ignore landing / jumping logic when flying
         if currentState == .flying {
             if let scene = self.scene as? GameScene {
@@ -57,10 +55,6 @@ extension PlayerEntity {
         let isJumping = !currentSurface.isGrounded && previousSurface.isGrounded
         if isJumping {
             handleGoingAirborne()
-//            let fellFromPlatform = currentSurface == .none && previousSurface.isPlatform
-//            if fellFromPlatform {  // No effects when dropping off
-//                EffectsFactory.shared.createParticleEffect(at: particlePosition, key: "smoke", amount: 2)
-//            }
         }
         
         self.currentSurface = currentSurface

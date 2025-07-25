@@ -82,14 +82,6 @@ struct GameView: View {
             if gamePhase == .none {
                 EmptyView()
             }
-            
-            if showShop {
-                Color.black.opacity(0.5)
-                    .ignoresSafeArea()
-                    .transition(.opacity)
-
-                ShopView(isShowing: $showShop)
-            }
 
             if showPauseMenu {
                 Color.black.opacity(0.5)
@@ -119,6 +111,14 @@ struct GameView: View {
                         gameScene.returnToHomeScreen()
                     }
                 )
+            }
+            
+            if showShop {
+                Color.black.opacity(0.5)
+                    .ignoresSafeArea()
+                    .transition(.opacity)
+
+                ShopView(isShowing: $showShop)
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: .gameDidAutoPause)) { _ in

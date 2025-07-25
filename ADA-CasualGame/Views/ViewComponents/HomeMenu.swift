@@ -14,53 +14,55 @@ struct HomeMenu: View {
     var openAchievements: ()-> Void
 
     var body: some View {
-        VStack {
-            HStack(alignment: .top) {
-                // Top-left settings button
-                Button(action: {
-                    openSettings()
-                }) {
-                    Image("UI_Setting")
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .frame(width: 60)
+        ZStack {
+            VStack {
+                HStack(alignment: .top) {
+                    // Top-left settings button
+                    Button(action: {
+                        openSettings()
+                    }) {
+                        Image("UI_Setting")
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(width: 60)
+                    }
+
+                    Spacer()
+
+                    // Top-right stacked buttons
+                    VStack {
+                        Button(action: {
+                            openShop()
+                        }) {
+                            Image("UI_Customize")
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .frame(width: 60)
+                        }
+                        Button(action: {
+                            openLeaderboard()
+                        }) {
+                            Image("UI_Leaderboard")
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .frame(width: 60)
+                        }
+                        
+                        Button(action: {
+                            openAchievements()
+                        }) {
+                            Image("UI_Achievements")
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .frame(width: 60)
+                        }
+                    }
                 }
 
                 Spacer()
-
-                // Top-right stacked buttons
-                VStack {
-                    Button(action: {
-                        openShop()
-                    }) {
-                        Image("UI_Customize")
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .frame(width: 60)
-                    }
-                    Button(action: {
-                        openLeaderboard()
-                    }) {
-                        Image("UI_Leaderboard")
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .frame(width: 60)
-                    }
-                    
-                    Button(action: {
-                        openAchievements()
-                    }) {
-                        Image("UI_Achievements")
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .frame(width: 60)
-                    }
-                }
             }
-
-            Spacer()
+            .padding(24)
         }
-        .padding(24)
     }
 }
 

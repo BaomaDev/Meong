@@ -234,7 +234,8 @@ class PlayerEntity: SKSpriteNode {
     
     func startRunningAnimation() {
         // Generate texture names based on your file naming
-        self.removeAllActions()
+        self.removeAction(forKey: "flyingAnimation")
+        self.removeAction(forKey: "duckAnimation")
         
         let textureNames = (1...12).map { String(format: "CatRunning_%05d", $0) }
         let textures = textureNames.map { SKTexture(imageNamed: $0) }
@@ -248,7 +249,8 @@ class PlayerEntity: SKSpriteNode {
     
     func startDuckingAnimation() {
         // Generate texture names based on your file naming
-        self.removeAllActions()
+        self.removeAction(forKey: "runAnimation")
+        self.removeAction(forKey: "flyingAnimation")
         
         let textureNames = (0...14).map { String(format: "CatDucking_%05d", $0) }
         let textures = textureNames.map { SKTexture(imageNamed: $0) }
@@ -262,7 +264,8 @@ class PlayerEntity: SKSpriteNode {
     
     func startFlyingAnimation() {
         // Generate texture names based on your file naming
-        self.removeAllActions()
+        self.removeAction(forKey: "runAnimation")
+        self.removeAction(forKey: "duckAnimation")
         
         let textureNames = (0...59).map { String(format: "CatFlying_%05d", $0) }
         let textures = textureNames.map { SKTexture(imageNamed: $0) }

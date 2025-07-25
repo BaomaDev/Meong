@@ -318,6 +318,8 @@ class PlayerEntity: SKSpriteNode {
     }
     
     func startRunningAnimation() {
+        print("starting run")
+        
         // Generate texture names based on your file naming
         stopAllAnimations()
         
@@ -429,6 +431,7 @@ class PlayerEntity: SKSpriteNode {
     }
     
     func startTiptoeAnimation() {
+        print("starting tiptoe")
         // Generate texture names based on your file naming
         stopAllAnimations()
         
@@ -436,7 +439,7 @@ class PlayerEntity: SKSpriteNode {
         let textures = textureNames.map { SKTexture(imageNamed: $0) }
 
          // Create animation
-        let animation = SKAction.animate(with: textures, timePerFrame: 0.085, resize: false, restore: false)
+        let animation = SKAction.animate(with: textures, timePerFrame: 0.035, resize: false, restore: false)
         let repeatAnimation = SKAction.repeatForever(animation)
 
         self.run(repeatAnimation, withKey: "tiptoeAnimation")
@@ -452,5 +455,4 @@ class PlayerEntity: SKSpriteNode {
         self.removeAction(forKey: "flyingAnimation")
         self.removeAction(forKey: "jumpAnimation")
     }
-
 }

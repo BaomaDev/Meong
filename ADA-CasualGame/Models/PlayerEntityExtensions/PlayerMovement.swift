@@ -48,7 +48,11 @@ extension PlayerEntity {
                 if self.currentState == .diving {
                     self.currentState = .running
                     self.canJump = true
-                    self.startRunningAnimation()
+                    if currentSurface == .semiSolidPlatform {
+                        self.startTiptoeAnimation()
+                    } else {
+                        self.startRunningAnimation()
+                    }
                 }
                 if self.size.height >= playerHitboxHeight {
                     self.restoreOriginalShape()
@@ -132,7 +136,11 @@ extension PlayerEntity {
         // Particle
         EffectsFactory.shared.createParticleEffect(at: particlePosition, key: surfaceKey, amount: amount)
         
-        self.startRunningAnimation()
+        if surfaceType == .semiSolidPlatform {
+            self.startTiptoeAnimation()
+        } else {
+            self.startRunningAnimation()
+        }
         
         self.run(SKAction.sequence([wait, transitionToRunning]))
     }
@@ -177,7 +185,11 @@ extension PlayerEntity {
             self.currentState = .running
         }
         
-        self.startRunningAnimation()
+        if surfaceType == .semiSolidPlatform {
+            self.startTiptoeAnimation()
+        } else {
+            self.startRunningAnimation()
+        }
     }
     
     // MARK: - Jump

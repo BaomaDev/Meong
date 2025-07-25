@@ -35,7 +35,7 @@ class PlayerEntity: SKSpriteNode {
     
     // MARK: - Initialization
     static func create(at position: CGPoint) -> PlayerEntity {
-        let texture = SKTexture(imageNamed: "CatRunning_00001")
+        let texture = SKTexture(imageNamed: "CatWithoutFish_00000")
         let playerSize = CGSize(width: playerHitboxWidth, height: playerHitboxHeight)
         let player = PlayerEntity(texture: texture, color: .clear, size: playerSize)
         player.name = "Player"
@@ -369,7 +369,22 @@ class PlayerEntity: SKSpriteNode {
         self.run(repeatAnimation, withKey: "jumpAnimation")
     }
     
+    func startIntroAnimation() {
+        // Generate texture names based on your file naming
+        stopAllAnimations()
+        
+        let textureNames = (0...11).map { String(format: "CatWithoutFish_%05d", $0) }
+        let textures = textureNames.map { SKTexture(imageNamed: $0) }
+
+         // Create animation
+        let animation = SKAction.animate(with: textures, timePerFrame: 0.05, resize: false, restore: false)
+        let repeatAnimation = SKAction.repeatForever(animation)
+
+        self.run(repeatAnimation, withKey: "introAnimation")
+    }
+    
     func stopAllAnimations() {
+        self.removeAction(forKey: "introAnimation")
         self.removeAction(forKey: "runAnimation")
         self.removeAction(forKey: "duckAnimation")
         self.removeAction(forKey: "flyingAnimation")

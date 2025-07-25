@@ -125,12 +125,12 @@ class TutorialManager {
         
         switch step {
         case .teachJump:
-            let obstaclePosition = CGPoint(x: scene.size.width + 100, y: groundHeight + 15)
+            let obstaclePosition = CGPoint(x: scene.size.width + 100, y: groundHeight + 30)
             let obstacle = SpawnFactory.createStepable(at: obstaclePosition)
             obstacle.name = "TutorialObstacle"
             scene.addChild(obstacle)
         case .teachDuck:
-            let obstaclePosition = CGPoint(x: scene.size.width + 150, y: groundHeight + 30)
+            let obstaclePosition = CGPoint(x: scene.size.width + 150, y: groundHeight + 45)
             let obstacle = SpawnFactory.createDuckable(at: obstaclePosition)
             obstacle.name = "TutorialObstacle"
             scene.addChild(obstacle)
@@ -141,12 +141,12 @@ class TutorialManager {
             scene.addChild(projectile)
             
         case .teachObstacles:
-            let noTouchPosition = CGPoint(x: scene.size.width + 120, y: groundHeight + 15)
+            let noTouchPosition = CGPoint(x: scene.size.width + 120, y: groundHeight + 30)
             let noTouchObstacle = SpawnFactory.createNoTouch(at: noTouchPosition)
             noTouchObstacle.name = "TutorialObstacle"
             scene.addChild(noTouchObstacle)
             
-            let stepablePosition = CGPoint(x: scene.size.width + 400, y: groundHeight + 15)
+            let stepablePosition = CGPoint(x: scene.size.width + 400, y: groundHeight + 30)
             let stepableObstacle = SpawnFactory.createStepable(at: stepablePosition)
             stepableObstacle.name = "TutorialObstacle"
             scene.addChild(stepableObstacle)
@@ -202,7 +202,7 @@ class TutorialManager {
         label.text = text
         label.fontSize = 20
         label.numberOfLines = 2
-        label.fontColor = .white
+        label.fontColor = .brown
         label.position = CGPoint(x: camera.position.x, y: camera.position.y + 75)
         label.zPosition = 100
         label.name = "TutorialMessage"

@@ -241,7 +241,7 @@ class WorldGenerator {
         case 1:
             obstacle = SpawnFactory.createStepable(at: CGPoint(x: scene.size.width + 50, y: groundHeight + 28))
         case 2:
-            obstacle = SpawnFactory.createDuckable(at: position)
+            obstacle = SpawnFactory.createDuckable(at: CGPoint(x: scene.size.width + 50, y: groundHeight + 45))
         case 3:
             let movingPosition = CGPoint(x: scene.size.width + 50, y: groundHeight + 22)
 

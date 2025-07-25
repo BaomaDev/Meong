@@ -383,7 +383,37 @@ class PlayerEntity: SKSpriteNode {
         self.run(repeatAnimation, withKey: "introAnimation")
     }
     
+    func startStealingAnimation() {
+        // Generate texture names based on your file naming
+        stopAllAnimations()
+        
+        let textureNames = (0...11).map { String(format: "CatTakesFish_%05d", $0) }
+        let textures = textureNames.map { SKTexture(imageNamed: $0) }
+
+         // Create animation
+        let animation = SKAction.animate(with: textures, timePerFrame: 0.05, resize: false, restore: false)
+        let repeatAnimation = SKAction.repeatForever(animation)
+
+        self.run(repeatAnimation, withKey: "stealingAnimation")
+    }
+    
+    func startIdleAnimation() {
+        // Generate texture names based on your file naming
+        stopAllAnimations()
+        
+        let textureNames = (0...26).map { String(format: "CatIdle_%05d", $0) }
+        let textures = textureNames.map { SKTexture(imageNamed: $0) }
+
+         // Create animation
+        let animation = SKAction.animate(with: textures, timePerFrame: 0.085, resize: false, restore: false)
+        let repeatAnimation = SKAction.repeatForever(animation)
+
+        self.run(repeatAnimation, withKey: "idleAnimation")
+    }
+    
     func stopAllAnimations() {
+        self.removeAction(forKey: "idleAnimation")
+        self.removeAction(forKey: "stealingAnimation")
         self.removeAction(forKey: "introAnimation")
         self.removeAction(forKey: "runAnimation")
         self.removeAction(forKey: "duckAnimation")

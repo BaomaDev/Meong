@@ -28,7 +28,7 @@ class ChaserEntity: SKSpriteNode {
 
         let initialDistance = max(CGFloat(player.distance) * 80.0, 1200)
         self.anchorPoint = CGPoint(x: 0.7, y: 0.2)
-        self.position = CGPoint(x: player.position.x - initialDistance, y: player.position.y)
+        self.position = CGPoint(x: player.position.x - initialDistance, y: player.position.y - 10)
     }
 
     required init?(coder aDecoder: NSCoder) {

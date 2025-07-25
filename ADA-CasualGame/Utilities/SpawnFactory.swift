@@ -111,8 +111,8 @@ class SpawnFactory {
         
         switch textureName {
             case "BapakMainCatur":
-                targetWidth = 130
-                objectPosition = CGPoint(x: position.x, y: position.y + 10)
+                targetWidth = 120
+                objectPosition = CGPoint(x: position.x, y: position.y)
             case "BoxPisang":
                 targetWidth = 70
                 objectPosition = CGPoint(x: position.x, y: position.y - 15)
@@ -236,13 +236,10 @@ class SpawnFactory {
         
         switch textureName {
             case "BoxBuah":
-                targetWidth = 65
-//            case "GerobakSayur":
-//                targetWidth = 160
-//                objectPosition = CGPoint(x: position.x, y: position.y + 30)
+                targetWidth = 70
             default:
                 targetWidth = 50
-                objectPosition = CGPoint(x: position.x, y: position.y - 10)
+                objectPosition = CGPoint(x: position.x, y: position.y + 15)
         }
         
         let aspectRatio = texture.size().height / texture.size().width

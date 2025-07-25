@@ -111,7 +111,7 @@ class SpawnFactory {
         
         switch textureName {
             case "BapakMainCatur":
-                targetWidth = 150
+                targetWidth = 115
                 objectPosition = CGPoint(x: position.x, y: position.y + 10)
             case "BoxPisang":
                 targetWidth = 70

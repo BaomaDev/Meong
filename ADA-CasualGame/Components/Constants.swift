@@ -21,7 +21,7 @@ let defaultJumpDistance: CGFloat = 350
 let diveForce: CGFloat = 150            // Downward force applied during dive command
 let landingDuration: CGFloat = 0.25     // "Ministun" duration when dive landing
 let transformDuration: TimeInterval = 0.05  // Transition of hitbox between states
-let parryRadius: CGFloat = 100.0 // The area around the player to check for projectiles
+let parryRadius: CGFloat = 160.0 // The area around the player to check for projectiles
 let parryCooldown: TimeInterval = 2.0
 
 // MARK: - Obstacle Variables

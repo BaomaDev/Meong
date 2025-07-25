@@ -2,7 +2,7 @@ import Foundation
 import SwiftUI
 
 // MARK: - Environment Variables
-let customGravity: CGFloat = -24
+let customGravity: CGFloat = -20
 let groundHeight: CGFloat = 60
 let airResistance: CGFloat = 5
 let platformHeight = 240.0
@@ -16,7 +16,7 @@ let playerHitboxHeight: CGFloat = 49
 let longSwipeTreshold = 150.0           // Min. distance for pan input to trigger high jump
 let shortSwipeTreshold = 50.0           // Strokes shorter than this will not be registered
 
-let defaultJumpHeight: CGFloat = 120
+let defaultJumpHeight: CGFloat = 135
 let defaultJumpDistance: CGFloat = 350
 let diveForce: CGFloat = 150            // Downward force applied during dive command
 let landingDuration: CGFloat = 0.25     // "Ministun" duration when dive landing

@@ -57,7 +57,7 @@ class EffectsFactory {
         // 4. Play the sound once
         audioNode.run(SKAction.sequence([
             SKAction.play(),  // Explicitly play the sound
-            SKAction.wait(forDuration: 0.5), // Brief delay to ensure playback
+            SKAction.wait(forDuration: 2.0), // Brief delay to ensure playback
             SKAction.removeFromParent() // Remove after playing
         ]))
     }
@@ -211,7 +211,7 @@ class EffectsFactory {
                 emitter.particleLifetime = 0.6
                 emitter.particleSpeed = 80
                 emitter.emissionAngleRange = .pi / 8
-                emitter.xAcceleration = -gameSpeed
+                emitter.xAcceleration = -gameSpeed*1.5
                 emitter.yAcceleration = -150
 
                 emitter.particleScaleSequence = SKKeyframeSequence(keyframeValues: [initialSize, initialSize * 0.2], times: [0, 1])
@@ -256,6 +256,34 @@ class EffectsFactory {
                 emitter.emissionAngleRange = .pi / 8
                 emitter.xAcceleration = -gameSpeed
                 emitter.yAcceleration = 0
+
+                emitter.particleScaleSequence = SKKeyframeSequence(keyframeValues: [initialSize, initialSize * 0.2], times: [0, 1])
+                
+            case "banana":
+                let initialSize: CGFloat = 5.0
+
+                emitter.particleTexture = SKTexture(imageNamed: "Banana")
+                emitter.particleColorBlendFactor = 1.0
+                emitter.particleLifetime = 0.6
+                emitter.particleSpeed = 80
+                emitter.emissionAngleRange = .pi / 8
+                emitter.xAcceleration = -gameSpeed
+                emitter.yAcceleration = 0
+
+                emitter.particleScaleSequence = SKKeyframeSequence(keyframeValues: [initialSize, initialSize * 0.2], times: [0, 1])
+                
+            case "bling":
+                let initialSize: CGFloat = 0.025
+
+                emitter.particleTexture = SKTexture(imageNamed: starParticleTextures.randomElement() ?? "star_01")
+                emitter.particleColor = .yellow
+                emitter.particleColorBlendFactor = 0.6
+                emitter.particleLifetime = 0.6
+                emitter.particleSpeed = 80
+                emitter.emissionAngleRange = .pi / 8
+                emitter.xAcceleration = -gameSpeed
+                emitter.yAcceleration = 0
+                emitter.particlePositionRange = CGVector(dx: 10, dy: 0)
 
                 emitter.particleScaleSequence = SKKeyframeSequence(keyframeValues: [initialSize, initialSize * 0.2], times: [0, 1])
                 

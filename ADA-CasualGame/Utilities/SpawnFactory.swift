@@ -126,7 +126,7 @@ class SpawnFactory {
         let size = CGSize(width: targetWidth, height: targetHeight)
         
         let noTouch = SKSpriteNode(texture: texture, color: .clear, size: size)
-        noTouch.name = "NoTouch"
+        noTouch.name = textureName
         noTouch.position = objectPosition
         
         noTouch.physicsBody = SKPhysicsBody(rectangleOf: noTouch.size)
@@ -225,7 +225,6 @@ class SpawnFactory {
 
         return moving
     }
-
     
     static func createDuckable(at position: CGPoint) -> Duckable {
         let textureNames = ["BoxBuah"]
@@ -251,7 +250,7 @@ class SpawnFactory {
         let size = CGSize(width: targetWidth, height: targetHeight)
         
         let duckable = Duckable(texture: texture, color: .clear, size: size)
-        duckable.name = "Duckable"
+        duckable.name = textureName
         duckable.position = objectPosition
         duckable.userData = ["obstacleType": "duckable"]
         
@@ -309,7 +308,7 @@ class SpawnFactory {
         let size = CGSize(width: targetWidth, height: targetHeight)
         let stepable = Stepable(texture: texture, color: .clear, size: size)
         
-        stepable.name = "Stepable"
+        stepable.name = textureName
         stepable.position = objectPosition
         stepable.userData = ["obstacleType": "stepable"]
 

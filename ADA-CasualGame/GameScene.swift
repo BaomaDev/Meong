@@ -1,17 +1,6 @@
 import SpriteKit
 import GameplayKit
 
-<<<<<<< Updated upstream
-=======
-enum GamePhase {
-    case tutorial
-    case homeScreen
-    case playing
-    case gameOver
-    case none
-}
-
->>>>>>> Stashed changes
 class GameScene: SKScene, SKPhysicsContactDelegate {
     // MARK: - Properties
     var player: PlayerEntity?
@@ -38,240 +27,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     private var internalScore: Int = 0
     
     private var lastDistanceBonusScore = 0
-<<<<<<< Updated upstream
     
     // MARK: - Scene Lifecycle (Initializers)
     override func didMove(to view: SKView) {
         backgroundColor = SKColor(white: 0.1, alpha: 1.0)
-=======
-    private var lastSpeedFactor: Double = 1.0
-    private var lastSpeedFactor2: Double = 1.0
-    
-    private var tutorialManager: TutorialManager?
-    private(set) var gamePhase: GamePhase = .tutorial
-    private static var isFirstLaunch = true
-    private var tapToStartUI: SKLabelNode?
-    private var titleUI: SKSpriteNode?
-    private var isWaitingForTapToStart = false
-    private var isWaitingForAnimationHome = true
-    
-    private var backgroundHome: SKSpriteNode?
-    private var gerobakIkan: SKSpriteNode?
-    
-    private var playerData: PlayerData!
-    
-    // MARK: - Scene Lifecycle (Initializers)
-    override func didMove(to view: SKView) {
-        setupProperties()
-        
-        NotificationCenter.default.addObserver(self, selector: #selector(appWillResignActive), name: UIApplication.willResignActiveNotification, object: nil)
-        
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(savePlayerData),
-            name: UIApplication.willTerminateNotification,
-            object: nil
-        )
-        
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(savePlayerData),
-            name: UIApplication.didEnterBackgroundNotification,
-            object: nil
-        )
-        
-        // 🔹 Preload background texture before setupGame
-        let backgroundTexture = SKTexture(imageNamed: "Background")
-        SKTexture.preload([backgroundTexture]) { [weak self] in
-            DispatchQueue.main.async {
-                guard let self = self else { return }
-                
-                if self.playerData.isFirstTimeInstall {
-                    self.setupGame()
-                } else {
-                    self.camera?.position = CGPoint(x: self.size.width / 2, y: 1000)
-                    self.backgroundColor = SKColor(
-                        red: 191.0 / 255.0,
-                        green: 226.0 / 255.0,
-                        blue: 238.0 / 255.0,
-                        alpha: 1.0
-                    )
-                    self.showTapToStart()
-                }
-            }
-        }
-        
-    }
-    
-    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-        if isWaitingForTapToStart {
-            startGameAfterTap()
-        }
-    }
-    
-    func showTapToStart() {
-        tapToStartUI = SKLabelNode(text: "Tap to Start")
-        tapToStartUI?.fontSize = 38
-        tapToStartUI?.fontName = "Comic Lemon"
-        tapToStartUI?.position = CGPoint(x: size.width / 2, y: size.height * 0.05)
-        tapToStartUI?.fontColor = .white
-        tapToStartUI?.zPosition = 1000
-        addChild(tapToStartUI!)
-        
-        titleUI = SKSpriteNode(imageNamed: "UI_Title")
-        titleUI?.position = CGPoint(x: size.width / 2, y: 500)
-        titleUI?.setScale(0.45)
-        titleUI?.zPosition = 1000
-        titleUI?.alpha = 0
-        addChild(titleUI!)
-        
-        gamePhase = .none
-        gameStateUpdateHandler?(gamePhase)
-        
-        let backgroundHome = SKSpriteNode(imageNamed: "Background_Home")
-        backgroundHome.zPosition = -1
-        backgroundHome.position = CGPoint(x: size.width / 2, y: size.height / 2)
-        addChild(backgroundHome)
-        self.backgroundHome = backgroundHome
-        
-        createPlayer(x: 10)
-        createChaser()
-
-        // Wait for next frame so layout and textures are fully applied
-        run(SKAction.wait(forDuration: 0.01)) { [weak self] in
-            guard let self = self, let chaser = self.chaser else { return }
-            let startXChaser = self.size.width / 2
-            let startY = self.size.height*0.2
-            chaser.position = CGPoint(x: startXChaser, y: startY)
-            gerobakIkan?.position.x = chaser.position.x
-            player?.position.x = chaser.position.x - 120
-            player?.constraints = nil
-            
-            if self.isWaitingForAnimationHome {
-                let moveCamera = SKAction.moveTo(y: size.height / 2, duration: 3)
-                self.camera?.run(moveCamera, completion: {
-                    let moveTitle = SKAction.moveTo(y: self.size.height * 0.8, duration: 2)
-                    let changeOpacityTitle = SKAction.fadeAlpha(to: 1.0, duration: 0.0)
-                    let sequenceTitle = SKAction.sequence([changeOpacityTitle, moveTitle])
-                    self.titleUI?.run(sequenceTitle)
-                    self.titleUI?.run(moveTitle, completion: {
-                        self.gamePhase = .homeScreen
-                        self.gameStateUpdateHandler?(self.gamePhase)
-                        let fadeIn = SKAction.fadeIn(withDuration: 3)
-                        let fadeOut = SKAction.fadeOut(withDuration: 3)
-                        let repeatAnimation = SKAction.repeatForever(SKAction.sequence([fadeIn, fadeOut]))
-                        self.tapToStartUI?.run(repeatAnimation)
-                        self.isWaitingForTapToStart = true
-                    })
-                })
-            } else {
-                self.gamePhase = .homeScreen
-                self.gameStateUpdateHandler?(self.gamePhase)
-                let fadeIn = SKAction.fadeIn(withDuration: 3)
-                let fadeOut = SKAction.fadeOut(withDuration: 3)
-                let repeatAnimation = SKAction.repeatForever(SKAction.sequence([fadeIn, fadeOut]))
-                self.tapToStartUI?.run(repeatAnimation)
-                self.titleUI?.alpha = 1.0
-                self.titleUI?.position.y = self.size.height * 0.8
-                self.camera?.position.y = self.size.height / 2
-                self.isWaitingForTapToStart = true
-            }
-        }
-    }
-    
-    private func startGameAfterTap() {
-        guard let player = player else { return }
-        guard let chaser = chaser else { return }
-
-        isWaitingForTapToStart = false
-        isWaitingForAnimationHome = false
-        tapToStartUI?.removeFromParent()
-        tapToStartUI = nil
-        titleUI?.removeFromParent()
-        titleUI = nil
-        
-        gamePhase = .none
-        gameStateUpdateHandler?(gamePhase)
-        
-        //Move all to the far left
-        let movePlayertoLeft = SKAction.moveTo(x: 10, duration: 1)
-        movePlayertoLeft.timingMode = .easeInEaseOut
-        let moveMaktoLeft = SKAction.moveTo(x: size.width * 0.15, duration: 1)
-        moveMaktoLeft.timingMode = .easeInEaseOut
-        let moveGerobaktoLeft = SKAction.moveTo(x: size.width * 0.15, duration: 1)
-        moveGerobaktoLeft.timingMode = .easeInEaseOut
-        let moveBackgroundtoLeft = SKAction.moveTo(x: size.width * 0.15, duration: 1)
-        moveBackgroundtoLeft.timingMode = .easeInEaseOut
-      
-        let makMarah = SKAction.run {
-            chaser.startIntroAnimation()
-        }
-
-        // Step 2: Move player slightly forward
-        let moveToStart = SKAction.moveTo(x: 90, duration: 1)
-        moveToStart.timingMode = .easeIn
-
-        // Step 3: Bezier path animation (player jumping over the chaser)
-        let path = UIBezierPath()
-        let startPoint = CGPoint(x: 90, y: 125)
-        let endPoint = CGPoint(x: 200, y: 125)
-        let controlPoint = CGPoint(x: (90 + 200) / 2, y: 260)
-
-        path.move(to: startPoint)
-        path.addQuadCurve(to: endPoint, controlPoint: controlPoint)
-
-        let jump = SKAction.follow(path.cgPath, asOffset: false, orientToPath: false, duration: 1)
-        jump.timingMode = .easeInEaseOut
-
-        // Step 4: Finalize game start
-        let finalizeStart = SKAction.run { [weak self] in
-            guard let self = self else { return }
-
-            // Lock player in place to prevent drift
-            let xConstraint = SKConstraint.positionX(SKRange(constantValue: 200))
-            player.constraints = [xConstraint]
-
-            // Change game state and start game logic
-            self.gamePhase = .playing
-            self.gameStateUpdateHandler?(self.gamePhase)
-
-            chaser.startRunningAnimation() // Start chase animation now
-            
-            self.cleanupObjectHome()
-
-            self.setupGame() // Starts score and spawning logic
-        }
-        
-        let runAnimation = SKAction.run {
-            player.startRunningAnimation()
-        }
-
-        // Step 5: Sequence it all together
-        let fullSequence = SKAction.sequence([movePlayertoLeft, runAnimation, moveToStart, .wait(forDuration: 0.1), jump, makMarah, .wait(forDuration: 1), finalizeStart])
-        chaser.run(moveMaktoLeft)
-        backgroundHome?.run(moveBackgroundtoLeft)
-        gerobakIkan?.run(moveGerobaktoLeft)
-        player.run(fullSequence)
-    }
-    
-    private func cleanupObjectHome(){
-        let moveToLeft = SKAction.moveTo(x: -200, duration: 1.1)
-        let moveToLeftBG = SKAction.moveTo(x: -500, duration: 2)
-        let deleteObjects = SKAction.removeFromParent()
-        let sequence = SKAction.sequence([moveToLeft, deleteObjects])
-        let sequenceBG = SKAction.sequence([moveToLeftBG, deleteObjects])
-        backgroundHome?.run(sequenceBG)
-        gerobakIkan?.run(sequence)
-    }
-    
-    private func setupProperties() {
-        // Basic scene setup
-        backgroundView = BackgroundView(scene: self)
-        backgroundView?.setupScrollingBackground(imageNamed: "Background")
-        //        backgroundView?.spawnRandomClouds()
-        
-        // Basic scene setup
->>>>>>> Stashed changes
         physicsWorld.gravity = CGVector(dx: 0, dy: customGravity)
         physicsWorld.contactDelegate = self
         
@@ -350,17 +109,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 
             chaser.position = CGPoint(x: newX, y: newY)
         }
-<<<<<<< Updated upstream
-=======
-<<<<<<< HEAD
-        
-        print(player.currentState)
-=======
-//
-//        print(player.currentState)
-//        print(currentSurface)
->>>>>>> f9a713aabd4f63001ab37d230631d80ed40f21db
->>>>>>> Stashed changes
     }
     
     // MARK: - SKPhysicsContactDelegate
@@ -493,19 +241,16 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     func createPlayer() {
         let spawnPoint = CGPoint(x: 150, y: 125)
         player = PlayerEntity.create(at: spawnPoint)
-        player?.zPosition = 3
         self.addChild(player!)
     }
     
     // MARK: - Surface Detection
-    func getSurfaceType(rayLength: CGFloat = 5) -> SurfaceType {
+    func getSurfaceType() -> SurfaceType {
         guard let player = player else { return .none }
         
         let playerHeight = player.size.height
         let rayStart = player.position
-        
-        // The ray's end point is now calculated using the new parameter.
-        let rayEnd = CGPoint(x: player.position.x, y: player.position.y - playerHeight / 2 - rayLength)
+        let rayEnd = CGPoint(x: player.position.x, y: player.position.y - playerHeight / 2 - 5)
         
         var surfaceType: SurfaceType = .none
         physicsWorld.enumerateBodies(alongRayStart: rayStart, end: rayEnd) { (body, point, normal, stop) in
@@ -538,14 +283,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 
         addChild(chaserNode)
         chaser = chaserNode
-        chaser?.zPosition = 1
-        
-        let gerobakIkan = SKSpriteNode(imageNamed: "TokoIkan")
-        gerobakIkan.setScale(0.2)
-        gerobakIkan.position = chaser?.position ?? CGPoint.zero
-        gerobakIkan.zPosition = 2
-        self.gerobakIkan = gerobakIkan
-        addChild(gerobakIkan)
     }
 
 }

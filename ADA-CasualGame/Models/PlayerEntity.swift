@@ -536,7 +536,6 @@ class PlayerEntity: SKSpriteNode {
         let repeatBlink = SKAction.repeat(blink, count: 5)
         self.run(repeatBlink)
         
-<<<<<<< Updated upstream
         // Waktu invincibility
         let wait = SKAction.wait(forDuration: 1.0)
         let reset = SKAction.run { [weak self] in
@@ -546,92 +545,6 @@ class PlayerEntity: SKSpriteNode {
         }
         
         self.run(SKAction.sequence([wait, reset]))
-=======
-        // 2 variables to adjust knock speed and direction
-        let moveDistance: CGVector
-        let moveDuration: TimeInterval
-        let spin: SKAction
-        let knockType: String
-        
-        let objectName = node.name
-        
-        // Shared Sounds
-        let surprisedSoundKeys = ["surprised1.mp3", "surprised2.mp3", "surprised3.mp3"]
-        let crashSoundKeys = ["crash1.mp3", "crash2.mp3", "crash3.mp3"]
-        switch objectName {
-        case "Projectile":
-            EffectsFactory.shared.playSound(soundKey: "parry2.mp3", volumeKey: 1.0)
-            knockType = "expel"
-            
-        case "BapakMainCatur":
-            EffectsFactory.shared.playSound(soundKey: surprisedSoundKeys.randomElement()!, volumeKey: 1.0)
-            EffectsFactory.shared.playSound(soundKey: crashSoundKeys.randomElement()!, volumeKey: 0.6)
-            knockType = "inplace"
-            
-        case "Ayam":
-            EffectsFactory.shared.playSound(soundKey: "chickenHit.mp3", volumeKey: 1.0)
-            EffectsFactory.shared.createParticleEffect(at: self.position, key: "feather", amount: 8)
-            EffectsFactory.shared.createParticleEffect(at: self.position, key: "smoke", amount: 2)
-            knockType = "expel"
-            
-        case "Sepeda 2":
-            EffectsFactory.shared.playSound(soundKey: "surprised2.mp3", volumeKey: 1.0)
-            EffectsFactory.shared.playSound(soundKey: crashSoundKeys.randomElement()!, volumeKey: 1.0)
-            knockType = "flip"
-            
-        case "BoxPisang":
-            EffectsFactory.shared.createParticleEffect(at: self.position, key: "banana", amount: 3)
-            EffectsFactory.shared.playSound(soundKey: "cardboard.mp3", volumeKey: 1.0)
-            knockType = "flip"
-
-//        case "BoxBuah":
-//            EffectsFactory.shared.playSound(soundKey: crashSoundKeys.randomElement()!, volumeKey: 1.0)
-//            spin = SKAction.rotate(byAngle: 90, duration: 0.5)
-//
-//        case "GerobakSayur":
-//            EffectsFactory.shared.playSound(soundKey: crashSoundKeys.randomElement()!, volumeKey: 1.0)
-//            spin = SKAction.rotate(byAngle: 90, duration: 0.5)
-//
-//        case "Tong":
-//            EffectsFactory.shared.playSound(soundKey: crashSoundKeys.randomElement()!, volumeKey: 1.0)
-//            spin = SKAction.rotate(byAngle: 90, duration: 0.5)
-
-        case "Box":
-            EffectsFactory.shared.playSound(soundKey: "cardboard.mp3", volumeKey: 1.0)
-            knockType = "expel"
-
-        case "BoxBerdiri":
-            EffectsFactory.shared.playSound(soundKey: "cardboard.mp3", volumeKey: 1.0)
-            knockType = "expel"
-            
-        default:
-            EffectsFactory.shared.playSound(soundKey: crashSoundKeys.randomElement()!, volumeKey: 1.0)
-            knockType = "fallOver"
-        }
-        
-        switch knockType {
-        case "flip":
-            moveDistance = CGVector(dx: 100, dy: -40)
-            moveDuration = 0.3
-            spin = SKAction.rotate(byAngle: .pi, duration: 0.25)
-        case "expel":
-            moveDistance = CGVector(dx: 800, dy: 600)
-            moveDuration = 1.0
-            spin = SKAction.repeatForever(SKAction.rotate(byAngle: .pi, duration: 0.5))
-        case "inplace":
-            moveDistance = CGVector(dx: 0, dy: 0)
-            moveDuration = 0.1
-            spin = SKAction.rotate(byAngle: 0, duration: 0.1)
-        case "fallOver":
-            moveDistance = CGVector(dx: 100, dy: -60)
-            moveDuration = 0.3
-            spin = SKAction.rotate(byAngle: .pi/4, duration: 0.25)
-        default:
-            moveDistance = CGVector(dx: 100, dy: -20)
-            moveDuration = 0.3
-            spin = SKAction.rotate(byAngle: .pi, duration: 0.25)
-        }
->>>>>>> Stashed changes
         
         //        print("Player was hit by an obstacle!")
     }

@@ -8,35 +8,9 @@ let playerHitboxHeight: CGFloat = 34
 let defaultJumpHeight: CGFloat = 120
 let defaultJumpDistance: CGFloat = 300
 let airResistance: CGFloat = 5
-<<<<<<< Updated upstream
 let diveForce: CGFloat = 100
 let landingDuration: CGFloat = 0.25
 let transformDuration: TimeInterval = 0.05
-=======
-let platformHeight = 240.0
-let platformThickness = 7.0
-
-// MARK: - Player Variables
-let playerHitboxWidth: CGFloat = 70
-let playerHitboxHeight: CGFloat = 49
-
-// MARK: - Movement Variables
-let longSwipeTreshold = 150.0           // Min. distance for pan input to trigger high jump
-let shortSwipeTreshold = 50.0           // Strokes shorter than this will not be registered
-
-let defaultJumpHeight: CGFloat = 135
-let defaultJumpDistance: CGFloat = 350
-let diveForce: CGFloat = 200            // Downward force applied during dive command
-let landingDuration: CGFloat = 0.25     // "Ministun" duration when dive landing
-let transformDuration: TimeInterval = 0.05  // Transition of hitbox between states
-let parryRadius: CGFloat = 160.0 // The area around the player to check for projectiles
-let parryCooldown: TimeInterval = 2.0
-
-// MARK: - Obstacle Variables
-let projectileSpeed = 450.0
-
-// MARK: - Game Speed Variables
->>>>>>> Stashed changes
 let worldMoveDistance: CGFloat = UIScreen.main.bounds.width * 2
     
 let jumpSnapRayLength: CGFloat = 240.0

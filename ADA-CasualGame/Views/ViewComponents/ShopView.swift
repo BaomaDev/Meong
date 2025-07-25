@@ -9,6 +9,7 @@ import SwiftUI
 import SpriteKit
 
 struct ShopView: View {
+    @Binding var isShowing: Bool
     @State private var coins: Int = 0
     @State private var selectedCostume: String? = "default"
     @State private var purchasedCostumes: [String] = []
@@ -35,7 +36,7 @@ struct ShopView: View {
                         HStack {
                             HStack {
                                 Button(action: {
-                                    
+                                    isShowing = false // 👈 close shop
                                 }){
                                     Image("CloseButton")
                                         .resizable()
@@ -147,5 +148,6 @@ struct ShopView: View {
 }
 
 #Preview {
-    ShopView()
+    ShopView(isShowing: .constant(true))
 }
+

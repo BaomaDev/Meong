@@ -71,6 +71,14 @@ struct GameView: View {
                     Spacer()
                 }
             }
+            
+            if gamePhase == .homeScreen {
+               EmptyView()
+            }
+            
+            if gamePhase == .none {
+                EmptyView()
+            }
 
             if showPauseMenu {
                 Color.black.opacity(0.5)

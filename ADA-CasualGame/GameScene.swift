@@ -6,6 +6,7 @@ enum GamePhase {
     case homeScreen
     case playing
     case gameOver
+    case none
 }
 
 class GameScene: SKScene, SKPhysicsContactDelegate {
@@ -47,9 +48,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     private var tutorialManager: TutorialManager?
     private(set) var gamePhase: GamePhase = .tutorial
     private static var isFirstLaunch = true
-    private var tapToStartUI: SKSpriteNode?
+    private var tapToStartUI: SKLabelNode?
     private var titleUI: SKSpriteNode?
     private var isWaitingForTapToStart = false
+    private var isWaitingForAnimationHome = true
     
     private var playerData: PlayerData!
     
@@ -82,6 +84,13 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 if self.playerData.isFirstTimeInstall {
                     self.setupGame()
                 } else {
+                    self.camera?.position = CGPoint(x: self.size.width / 2, y: 1000)
+                    self.backgroundColor = SKColor(
+                        red: 191.0 / 255.0,
+                        green: 226.0 / 255.0,
+                        blue: 238.0 / 255.0,
+                        alpha: 1.0
+                    )
                     self.showTapToStart()
                 }
             }
@@ -96,32 +105,29 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
     
     func showTapToStart() {
-        isWaitingForTapToStart = true
-//        tapToStartLabel = SKLabelNode(text: "Tap to Start")
-//        tapToStartLabel?.fontSize = 42
-//        tapToStartLabel?.fontName = "Comic Lemon"
-//        tapToStartLabel?.position = CGPoint(x: size.width / 2, y: size.height / 2)
-//        tapToStartLabel?.fontColor = .white
-//        tapToStartLabel?.zPosition = 1000
-        tapToStartUI = SKSpriteNode(imageNamed: "UI_TapToStart")
-        tapToStartUI?.position = CGPoint(x: size.width / 2, y: (size.height / 2) - 100)
+        tapToStartUI = SKLabelNode(text: "Tap to Start")
+        tapToStartUI?.fontSize = 38
+        tapToStartUI?.fontName = "Comic Lemon"
+        tapToStartUI?.position = CGPoint(x: size.width / 2, y: size.height * 0.05)
+        tapToStartUI?.fontColor = .white
         tapToStartUI?.zPosition = 1000
         addChild(tapToStartUI!)
         
         titleUI = SKSpriteNode(imageNamed: "UI_Title")
-        titleUI?.position = CGPoint(x: size.width / 2, y: size.height * 0.8)
-        titleUI?.setScale(0.6)
+        titleUI?.position = CGPoint(x: size.width / 2, y: 500)
+        titleUI?.setScale(0.45)
         titleUI?.zPosition = 1000
+        titleUI?.alpha = 0
         addChild(titleUI!)
+        
+        gamePhase = .none
+        gameStateUpdateHandler?(gamePhase)
         
         let backgroundHome = SKSpriteNode(imageNamed: "Background_Home")
         backgroundHome.zPosition = -1
         backgroundHome.position = CGPoint(x: size.width / 2, y: size.height / 2)
         addChild(backgroundHome)
         self.backgroundHome = backgroundHome
-        
-        gamePhase = .homeScreen
-        gameStateUpdateHandler?(gamePhase)
         
         createPlayer(x: 10)
         createChaser()
@@ -135,8 +141,37 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             gerobakIkan?.position.x = chaser.position.x
             player?.position.x = chaser.position.x - 120
             player?.constraints = nil
+            
+            if self.isWaitingForAnimationHome {
+                let moveCamera = SKAction.moveTo(y: size.height / 2, duration: 3)
+                self.camera?.run(moveCamera, completion: {
+                    let moveTitle = SKAction.moveTo(y: self.size.height * 0.8, duration: 2)
+                    let changeOpacityTitle = SKAction.fadeAlpha(to: 1.0, duration: 0.0)
+                    let sequenceTitle = SKAction.sequence([changeOpacityTitle, moveTitle])
+                    self.titleUI?.run(sequenceTitle)
+                    self.titleUI?.run(moveTitle, completion: {
+                        self.gamePhase = .homeScreen
+                        self.gameStateUpdateHandler?(self.gamePhase)
+                        let fadeIn = SKAction.fadeIn(withDuration: 3)
+                        let fadeOut = SKAction.fadeOut(withDuration: 3)
+                        let repeatAnimation = SKAction.repeatForever(SKAction.sequence([fadeIn, fadeOut]))
+                        self.tapToStartUI?.run(repeatAnimation)
+                        self.isWaitingForTapToStart = true
+                    })
+                })
+            } else {
+                self.gamePhase = .homeScreen
+                self.gameStateUpdateHandler?(self.gamePhase)
+                let fadeIn = SKAction.fadeIn(withDuration: 3)
+                let fadeOut = SKAction.fadeOut(withDuration: 3)
+                let repeatAnimation = SKAction.repeatForever(SKAction.sequence([fadeIn, fadeOut]))
+                self.tapToStartUI?.run(repeatAnimation)
+                self.titleUI?.alpha = 1.0
+                self.titleUI?.position.y = self.size.height * 0.8
+                self.camera?.position.y = self.size.height / 2
+                self.isWaitingForTapToStart = true
+            }
         }
-
     }
     
     private func startGameAfterTap() {
@@ -144,10 +179,14 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         guard let chaser = chaser else { return }
 
         isWaitingForTapToStart = false
+        isWaitingForAnimationHome = false
         tapToStartUI?.removeFromParent()
         tapToStartUI = nil
         titleUI?.removeFromParent()
         titleUI = nil
+        
+        gamePhase = .none
+        gameStateUpdateHandler?(gamePhase)
         
         //Move all to the far left
         let movePlayertoLeft = SKAction.moveTo(x: 10, duration: 1)

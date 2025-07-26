@@ -100,7 +100,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
     
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-        if isWaitingForTapToStart {
+        if isWaitingForTapToStart && !isWaitingForAnimationHome {
             startGameAfterTap()
         }
     }
@@ -130,22 +130,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         label.name = "TapToStartLabel"
         addChild(label)
         tapToStartUI = nil
-// =======
-//         tapToStartUI = SKLabelNode(text: "Tap to Start")
-//         tapToStartUI?.fontSize = 38
-//         tapToStartUI?.fontName = "Comic Lemon"
-//         tapToStartUI?.position = CGPoint(x: size.width / 2, y: size.height * 0.05)
-//         tapToStartUI?.fontColor = .white
-//         tapToStartUI?.zPosition = 1000
-//         addChild(tapToStartUI!)
-// >>>>>>> main
-        
-        // Optionally add a subtle animation
-        let fadeInOut = SKAction.sequence([
-            SKAction.fadeAlpha(to: 0.4, duration: 0.8),
-            SKAction.fadeAlpha(to: 1.0, duration: 0.8)
-        ])
-        label.run(SKAction.repeatForever(fadeInOut))
 
         // MARK: - Title UI (Still using image)
         titleUI = SKSpriteNode(imageNamed: "UI_Title")
@@ -164,10 +148,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         backgroundHome.size = size
         addChild(backgroundHome)
         self.backgroundHome = backgroundHome
-
-//         gamePhase = .homeScreen
-//         gameStateUpdateHandler?(gamePhase)
-
+        
         createPlayer(x: 10)
         createChaser()
 
@@ -180,7 +161,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         self.gerobakIkan = gerobakIkan
 
         // MARK: - Finalize layout after frame update
-        run(SKAction.wait(forDuration: 0.01)) { [weak self] in
+        run(SKAction.wait(forDuration: 0.5)) { [weak self] in
             guard let self = self, let chaser = self.chaser else { return }
             let startXChaser = self.size.width / 2
             let startY = self.size.height * 0.2
@@ -196,22 +177,34 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 let moveCamera = SKAction.moveTo(y: size.height / 2, duration: 3)
                 self.camera?.run(moveCamera, completion: {
                     let moveTitle = SKAction.moveTo(y: self.size.height * 0.8, duration: 2)
-                    let changeOpacityTitle = SKAction.fadeAlpha(to: 1.0, duration: 0.0)
-                    let sequenceTitle = SKAction.sequence([changeOpacityTitle, moveTitle])
+                    let changeOpacityTitle = SKAction.fadeAlpha(to: 1.0, duration: 1.0)
+                    let sequenceTitle = SKAction.sequence([changeOpacityTitle, moveTitle, .wait(forDuration: 2)])
                     self.titleUI?.run(sequenceTitle)
                     self.titleUI?.run(moveTitle, completion: {
-                        self.gamePhase = .homeScreen
-                        self.gameStateUpdateHandler?(self.gamePhase)
+                        let fadeInOut = SKAction.sequence([
+                            SKAction.fadeAlpha(to: 0.4, duration: 0.8),
+                            SKAction.fadeAlpha(to: 1.0, duration: 0.8)
+                        ])
+                        label.run(SKAction.repeatForever(fadeInOut))
                         let fadeIn = SKAction.fadeIn(withDuration: 3)
                         let fadeOut = SKAction.fadeOut(withDuration: 3)
                         let repeatAnimation = SKAction.repeatForever(SKAction.sequence([fadeIn, fadeOut]))
                         self.tapToStartUI?.run(repeatAnimation)
-                        self.isWaitingForTapToStart = true
+                        self.gamePhase = .homeScreen
+                        self.gameStateUpdateHandler?(self.gamePhase)
+                        self.run(SKAction.wait(forDuration: 1)) {
+                            self.isWaitingForAnimationHome = false
+                            self.isWaitingForTapToStart = true
+                        }
                     })
                 })
             } else {
-                self.gamePhase = .homeScreen
-                self.gameStateUpdateHandler?(self.gamePhase)
+                let fadeInOut = SKAction.sequence([
+                    SKAction.fadeAlpha(to: 0.4, duration: 0.8),
+                    SKAction.fadeAlpha(to: 1.0, duration: 0.8)
+                ])
+                label.run(SKAction.repeatForever(fadeInOut))
+                
                 let fadeIn = SKAction.fadeIn(withDuration: 3)
                 let fadeOut = SKAction.fadeOut(withDuration: 3)
                 let repeatAnimation = SKAction.repeatForever(SKAction.sequence([fadeIn, fadeOut]))
@@ -219,7 +212,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 self.titleUI?.alpha = 1.0
                 self.titleUI?.position.y = self.size.height * 0.8
                 self.camera?.position.y = self.size.height / 2
-                self.isWaitingForTapToStart = true
+                self.gamePhase = .homeScreen
+                self.gameStateUpdateHandler?(self.gamePhase)
+                self.run(SKAction.wait(forDuration: 1)) {
+                    self.isWaitingForAnimationHome = false
+                    self.isWaitingForTapToStart = true
+                }
             }
         }
     }
@@ -227,6 +225,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     private func startGameAfterTap() {
         guard let player = player else { return }
         guard let chaser = chaser else { return }
+        
+        guard !isWaitingForAnimationHome && isWaitingForTapToStart else { return }
 
         isWaitingForTapToStart = false
 
@@ -238,7 +238,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 
         childNode(withName: "TapToStartLabel")?.removeFromParent()
         childNode(withName: "TapToStartShadowLabel")?.removeFromParent()
-        isWaitingForAnimationHome = false
+        
         titleUI?.removeFromParent()
         titleUI = nil
         

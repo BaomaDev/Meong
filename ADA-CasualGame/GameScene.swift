@@ -111,6 +111,15 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     func showTapToStart() {
 // <<<<<<< derend3
+        internalScore = 0
+        lastDistanceBonusScore = 0
+        scoreUpdateHandler?(internalScore)
+        healthUpdateHandler?(9)
+        distanceUpdateHandler?(3)
+        coinUpdateHandler?(0)
+        gameSpeed = baseGameSpeed
+        
+        worldGenerator?.stopAllSpawning()
         isWaitingForTapToStart = true
 
         // MARK: - Tap to Start Label (Text-based)
@@ -229,6 +238,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     private func startGameAfterTap() {
         guard let player = player else { return }
         guard let chaser = chaser else { return }
+        
         gamePhase = .none
         gameStateUpdateHandler?(gamePhase)
         

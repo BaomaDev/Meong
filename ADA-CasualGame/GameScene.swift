@@ -229,6 +229,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     private func startGameAfterTap() {
         guard let player = player else { return }
         guard let chaser = chaser else { return }
+        gamePhase = .none
+        gameStateUpdateHandler?(gamePhase)
         
         guard !isWaitingForAnimationHome && isWaitingForTapToStart else { return }
 
@@ -244,10 +246,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         childNode(withName: "TapToStartShadowLabel")?.removeFromParent()
         
         titleUI?.removeFromParent()
-        titleUI = nil
-        
-        gamePhase = .none
-        gameStateUpdateHandler?(gamePhase)
         
         //Move all to the far left
         let movePlayertoLeft = SKAction.moveTo(x: 10, duration: 1)

@@ -414,27 +414,35 @@ extension PlayerEntity {
     
     // MARK: - Parry
     func parry(currentTime: TimeInterval) -> Bool {
-        guard self.currentState != .landing else {return false}
+        guard self.currentState != .landing else { return false }
+        
         let timeSinceLastParry = currentTime - lastParryTime
         guard timeSinceLastParry > parryCooldown else {
-            //            print("Parry on cooldown: \(timeSinceLastParry) / \(parryCooldown)")
             return false
         }
         
         lastParryTime = currentTime
         isParrying = true
         parryStartTime = currentTime
-        
-        //        print("Parry activated!")
+
+        // Start parry animation
+        startParryAnimation()
         
         // Visual feedback with SKAction
-        let scaleUp = SKAction.scale(to: 1.2, duration: 0.1)
+        let scaleUp = SKAction.scale(to: 1.1, duration: 0.2)
         let scaleDown = SKAction.scale(to: 1.0, duration: 0.2)
+        
         let endParry = SKAction.run { [weak self] in
-            self?.isParrying = false
+            guard let self = self else { return }
+            self.isParrying = false
+            
+            // ✅ Resume running animation only if player is still in running state
+            if self.currentState == .running {
+                self.startRunningAnimation()
+            }
         }
         
-        run(SKAction.sequence([scaleUp, scaleDown, endParry]))
+        self.run(SKAction.sequence([scaleUp, scaleDown, endParry]))
         
         return true
     }

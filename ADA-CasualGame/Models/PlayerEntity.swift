@@ -439,7 +439,7 @@ class PlayerEntity: SKSpriteNode {
         let textures = textureNames.map { SKTexture(imageNamed: $0) }
 
          // Create animation
-        let animation = SKAction.animate(with: textures, timePerFrame: 0.05, resize: false, restore: false)
+        let animation = SKAction.animate(with: textures, timePerFrame: 0.035, resize: false, restore: false)
         let repeatAnimation = SKAction.repeatForever(animation)
 
         self.run(repeatAnimation, withKey: "tiptoeAnimation")
@@ -459,7 +459,22 @@ class PlayerEntity: SKSpriteNode {
         self.run(repeatAnimation, withKey: "divingAnimation")
     }
     
+    func startParryAnimation() {
+        // Generate texture names based on your file naming
+        stopAllAnimations()
+        
+        let textureNames = (1...12).map { String(format: "CatParry_%05d", $0) }
+        let textures = textureNames.map { SKTexture(imageNamed: $0) }
+
+         // Create animation
+        let animation = SKAction.animate(with: textures, timePerFrame: 0.025, resize: false, restore: false)
+        let repeatAnimation = SKAction.repeatForever(animation)
+
+        self.run(repeatAnimation, withKey: "parryAnimation")
+    }
+    
     func stopAllAnimations() {
+        self.removeAction(forKey: "parryAnimation")
         self.removeAction(forKey: "divingAnimation")
         self.removeAction(forKey: "tiptoeAnimation")
         self.removeAction(forKey: "idleAnimation")

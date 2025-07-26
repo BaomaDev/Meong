@@ -61,7 +61,8 @@ struct GameView: View {
                         HStack {
                             Spacer()
                             Text("\(score)")
-                                .font(.system(size: 32, weight: .bold))
+                                .font(.custom("Comic Lemon", size: 32))
+                                .fontWeight(.bold)
                                 .foregroundColor(.white)
                                 .shadow(radius: 3)
                             Spacer()

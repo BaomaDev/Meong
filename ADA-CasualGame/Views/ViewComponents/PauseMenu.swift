@@ -14,6 +14,7 @@ struct PauseMenu: View {
     var body: some View {
         VStack(spacing: 20) {
             Text("Paused")
+                .font(.custom("Comic Lemon", size: 24))
                 .font(.largeTitle)
                 .bold()
                 .foregroundColor(.white)

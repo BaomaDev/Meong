@@ -220,8 +220,8 @@ extension PlayerEntity {
         canJump = false
         self.currentState = .airborne
         
-//        let adjustY = playerHitboxHeight * -0.125
-//        applyVerticalMovementTransformation(withYAdjustment: adjustY)
+        let adjustY = playerHitboxHeight * -0.125
+        applyVerticalMovementTransformation(withYAdjustment: adjustY)
         
         // Start jump animation
         startJumpingAnimation()
@@ -269,8 +269,8 @@ extension PlayerEntity {
         canJump = false
         self.currentState = .airborne
         
-//        let adjustY = playerHitboxHeight * -0.17
-//        applyVerticalMovementTransformation(withYAdjustment: adjustY)
+        let adjustY = playerHitboxHeight * -0.17
+        applyVerticalMovementTransformation(withYAdjustment: adjustY)
 
         // Start jump animation
         startHighJumpingAnimation()
@@ -352,8 +352,9 @@ extension PlayerEntity {
         if !shortDive {
             self.currentState = .diving
             
-            let adjustY = self.size.height * (0.34/2)
-            applyVerticalMovementTransformation(withYAdjustment: adjustY)
+//            let adjustY = self.size.height * (0.34/2)
+//            applyVerticalMovementTransformation(withYAdjustment: adjustY)
+            self.startDivingAnimation()
         }
         
         // Apply a sharp downward impulse.

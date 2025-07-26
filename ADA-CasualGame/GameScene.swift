@@ -64,6 +64,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     override func didMove(to view: SKView) {
         setupProperties()
         
+        // ✅ Start BGM early
+        EffectsFactory.shared.playBgm()
+        
         NotificationCenter.default.addObserver(self, selector: #selector(appWillResignActive), name: UIApplication.willResignActiveNotification, object: nil)
         
         NotificationCenter.default.addObserver(
@@ -277,19 +280,19 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
 
         // Step 2: Move player slightly forward
-        let moveToStart = SKAction.moveTo(x: 90, duration: 1)
+        let moveToStart = SKAction.moveTo(x: 90, duration: 0.5)
         moveToStart.timingMode = .easeIn
 
         // Step 3: Bezier path animation (player jumping over the chaser)
         let path = UIBezierPath()
-        let startPoint = CGPoint(x: 90, y: 125)
-        let endPoint = CGPoint(x: 200, y: 125)
-        let controlPoint = CGPoint(x: (90 + 200) / 2, y: 260)
+        let startPoint = CGPoint(x: 90, y: player.position.y)
+        let endPoint = CGPoint(x: 200, y: player.position.y)
+        let controlPoint = CGPoint(x: (startPoint.x + endPoint.x)/2, y: player.position.y + 160)
 
         path.move(to: startPoint)
         path.addQuadCurve(to: endPoint, controlPoint: controlPoint)
 
-        let jump = SKAction.follow(path.cgPath, asOffset: false, orientToPath: false, duration: 1)
+        let jump = SKAction.follow(path.cgPath, asOffset: false, orientToPath: false, duration: 0.7)
         jump.timingMode = .easeInEaseOut
 
          // Step 4: After intro + jump, switch to running
@@ -312,7 +315,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             
             self.cleanupObjectHome()
 
-            self.setupGame() // Starts score and spawning logic
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                self.setupGame()
+            }
         }
         
         let runAnimation = SKAction.run {
@@ -321,16 +326,16 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
 
         // Step 5: Sequence it all together
         let fullSequence = SKAction.sequence([
-            startIntro,
             movePlayertoLeft,
-            .wait(forDuration: 0.1),
+            startIntro,
+            .wait(forDuration: 0.001),
             runAnimation,
             moveToStart,
-            .wait(forDuration: 0.1),
-            startStealingDuringJump, // <<< Start the stealing animation just before jump
+            .wait(forDuration: 0.001),
+            startStealingDuringJump,
             jump,
             makMarah,
-            .wait(forDuration: 0.2),
+            .wait(forDuration: 0.001),
             startRunning,
             finalizeStart
         ])

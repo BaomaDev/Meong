@@ -37,7 +37,7 @@ final class SaveManager {
             return decoded
         } catch {
             print("⚠️ Load failed: \(error.localizedDescription), using default values.")
-            return PlayerData(isFirstTimeInstall: true,highScore: 0, coins: 0, selectedCostume: "default", unlockedCostumes: [])
+            return PlayerData(isFirstTimeInstall: true,highScore: 0, coins: 0, selectedCostume: "costume_default", unlockedCostumes: ["costume_default"])
         }
     }
 

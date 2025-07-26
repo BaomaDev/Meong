@@ -27,12 +27,16 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     // Timers to implement cooldown
     var lastUpdateTime: TimeInterval = 0
     
+    
+    // MARK: - Handler
     var scoreUpdateHandler: ((Int) -> Void)?
     var highscoreUpdateHandler: ((Int) -> Void)?
     var coinUpdateHandler: ((Int) -> Void)?
     var healthUpdateHandler: ((Int) -> Void)?
     var distanceUpdateHandler: ((Int) -> Void)?
     var gameStateUpdateHandler: ((GamePhase) -> Void)?
+    var costumePurchasedHandler:  (([String]) -> Void)?
+    var selectedCostumeHandler:  ((String) -> Void)?
     
     private var scoreTimer: Timer?
     private var internalScore: Int = 0
@@ -161,7 +165,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         self.gerobakIkan = gerobakIkan
 
         // MARK: - Finalize layout after frame update
-        run(SKAction.wait(forDuration: 0.5)) { [weak self] in
+        run(SKAction.wait(forDuration: 0.01)) { [weak self] in
             guard let self = self, let chaser = self.chaser else { return }
             let startXChaser = self.size.width / 2
             let startY = self.size.height * 0.2
@@ -199,6 +203,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                     })
                 })
             } else {
+                self.titleUI?.alpha = 1.0
+                self.titleUI?.position.y = self.size.height * 0.8
+                self.camera?.position.y = self.size.height / 2
                 let fadeInOut = SKAction.sequence([
                     SKAction.fadeAlpha(to: 0.4, duration: 0.8),
                     SKAction.fadeAlpha(to: 1.0, duration: 0.8)
@@ -209,9 +216,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 let fadeOut = SKAction.fadeOut(withDuration: 3)
                 let repeatAnimation = SKAction.repeatForever(SKAction.sequence([fadeIn, fadeOut]))
                 self.tapToStartUI?.run(repeatAnimation)
-                self.titleUI?.alpha = 1.0
-                self.titleUI?.position.y = self.size.height * 0.8
-                self.camera?.position.y = self.size.height / 2
                 self.gamePhase = .homeScreen
                 self.gameStateUpdateHandler?(self.gamePhase)
                 self.run(SKAction.wait(forDuration: 1)) {
@@ -366,6 +370,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         // Reset properties
         internalScore = 0
         lastDistanceBonusScore = 0
+        scoreUpdateHandler?(internalScore)
+        healthUpdateHandler?(9)
+        distanceUpdateHandler?(3)
+        coinUpdateHandler?(0)
         gameSpeed = baseGameSpeed
         
         worldGenerator?.stopAllSpawning() // <-- STOPS spawning during tutorial
@@ -416,6 +424,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     func endTutorial() {
         playerData.isFirstTimeInstall = false
+        isWaitingForAnimationHome = false
         gamePhase = .playing
         gameStateUpdateHandler?(gamePhase)
         worldGenerator?.startProceduralSpawning()
@@ -618,6 +627,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         scoreUpdateHandler?(internalScore)
         healthUpdateHandler?(9)
         distanceUpdateHandler?(3)
+        coinUpdateHandler?(0)
         
         setupProperties()
         setupGame()
@@ -649,6 +659,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         chaser = nil
         scoreTimer?.invalidate()
         internalScore = 0
+        isWaitingForAnimationHome = false
+        
+        worldGenerator?.stopAllSpawning()
         
         setupProperties()
         
@@ -743,10 +756,41 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         ]))
     }
     
+    // MARK: - Shop Logic
+    func buyCostume(costume: String, price coin:Int) {
+        if playerData.coins < coin {
+            print("Not enough coin")
+            return
+        }
+        if playerData.unlockedCostumes.contains(costume) {
+            print("Already purchased")
+            return
+        }
+        
+        playerData.coins -= coin
+        playerData.unlockedCostumes.append(costume)
+        coinUpdateHandler?(playerData.coins)
+        costumePurchasedHandler?(playerData.unlockedCostumes)
+        savePlayerData()
+    }
+    
+    func selectCostume(_ costume: String) {
+        if !playerData.unlockedCostumes.contains(costume) {
+            print("Costume not purchased yet") 
+            return
+        }
+        playerData.selectedCostume = costume
+        selectedCostumeHandler?(costume)
+        savePlayerData()
+    }
+    
+    // MARK: - Save Func
     @objc private func savePlayerData() {
+        guard gamePhase != .tutorial || gamePhase != .playing else { return }
         SaveManager.shared.save(playerData)
     }
     
+    // MARK: - Deinit
     deinit {
         NotificationCenter.default.removeObserver(self)
         savePlayerData()

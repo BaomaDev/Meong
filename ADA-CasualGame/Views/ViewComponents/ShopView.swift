@@ -11,8 +11,10 @@ import SpriteKit
 struct ShopView: View {
     @Binding var isShowing: Bool
     @State private var coins: Int = 0
-    @State private var selectedCostume: String? = "default"
+    @State private var selectedCostume: String? = "costume_default"
     @State private var purchasedCostumes: [String] = []
+    @State private var playerData: PlayerData = SaveManager.shared.load()
+    @Binding var scene: GameScene
     var body: some View {
         ZStack {
             Image("UI_Box")
@@ -70,22 +72,31 @@ struct ShopView: View {
                                     .resizable()
                                     .aspectRatio(contentMode: .fit)
                                     .frame(width: 100)
-                                Text("Cat")
+                                Text("Oyen")
                                     .font(.custom("Comic Lemon", size: 18))
                                     .foregroundStyle(.black)
-                                Text("1000 Coins")
+                                Text("Owned")
                                     .font(.custom("Comic Lemon", size: 12))
                                     .foregroundStyle(.black)
-                                Button(action: {
-                                    
-                                }){
-                                    Image("BuyButton")
-                                        .resizable()
-                                        .aspectRatio(contentMode: .fit)
-                                        .frame(width: 100)
+                                    .padding(.bottom, 10)
+                                if selectedCostume != "costume_default" {
+                                    Button(action: {
+                                        scene.selectCostume("costume_default")
+                                    }){
+                                        Image("EquipButton")
+                                            .resizable()
+                                            .aspectRatio(contentMode: .fit)
+                                            .frame(width: 100)
+                                    }
+                                } else {
+                                    Text("Selected")
+                                        .font(.custom("Comic Lemon", size: 20))
+                                        .foregroundStyle(.black)
+                                        .padding(.bottom, 10)
                                 }
                             }
                         }
+                        
                         ZStack {
                             Image("ShopCard")
                                 .resizable()
@@ -97,22 +108,45 @@ struct ShopView: View {
                                     .resizable()
                                     .aspectRatio(contentMode: .fit)
                                     .frame(width: 100)
-                                Text("Cat")
+                                Text("Kitter")
                                     .font(.custom("Comic Lemon", size: 18))
                                     .foregroundStyle(.black)
-                                Text("Purchashed")
-                                    .font(.custom("Comic Lemon", size: 12))
-                                    .foregroundStyle(.black)
-                                Button(action: {
-                                    
-                                }){
-                                    Image("EquipButton")
-                                        .resizable()
-                                        .aspectRatio(contentMode: .fit)
-                                        .frame(width: 100)
+                                if !purchasedCostumes.contains("costume_kitter") {
+                                    Text("1000 Coins")
+                                        .font(.custom("Comic Lemon", size: 12))
+                                        .foregroundStyle(.black)
+                                    Button(action: {
+                                        scene.buyCostume(costume: "costume_kitter", price: 1)
+                                    }){
+                                        Image("BuyButton")
+                                            .resizable()
+                                            .aspectRatio(contentMode: .fit)
+                                            .frame(width: 100)
+                                    }
+                                } else {
+                                    Text("Owned")
+                                        .font(.custom("Comic Lemon", size: 12))
+                                        .foregroundStyle(.black)
+                                        .padding(.bottom, 10)
+                                    if selectedCostume != "costume_kitter" {
+                                        Button(action: {
+                                            scene.selectCostume("costume_kitter")
+                                        }){
+                                            Image("EquipButton")
+                                                .resizable()
+                                                .aspectRatio(contentMode: .fit)
+                                                .frame(width: 100)
+                                        }
+                                    } else {
+                                        Text("Selected")
+                                            .font(.custom("Comic Lemon", size: 20))
+                                            .foregroundStyle(.black)
+                                            .padding(.bottom, 10)
+                                    }
                                 }
                             }
                         }
+                        
                         ZStack {
                             Image("ShopCard")
                                 .resizable()
@@ -124,36 +158,72 @@ struct ShopView: View {
                                     .resizable()
                                     .aspectRatio(contentMode: .fit)
                                     .frame(width: 100)
-                                Text("Cat")
+                                Text("Butler")
                                     .font(.custom("Comic Lemon", size: 18))
                                     .foregroundStyle(.black)
-                                Text("1000 Coins")
-                                    .font(.custom("Comic Lemon", size: 12))
-                                    .foregroundStyle(.black)
-                                Button(action: {
-                                    
-                                }){
-                                    Image("BuyButton")
-                                        .resizable()
-                                        .aspectRatio(contentMode: .fit)
-                                        .frame(width: 100)
+                                if !purchasedCostumes.contains("costume_butler") {
+                                    Text("1000 Coins")
+                                        .font(.custom("Comic Lemon", size: 12))
+                                        .foregroundStyle(.black)
+                                    Button(action: {
+                                        scene.buyCostume(costume: "costume_butler", price: 1000)
+                                    }){
+                                        Image("BuyButton")
+                                            .resizable()
+                                            .aspectRatio(contentMode: .fit)
+                                            .frame(width: 100)
+                                    }
+                                } else {
+                                    Text("Owned")
+                                        .font(.custom("Comic Lemon", size: 12))
+                                        .foregroundStyle(.black)
+                                        .padding(.bottom, 10)
+                                    if selectedCostume != "costume_butler" {
+                                        Button(action: {
+                                            scene.selectCostume("costume_butler")
+                                        }){
+                                            Image("EquipButton")
+                                                .resizable()
+                                                .aspectRatio(contentMode: .fit)
+                                                .frame(width: 100)
+                                        }
+                                    } else {
+                                        Text("Selected")
+                                            .font(.custom("Comic Lemon", size: 20))
+                                            .foregroundStyle(.black)
+                                            .padding(.bottom, 10)
+                                    }
                                 }
                             }
                         }
                     }
                 }
                 .padding(.top, -30)
-//                .padding(.trailing, 30)
             }
             .padding(.top, 60)
         }
-//        .ignoresSafeArea()
         .padding(.top, 20)
         .padding(.leading, 20)
+        .onAppear{
+            playerData = SaveManager.shared.load()
+            DispatchQueue.main.async {
+                coins = playerData.coins
+                purchasedCostumes = playerData.unlockedCostumes
+                selectedCostume = playerData.selectedCostume
+            }
+            scene.coinUpdateHandler = { self.coins = $0 }
+            scene.selectedCostumeHandler = { self.selectedCostume = $0 }
+            scene.costumePurchasedHandler = { self.purchasedCostumes = $0 }
+        }
+        .onDisappear{
+            scene.coinUpdateHandler = nil
+            scene.selectedCostumeHandler = nil
+            scene.costumePurchasedHandler = nil
+        }
     }
 }
 
-#Preview {
-    ShopView(isShowing: .constant(true))
-}
+//#Preview {
+//    ShopView(isShowing: .constant(true))
+//}
 

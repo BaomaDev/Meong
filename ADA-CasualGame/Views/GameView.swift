@@ -41,6 +41,19 @@ struct GameView: View {
                     gameScene.gameStateUpdateHandler = { self.gamePhase = $0 }
                     gameScene.highscoreUpdateHandler = { self.highScore = $0 }
                 }
+            
+            if gamePhase == .none {
+                EmptyView()
+            }
+            
+            if gamePhase == .homeScreen {
+                HomeMenu(
+                    openShop: { showShop = true },
+                    openSettings: { showSettings = true },
+                    openLeaderboard: { showSettings = true },
+                    openAchievements: { showSettings = true },
+                )
+            }
 
             if gamePhase == .playing || gamePhase == .tutorial {
                 VStack {
@@ -74,14 +87,6 @@ struct GameView: View {
                     Spacer()
                 }
             }
-            
-//            if gamePhase == .homeScreen {
-//               EmptyView()
-//            }
-            
-            if gamePhase == .none {
-                EmptyView()
-            }
 
             if showPauseMenu {
                 Color.black.opacity(0.5)
@@ -89,13 +94,6 @@ struct GameView: View {
                     .transition(.opacity)
                 
                 PauseMenu(showPauseMenu: $showPauseMenu, gameScene: $gameScene)
-            } else if gamePhase == .homeScreen {
-                HomeMenu(
-                    openShop: { showShop = true },
-                    openSettings: { showSettings = true },
-                    openLeaderboard: { showSettings = true },
-                    openAchievements: { showSettings = true },
-                )
             } else if gamePhase == .gameOver {
                 Color.black.opacity(0.5)
                     .ignoresSafeArea()
@@ -118,7 +116,27 @@ struct GameView: View {
                     .ignoresSafeArea()
                     .transition(.opacity)
 
-                ShopView(isShowing: $showShop)
+                ShopView(isShowing: $showShop, scene: $gameScene)
+                    .onAppear {
+                        gameScene.scoreUpdateHandler = nil
+                        gameScene.coinUpdateHandler = nil
+                        gameScene.healthUpdateHandler = nil
+                        gameScene.gameStateUpdateHandler = nil
+                        gameScene.highscoreUpdateHandler = nil
+                    }
+                    .onDisappear {
+                        gameScene.scoreUpdateHandler = { newScore in
+                            DispatchQueue.main.async { self.score = newScore }
+                        }
+                        gameScene.coinUpdateHandler = { newCoin in
+                            DispatchQueue.main.async { self.coin = newCoin }
+                        }
+                        gameScene.healthUpdateHandler = { newHealth in
+                            DispatchQueue.main.async { self.health = newHealth }
+                        }
+                        gameScene.gameStateUpdateHandler = { self.gamePhase = $0 }
+                        gameScene.highscoreUpdateHandler = { self.highScore = $0 }
+                    }
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: .gameDidAutoPause)) { _ in

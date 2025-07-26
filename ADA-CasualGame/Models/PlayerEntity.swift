@@ -350,7 +350,7 @@ class PlayerEntity: SKSpriteNode {
     func startFlyingAnimation() {
         stopAllAnimations()
         
-        let textureNames = (0...59).map { String(format: "CatFlying_%05d", $0) }
+        let textureNames = (1...58).map { String(format: "CatFlying_%05d", $0) }
         let textures = textureNames.map { SKTexture(imageNamed: $0) }
 
          // Create animation
@@ -435,17 +435,32 @@ class PlayerEntity: SKSpriteNode {
         // Generate texture names based on your file naming
         stopAllAnimations()
         
-        let textureNames = (0...50).map { String(format: "CatWalk_%05d", $0) }
+        let textureNames = (2...49).map { String(format: "CatWalk_%05d", $0) }
         let textures = textureNames.map { SKTexture(imageNamed: $0) }
 
          // Create animation
-        let animation = SKAction.animate(with: textures, timePerFrame: 0.035, resize: false, restore: false)
+        let animation = SKAction.animate(with: textures, timePerFrame: 0.05, resize: false, restore: false)
         let repeatAnimation = SKAction.repeatForever(animation)
 
         self.run(repeatAnimation, withKey: "tiptoeAnimation")
     }
     
+    func startDivingAnimation() {
+        // Generate texture names based on your file naming
+        stopAllAnimations()
+        
+        let textureNames = (0...24).map { String(format: "CatDiving_%05d", $0) }
+        let textures = textureNames.map { SKTexture(imageNamed: $0) }
+
+         // Create animation
+        let animation = SKAction.animate(with: textures, timePerFrame: 0.01, resize: false, restore: false)
+        let repeatAnimation = SKAction.repeatForever(animation)
+
+        self.run(repeatAnimation, withKey: "divingAnimation")
+    }
+    
     func stopAllAnimations() {
+        self.removeAction(forKey: "divingAnimation")
         self.removeAction(forKey: "tiptoeAnimation")
         self.removeAction(forKey: "idleAnimation")
         self.removeAction(forKey: "stealingAnimation")

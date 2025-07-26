@@ -137,7 +137,7 @@ class EffectsFactory {
     func playBgm() {
         guard let scene = scene, bgmNode == nil else { return }
         
-        let node = SKAudioNode(fileNamed: "bgm.wav")
+        let node = SKAudioNode(fileNamed: "BGM")
         node.autoplayLooped = true
         node.isPositional = false // Ensures sound is not affected by camera position
         node.run(SKAction.changeVolume(to: 0, duration: 0)) // Start silent

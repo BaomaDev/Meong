@@ -296,7 +296,7 @@ class SpawnFactory {
                 objectPosition = CGPoint(x: position.x, y: position.y - 10)
             case "GerobakSayur":
                 targetWidth = 160
-                objectPosition = CGPoint(x: position.x, y: position.y + 30)
+                objectPosition = CGPoint(x: position.x, y: position.y + 50)
             default:
                 targetWidth = 50
                 objectPosition = CGPoint(x: position.x, y: position.y - 10)

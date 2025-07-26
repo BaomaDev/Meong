@@ -273,6 +273,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         //After position changed to far left
         let startStealingDuringJump = SKAction.run {
             player.startStealingAnimation()
+            EffectsFactory.shared.playSound(soundKey: "munch.mp3", volumeKey: 1.0)
         }
         
         let makMarah = SKAction.run {
@@ -624,10 +625,13 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     func checkGameOver() {
         guard let player = player else { return }
+
         if player.hearts <= 0 || player.distance <= 0 {
-            gameOver()
+            // Trigger final catch-up animation
+            startChaserCatchupSequence()
         }
     }
+
     
     func restart() {
         self.removeAllChildren()
@@ -796,6 +800,36 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         selectedCostumeHandler?(costume)
         savePlayerData()
     }
+    
+    private func startChaserCatchupSequence() {
+        guard let chaser = chaser, let player = player else {
+            gameOver() // fallback
+            return
+        }
+
+        // 1. Stop spawning and freeze background scrolling
+        worldGenerator?.stopAllSpawning()
+        backgroundView?.pauseScrolling()
+
+        // 2. Stop player's input or animation
+        player.removeAllActions()
+        player.startCaughtAnimation() // ⬅️ Create this animation in your PlayerEntity
+
+        // 3. Move chaser to player's position over 1 second
+        let moveToPlayer = SKAction.moveTo(x: player.position.x, duration: 1.0)
+        moveToPlayer.timingMode = .easeInEaseOut
+
+        chaser.run(moveToPlayer)
+
+        // 4. Delay before final GameOver logic
+        run(SKAction.sequence([
+            SKAction.wait(forDuration: 1.5), // adjust timing as needed
+            SKAction.run { [weak self] in
+                self?.gameOver()
+            }
+        ]))
+    }
+
     
     // MARK: - Save Func
     @objc private func savePlayerData() {

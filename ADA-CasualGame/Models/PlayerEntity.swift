@@ -473,7 +473,21 @@ class PlayerEntity: SKSpriteNode {
         self.run(repeatAnimation, withKey: "parryAnimation")
     }
     
+    func startCaughtAnimation() {
+        // Generate texture names based on your file naming
+        stopAllAnimations()
+        
+        let textureNames = (0...11).map { String(format: "CatWithoutFish_%05d", $0) }
+        let textures = textureNames.map { SKTexture(imageNamed: $0) }
+
+         // Create animation
+        let animation = SKAction.animate(with: textures, timePerFrame: 0.05, resize: false, restore: false)
+
+        self.run(animation, withKey: "caughtAnimation")
+    }
+    
     func stopAllAnimations() {
+        self.removeAction(forKey: "caughtAnimation")
         self.removeAction(forKey: "parryAnimation")
         self.removeAction(forKey: "divingAnimation")
         self.removeAction(forKey: "tiptoeAnimation")

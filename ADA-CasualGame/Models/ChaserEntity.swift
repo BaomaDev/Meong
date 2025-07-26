@@ -76,11 +76,26 @@ class ChaserEntity: SKSpriteNode {
         let animation = SKAction.animate(with: textures, timePerFrame: 0.1, resize: false, restore: false)
         let repeatAnimation = SKAction.repeatForever(animation)
 
-        self.run(repeatAnimation, withKey: "emakRunAnimation")
+        self.run(repeatAnimation, withKey: "emakIntroAnimation")
+    }
+    
+    func startCatchAnimation() {
+        // Generate texture names based on your file naming
+        stopAllAnimation()
+        
+        let textureNames = (0...23).map { String(format: "Mak_Intro_%05d", $0) }
+        let textures = textureNames.map { SKTexture(imageNamed: $0) }
+
+         // Create animation
+        let animation = SKAction.animate(with: textures, timePerFrame: 0.1, resize: false, restore: false)
+
+        self.run(animation, withKey: "emakCatchAnimation")
     }
     
     func stopAllAnimation() {
+        self.removeAction(forKey: "emakIntroAnimation")
         self.removeAction(forKey: "emakRunAnimation")
+        self.removeAction(forKey: "emakCatchAnimation")
     }
 }
 

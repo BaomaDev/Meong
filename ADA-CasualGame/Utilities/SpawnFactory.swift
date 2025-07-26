@@ -45,6 +45,10 @@ class SpawnFactory {
         let removeAction = SKAction.removeFromParent()
         return SKAction.sequence([moveAction, removeAction])
     }
+    
+    static func stopMovement(of node: SKNode) {
+        node.removeAction(forKey: MoveKey.collectible)
+    }
 
     // MARK: - Collectibles
     
@@ -296,7 +300,7 @@ class SpawnFactory {
                 objectPosition = CGPoint(x: position.x, y: position.y - 10)
             case "GerobakSayur":
                 targetWidth = 160
-                objectPosition = CGPoint(x: position.x, y: position.y + 50)
+                objectPosition = CGPoint(x: position.x, y: position.y + 45)
             default:
                 targetWidth = 50
                 objectPosition = CGPoint(x: position.x, y: position.y - 10)

@@ -17,7 +17,7 @@ struct CoinIndicator: View {
                 .aspectRatio(contentMode: .fit)
                 .frame(width: 90)
             Text("\(coinCount)")
-                .font(.custom("Comic Lemon", size: 18))
+                .font(.custom("Comic Lemon", size: 20))
                 .foregroundColor(.white)
                 .shadow(radius: 2)
                 .padding(.leading, 40)

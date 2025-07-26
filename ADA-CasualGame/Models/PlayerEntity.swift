@@ -477,11 +477,11 @@ class PlayerEntity: SKSpriteNode {
         // Generate texture names based on your file naming
         stopAllAnimations()
         
-        let textureNames = (0...11).map { String(format: "CatWithoutFish_%05d", $0) }
+        let textureNames = (0...29).map { String(format: "CatDead_%05d", $0) }
         let textures = textureNames.map { SKTexture(imageNamed: $0) }
 
          // Create animation
-        let animation = SKAction.animate(with: textures, timePerFrame: 0.05, resize: false, restore: false)
+        let animation = SKAction.animate(with: textures, timePerFrame: 0.02, resize: false, restore: false)
 
         self.run(animation, withKey: "caughtAnimation")
     }

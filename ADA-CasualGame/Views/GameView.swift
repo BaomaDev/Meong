@@ -139,6 +139,14 @@ struct GameView: View {
                         gameScene.highscoreUpdateHandler = { self.highScore = $0 }
                     }
             }
+            
+            if showSettings {
+                Color.black.opacity(0.5)
+                    .ignoresSafeArea()
+                    .transition(.opacity)
+                
+                SettingMenu(isShowing: $showSettings, scene: $gameScene)
+            }
         }
         .onReceive(NotificationCenter.default.publisher(for: .gameDidAutoPause)) { _ in
             if gamePhase != .gameOver {

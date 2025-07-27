@@ -273,7 +273,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         //After position changed to far left
         let startStealingDuringJump = SKAction.run {
             player.startStealingAnimation()
-            EffectsFactory.shared.playSound(soundKey: "munch.mp3", volumeKey: 1.0)
+            EffectsFactory.shared.playSound(soundKey: "munch.mp3")
         }
         
         let makMarah = SKAction.run {
@@ -849,6 +849,27 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 self?.gameOver()
             }
         ]))
+    }
+    
+    //MARK: - Setting Stuff
+    
+    func setBgmVolume(_ volume: Float) {
+        playerData.bgmVolume = volume
+        EffectsFactory.shared.refreshBgmVolume(volume: volume)
+        savePlayerData()
+    }
+    
+    func setSfxVolume(_ volume: Float) {
+        playerData.sfxVolume = volume
+        savePlayerData()
+    }
+    
+    func getBgmVolume() -> Float {
+        return playerData.bgmVolume
+    }
+    
+    func getSfxVolume() -> Float {
+        return playerData.sfxVolume
     }
     
     

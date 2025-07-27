@@ -63,9 +63,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     // MARK: - Scene Lifecycle (Initializers)
     override func didMove(to view: SKView) {
         setupProperties()
-        
-        // ✅ Start BGM early
-        EffectsFactory.shared.playBgm(named: "BGM", isMainTrack: true)
 
         NotificationCenter.default.addObserver(self, selector: #selector(appWillResignActive), name: UIApplication.willResignActiveNotification, object: nil)
         
@@ -121,6 +118,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         distanceUpdateHandler?(3)
         coinUpdateHandler?(0)
         gameSpeed = baseGameSpeed
+        
+        EffectsFactory.shared.playBgm(named: "BGM", isMainTrack: true)
         
         worldGenerator?.stopAllSpawning()
         isWaitingForTapToStart = true

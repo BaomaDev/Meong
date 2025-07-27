@@ -11,10 +11,20 @@ struct PlayerData: Codable {
     var isFirstTimeInstall: Bool = true
     var highScore: Int
     var coins: Int
+    var totalCoinsGained: Int
+    var totalCoinsSpent: Int
+    var totalGamesPlayed: Int
+    var totalBikerKnockedOut: Int
+    var totalChessKnockedOut: Int
+    var totalChickenKnockedOut: Int
+    var totalBananaKnockedOut: Int
+    var totalHittedBySandal: Int
+    var totalCatnipEaten: Int
     var selectedCostume: String
     var unlockedCostumes: [String] // Example: ["skin_red", "skin_blue"]
     var bgmVolume: Float = 1.0
     var sfxVolume: Float = 1.0
+    var unlockedAchievements: [String]
 }
 
 final class SaveManager {
@@ -37,7 +47,7 @@ final class SaveManager {
             return decoded
         } catch {
             print("⚠️ Load failed: \(error.localizedDescription), using default values.")
-            return PlayerData(isFirstTimeInstall: true,highScore: 0, coins: 0, selectedCostume: "costume_default", unlockedCostumes: ["costume_default"])
+            return PlayerData(isFirstTimeInstall: true, highScore: 0, coins: 0, totalCoinsGained: 0, totalCoinsSpent: 0, totalGamesPlayed: 0, totalBikerKnockedOut: 0, totalChessKnockedOut: 0, totalChickenKnockedOut: 0, totalBananaKnockedOut: 0, totalHittedBySandal: 0, totalCatnipEaten: 0, selectedCostume: "costume_default", unlockedCostumes: ["costume_default"], unlockedAchievements: [])
         }
     }
 

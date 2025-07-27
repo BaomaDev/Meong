@@ -241,6 +241,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     private func startGameAfterTap() {
         guard let player = player else { return }
         guard let chaser = chaser else { return }
+        guard gamePhase == .homeScreen else { return }
         
         gamePhase = .none
         gameStateUpdateHandler?(gamePhase)
@@ -627,6 +628,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     func checkGameOver() {
         guard let player = player else { return }
+        guard gamePhase == .playing else { return }
         
         if player.hearts <= 0 || player.distance <= 0 {
             // Trigger final catch-up animation
@@ -636,6 +638,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     
     func restart() {
+        self.isPaused = false
+        GameScene.isGamePaused = false
         for child in self.children {
             if child.name != "background_music_node" {
                 child.removeFromParent()
@@ -654,9 +658,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         setupProperties()
         setupGame()
-        
-        self.isPaused = false
-        GameScene.isGamePaused = false
     }
     
     func gameOver() {
@@ -677,6 +678,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
     
     func returnToHomeScreen() {
+        self.isPaused = false
+        GameScene.isGamePaused = false
         for child in self.children {
             if child.name != "background_music_node" {
                 child.removeFromParent()
@@ -694,9 +697,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         setupProperties()
         
         showTapToStart()
-        
-        self.isPaused = false
-        GameScene.isGamePaused = false
     }
     
     func pauseGame() {
@@ -814,9 +814,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     private func startChaserCatchupSequence() {
         guard let chaser = chaser, let player = player else {
-            gameOver() // fallback
+//            gameOver() // fallback
             return
         }
+        
+        guard gamePhase == .playing else { return }
         
         // 1. Stop spawning and freeze background scrolling
         worldGenerator?.stopAllSpawning()
@@ -840,22 +842,17 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         let moveToPlayer = SKAction.moveTo(x: player.position.x, duration: 1.0)
         moveToPlayer.timingMode = .easeInEaseOut
         
-        chaser.run(moveToPlayer)
-        
-        // 4. Delay before final GameOver logic
-        run(SKAction.sequence([
-            SKAction.wait(forDuration: 2.0), // adjust timing as needed
-            SKAction.run { [weak self] in
-                self?.gameOver()
-            }
-        ]))
+        chaser.run(moveToPlayer) {
+            self.gameOver()
+            print("GameOver")
+        }
     }
     
     //MARK: - Setting Stuff
     
     func setBgmVolume(_ volume: Float) {
-        playerData.bgmVolume = volume
         EffectsFactory.shared.refreshBgmVolume(volume: volume)
+        EffectsFactory.shared.setBgmVolume(volume)
         savePlayerData()
     }
     

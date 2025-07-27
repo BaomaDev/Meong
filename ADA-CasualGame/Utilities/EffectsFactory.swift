@@ -30,6 +30,8 @@ class EffectsFactory {
     }
     
     private(set) var mainBgmName: String?
+    
+    private var bgmVolume: Float?
     // MARK: - Setup
     
     /// Initializes the factory with a reference to the main game scene.
@@ -175,6 +177,11 @@ class EffectsFactory {
     func refreshBgmVolume(volume: Float) {
         guard let bgmNode = bgmNode else { return }
         bgmNode.run(SKAction.changeVolume(to: volume, duration: 0))
+    }
+    
+    func setBgmVolume(_ volume: Float) {
+        playerData.bgmVolume = volume
+        refreshBgmVolume(volume: volume)
     }
     
     /// Stops the background music with a slow fade-out.

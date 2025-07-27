@@ -157,6 +157,7 @@ class PlayerEntity: SKSpriteNode {
         currentState = .flying
         isInvincible = true
         
+        EffectsFactory.shared.playBgm(named: "BGM_Catnip", isMainTrack: false)
         EffectsFactory.shared.playSound(soundKey: "powerUp.mp3", volumeKey: 1.0)
 
         // This ensures the player is not stuck in a blinking, stretched, or ducked state.
@@ -203,6 +204,10 @@ class PlayerEntity: SKSpriteNode {
                 self.physicsBody?.affectedByGravity = true
                 self.alpha = 1.0
                 self.restoreOriginalShape()
+                
+                if let mainBgm = EffectsFactory.shared.mainBgmName {
+                    EffectsFactory.shared.playBgm(named: mainBgm, isMainTrack: true)
+                }
                 
                 // 🔁 Resume running animation
                 self.startRunningAnimation()

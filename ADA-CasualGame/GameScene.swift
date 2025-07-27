@@ -65,8 +65,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         setupProperties()
         
         // ✅ Start BGM early
-        EffectsFactory.shared.playBgm()
-        
+        EffectsFactory.shared.playBgm(named: "BGM", isMainTrack: true)
+
         NotificationCenter.default.addObserver(self, selector: #selector(appWillResignActive), name: UIApplication.willResignActiveNotification, object: nil)
         
         NotificationCenter.default.addObserver(
@@ -304,6 +304,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         let finalizeStart = SKAction.run { [weak self] in
             guard let self = self else { return }
+            
+            EffectsFactory.shared.playBgm(named: "bgmtest", isMainTrack: true)
             
             // Lock player in place to prevent drift
             let xConstraint = SKConstraint.positionX(SKRange(constantValue: 200))
@@ -634,7 +636,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     
     func restart() {
-        self.removeAllChildren()
+        for child in self.children {
+            if child.name != "background_music_node" {
+                child.removeFromParent()
+            }
+        }
         
         player = nil
         chaser = nil
@@ -671,7 +677,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
     
     func returnToHomeScreen() {
-        self.removeAllChildren()
+        for child in self.children {
+            if child.name != "background_music_node" {
+                child.removeFromParent()
+            }
+        }
+
         player = nil
         chaser = nil
         scoreTimer?.invalidate()
@@ -813,10 +824,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         // 🔹 STOP MOVEMENT OF ALL EXISTING OBJECTS
         self.enumerateChildNodes(withName: "//") { node, _ in
-            node.removeAllActions() // Stop any SKAction-based movement
-            node.physicsBody?.velocity = .zero // Stop any physics-based motion
-            node.physicsBody?.angularVelocity = 0
-            node.physicsBody?.isDynamic = false // Optional: disable physics
+            if node.name != "background_music_node" {
+                node.removeAllActions()
+                node.physicsBody?.velocity = .zero
+                node.physicsBody?.angularVelocity = 0
+                node.physicsBody?.isDynamic = false
+            }
         }
         
         // 2. Stop player's input or animation

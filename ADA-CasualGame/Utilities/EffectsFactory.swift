@@ -28,6 +28,7 @@ class EffectsFactory {
         prepareHaptics()
     }
     
+    private(set) var mainBgmName: String?
     // MARK: - Setup
     
     /// Initializes the factory with a reference to the main game scene.
@@ -134,19 +135,40 @@ class EffectsFactory {
     }
     
     /// Starts playing the background music with a slow fade-in.
-    func playBgm() {
-        guard let scene = scene, bgmNode == nil else { return }
+    func playBgm(named trackName: String, isMainTrack: Bool = false) {
+        guard let scene = scene else { return }
+
+        if let currentTrack = bgmNode?.userData?["trackName"] as? String, currentTrack == trackName {
+            return
+        }
         
-        let node = SKAudioNode(fileNamed: "BGM")
-        node.autoplayLooped = true
-        node.isPositional = false // Ensures sound is not affected by camera position
-        node.run(SKAction.changeVolume(to: 0, duration: 0)) // Start silent
-        
-        scene.addChild(node)
-        self.bgmNode = node
-        
-        // Fade in the volume over 3 seconds.
-        node.run(SKAction.changeVolume(to: 0.7, duration: 3.0))
+        // If this is a main track, update our reference.
+        if isMainTrack {
+            self.mainBgmName = trackName
+        }
+
+        if let currentNode = bgmNode {
+            let fadeOut = SKAction.changeVolume(to: 0, duration: 1.0)
+            let remove = SKAction.removeFromParent()
+            currentNode.run(SKAction.sequence([fadeOut, remove]))
+        }
+
+        let delay = bgmNode == nil ? 0.0 : 1.0
+        scene.run(SKAction.wait(forDuration: delay)) { [weak self] in
+            guard let self = self else { return }
+            
+            let newNode = SKAudioNode(fileNamed: trackName)
+            newNode.name = "background_music_node"
+            newNode.userData = ["trackName": trackName]
+            newNode.autoplayLooped = true
+            newNode.isPositional = false
+            newNode.run(SKAction.changeVolume(to: 0, duration: 0))
+            
+            scene.addChild(newNode)
+            self.bgmNode = newNode
+            
+            newNode.run(SKAction.changeVolume(to: 0.7, duration: 1.5))
+        }
     }
     
     /// Stops the background music with a slow fade-out.

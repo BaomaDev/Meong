@@ -108,16 +108,16 @@ extension PlayerEntity {
         if surfaceType == .ground {
             surfaceKey = "dirt"
             amount = 12
-            EffectsFactory.shared.playSound(soundKey: "landing.mp3", volumeKey: 1.0)
+            EffectsFactory.shared.playSound(soundKey: "landing.mp3")
         } else if surfaceType == .semiSolidPlatform {
             surfaceKey = "spark"
             amount = 3
-            EffectsFactory.shared.playSound(soundKey: "landing_wire.mp3", volumeKey: 1.0)
+            EffectsFactory.shared.playSound(soundKey: "landing_wire.mp3")
 //            EffectsFactory.shared.playSound(soundKey: "electricity.mp3", volumeKey: 0.15)
         } else {
             surfaceKey = "smoke"
             amount = 4
-            EffectsFactory.shared.playSound(soundKey: "landingConcrete.mp3", volumeKey: 1.0)
+            EffectsFactory.shared.playSound(soundKey: "landingConcrete.mp3")
         }
         
         restoreOriginalShape()
@@ -166,16 +166,16 @@ extension PlayerEntity {
             if surfaceType == .ground {
                 surfaceKey = "dirt"
                 amount = 6
-                EffectsFactory.shared.playSound(soundKey: "softLanding.mp3", volumeKey: 0.5)
+                EffectsFactory.shared.playSound(soundKey: "softLanding.mp3")
             } else if surfaceType == .semiSolidPlatform {
                 surfaceKey = "spark"
                 amount = 1
-                EffectsFactory.shared.playSound(soundKey: "landing_wire.mp3", volumeKey: 1.0)
+                EffectsFactory.shared.playSound(soundKey: "landing_wire.mp3")
 //                EffectsFactory.shared.playSound(soundKey: "electricity.mp3", volumeKey: 0.15)
             } else {
                 surfaceKey = "smoke"
                 amount = 2
-                EffectsFactory.shared.playSound(soundKey: "landingConcrete.mp3", volumeKey: 0.5)
+                EffectsFactory.shared.playSound(soundKey: "landingConcrete.mp3")
             }
             
             EffectsFactory.shared.createParticleEffect(at: particlePosition, key: surfaceKey, amount: amount)
@@ -236,7 +236,7 @@ extension PlayerEntity {
         
         self.physicsBody?.affectedByGravity = false
         
-        EffectsFactory.shared.playSound(soundKey: "jump.mp3", volumeKey: 2.5)
+        EffectsFactory.shared.playSound(soundKey: "jump.mp3")
         
         let jumpAction = SKAction.customAction(withDuration: duration) { (node, elapsedTime) in
             let t = elapsedTime / duration
@@ -301,7 +301,7 @@ extension PlayerEntity {
         }
         
         // Play effects for either jump type
-        EffectsFactory.shared.playSound(soundKey: "highJump.mp3", volumeKey: 2.5)
+        EffectsFactory.shared.playSound(soundKey: "highJump.mp3")
 //        EffectsFactory.shared.playHaptic(strength: 1.0)
         
         // Run the chosen jumpAction followed by its corresponding completion action.
@@ -368,7 +368,7 @@ extension PlayerEntity {
         self.canDuck = false
 
         startDuckingAnimation()
-        EffectsFactory.shared.playSound(soundKey: "duck.wav", volumeKey: 1.0)
+        EffectsFactory.shared.playSound(soundKey: "duck.wav")
 
         // Restore after duration
         let wait = SKAction.wait(forDuration: 0.75)
@@ -397,7 +397,7 @@ extension PlayerEntity {
         // This is the existing action that restores the collision rules after a delay.
         let wait = SKAction.wait(forDuration: 0.33)
         let restoreCollision = SKAction.run {
-            EffectsFactory.shared.playSound(soundKey: "landing_wire.mp3", volumeKey: 1.0)
+            EffectsFactory.shared.playSound(soundKey: "landing_wire.mp3")
             self.setupPhysics()
             self.currentState = .airborne
             self.physicsBody?.velocity.dy = 0

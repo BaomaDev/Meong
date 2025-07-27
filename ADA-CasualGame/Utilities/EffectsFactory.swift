@@ -9,6 +9,7 @@ class EffectsFactory {
     private let starParticleTextures = ["star_01", "star_02", "star_03"]
     private let sparkParticleTextures = ["spark_01", "spark_02", "spark_03"]
     
+    private var playerData: PlayerData = SaveManager.shared.load()
     // MARK: - Singleton Instance
     static let shared = EffectsFactory()
     
@@ -42,7 +43,7 @@ class EffectsFactory {
     
     /// Plays a one-off sound effect.
     /// - Parameter soundKey: The filename of the sound to play (e.g., "jump.wav").
-    func playSound(soundKey: String, volumeKey: Float) {
+    func playSound(soundKey: String) {
         guard let scene = scene else { return }
         
         // 1. Create an audio node
@@ -50,7 +51,7 @@ class EffectsFactory {
         audioNode.autoplayLooped = false // Prevent looping
         
         // 2. Set volume (0.0 to 1.0)
-        audioNode.run(SKAction.changeVolume(to: volumeKey, duration: 0))
+        audioNode.run(SKAction.changeVolume(to: playerData.sfxVolume, duration: 0))
         
         // 3. Add to the scene
         scene.addChild(audioNode)
@@ -167,8 +168,13 @@ class EffectsFactory {
             scene.addChild(newNode)
             self.bgmNode = newNode
             
-            newNode.run(SKAction.changeVolume(to: 0.7, duration: 1.5))
+            newNode.run(SKAction.changeVolume(to: playerData.bgmVolume, duration: 1.5))
         }
+    }
+    
+    func refreshBgmVolume(volume: Float) {
+        guard let bgmNode = bgmNode else { return }
+        bgmNode.run(SKAction.changeVolume(to: volume, duration: 0))
     }
     
     /// Stops the background music with a slow fade-out.

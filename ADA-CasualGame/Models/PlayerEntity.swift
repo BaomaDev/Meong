@@ -91,7 +91,7 @@ class PlayerEntity: SKSpriteNode {
         physicsBody?.collisionBitMask &= ~PhysicsCategory.projectile
         
         EffectsFactory.shared.playSound(soundKey: "parry2.mp3", volumeKey: 1.0)     // Smack sound
-        EffectsFactory.shared.playSound(soundKey: "hurt.mp3", volumeKey: 5.0)
+        EffectsFactory.shared.playSound(soundKey: "hurt.mp3", volumeKey: 1.0)
         EffectsFactory.shared.playHaptic(intensity: 1.0, sharpness: 0.1, type: .hapticContinuous, duration: 0.3)
         
         applyHitInvincibility()
@@ -117,7 +117,7 @@ class PlayerEntity: SKSpriteNode {
             body.collisionBitMask &= ~PhysicsCategory.obstacle
         }
         
-        EffectsFactory.shared.playSound(soundKey: "hurt.mp3", volumeKey: 5.0)
+        EffectsFactory.shared.playSound(soundKey: "hurt.mp3", volumeKey: 1.0)
         EffectsFactory.shared.playHaptic(intensity: 2.0, sharpness: 0.1, type: .hapticContinuous, duration: 0.3)
 
         applyHitInvincibility()

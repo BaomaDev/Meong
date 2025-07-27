@@ -85,7 +85,12 @@ extension GameScene {
             let distance = hypot(node.position.x - player.position.x, node.position.y - player.position.y)
             
             if distance < parryRadius {
-//                print("Parry successful!")
+                EffectsFactory.shared.playSound(soundKey: "parry_success.wav", volumeKey: 3.0)
+
+                
+                let parrySounds = ["parry1.mp3", "parry2.mp3"]
+                EffectsFactory.shared.playSound(soundKey: parrySounds.randomElement()!, volumeKey: 1.0)
+
                 node.removeFromParent()
                 stop.pointee = true
             }

@@ -90,8 +90,8 @@ class PlayerEntity: SKSpriteNode {
         physicsBody?.contactTestBitMask &= ~PhysicsCategory.projectile
         physicsBody?.collisionBitMask &= ~PhysicsCategory.projectile
         
-        EffectsFactory.shared.playSound(soundKey: "parry2.mp3")     // Smack sound
-        EffectsFactory.shared.playSound(soundKey: "hurt.mp3")
+        EffectsFactory.shared.playSound(soundKey: "parry2.mp3", volumeKey: 1.0)     // Smack sound
+        EffectsFactory.shared.playSound(soundKey: "hurt.mp3", volumeKey: 1.0)
         EffectsFactory.shared.playHaptic(intensity: 1.0, sharpness: 0.1, type: .hapticContinuous, duration: 0.3)
         
         applyHitInvincibility()
@@ -117,7 +117,7 @@ class PlayerEntity: SKSpriteNode {
             body.collisionBitMask &= ~PhysicsCategory.obstacle
         }
         
-        EffectsFactory.shared.playSound(soundKey: "hurt.mp3")
+        EffectsFactory.shared.playSound(soundKey: "hurt.mp3", volumeKey: 1.0)
         EffectsFactory.shared.playHaptic(intensity: 2.0, sharpness: 0.1, type: .hapticContinuous, duration: 0.3)
 
         applyHitInvincibility()
@@ -147,8 +147,8 @@ class PlayerEntity: SKSpriteNode {
         distance += 1
         updateDistance(distance)
         
-        EffectsFactory.shared.playSound(soundKey: "munch.mp3")
-        EffectsFactory.shared.playSound(soundKey: "speedBoost.mp3")
+        EffectsFactory.shared.playSound(soundKey: "munch.mp3", volumeKey: 1.0)
+        EffectsFactory.shared.playSound(soundKey: "speedBoost.mp3", volumeKey: 1.0)
     }
     
     func applyCatnip() {
@@ -158,7 +158,7 @@ class PlayerEntity: SKSpriteNode {
         isInvincible = true
         
         EffectsFactory.shared.playBgm(named: "BGM_Catnip", isMainTrack: false)
-        EffectsFactory.shared.playSound(soundKey: "powerUp.mp3")
+        EffectsFactory.shared.playSound(soundKey: "powerUp.mp3", volumeKey: 1.0)
 
         // This ensures the player is not stuck in a blinking, stretched, or ducked state.
         self.removeAllActions() // Stop any ongoing visual animations (like blinking or stretching)
@@ -219,7 +219,7 @@ class PlayerEntity: SKSpriteNode {
     }
     
     func takeCoin() {
-        EffectsFactory.shared.playSound(soundKey: "coin.mp3")
+        EffectsFactory.shared.playSound(soundKey: "coin.mp3", volumeKey: 1.0)
         EffectsFactory.shared.createParticleEffect(at: self.position, key: "bling", amount: 3)
     }
     
@@ -241,28 +241,28 @@ class PlayerEntity: SKSpriteNode {
         let crashSoundKeys = ["crash1.mp3", "crash2.mp3", "crash3.mp3"]
         switch objectName {
         case "Projectile":
-            EffectsFactory.shared.playSound(soundKey: "parry2.mp3")
+            EffectsFactory.shared.playSound(soundKey: "parry2.mp3", volumeKey: 1.0)
             knockType = "expel"
             
         case "BapakMainCatur":
-            EffectsFactory.shared.playSound(soundKey: surprisedSoundKeys.randomElement()!)
-            EffectsFactory.shared.playSound(soundKey: crashSoundKeys.randomElement()!)
+            EffectsFactory.shared.playSound(soundKey: surprisedSoundKeys.randomElement()!, volumeKey: 1.0)
+            EffectsFactory.shared.playSound(soundKey: crashSoundKeys.randomElement()!, volumeKey: 0.6)
             knockType = "inplace"
             
         case "Ayam":
-            EffectsFactory.shared.playSound(soundKey: "chickenHit.mp3")
+            EffectsFactory.shared.playSound(soundKey: "chickenHit.mp3", volumeKey: 1.0)
             EffectsFactory.shared.createParticleEffect(at: self.position, key: "feather", amount: 8)
             EffectsFactory.shared.createParticleEffect(at: self.position, key: "smoke", amount: 2)
             knockType = "expel"
             
         case "Sepeda 2":
-            EffectsFactory.shared.playSound(soundKey: "surprised2.mp3")
-            EffectsFactory.shared.playSound(soundKey: "bikeCrash.mp3")
+            EffectsFactory.shared.playSound(soundKey: "surprised2.mp3", volumeKey: 1.0)
+            EffectsFactory.shared.playSound(soundKey: "bikeCrash.mp3", volumeKey: 1.0)
             knockType = "flip"
             
         case "BoxPisang":
             EffectsFactory.shared.createParticleEffect(at: self.position, key: "banana", amount: 3)
-            EffectsFactory.shared.playSound(soundKey: "cardboard.mp3")
+            EffectsFactory.shared.playSound(soundKey: "cardboard.mp3", volumeKey: 1.0)
             knockType = "flip"
 
 //        case "BoxBuah":
@@ -278,15 +278,15 @@ class PlayerEntity: SKSpriteNode {
 //            spin = SKAction.rotate(byAngle: 90, duration: 0.5)
 
         case "Box":
-            EffectsFactory.shared.playSound(soundKey: "cardboard.mp3")
+            EffectsFactory.shared.playSound(soundKey: "cardboard.mp3", volumeKey: 1.0)
             knockType = "expel"
 
         case "BoxBerdiri":
-            EffectsFactory.shared.playSound(soundKey: "cardboard.mp3")
+            EffectsFactory.shared.playSound(soundKey: "cardboard.mp3", volumeKey: 1.0)
             knockType = "expel"
             
         default:
-            EffectsFactory.shared.playSound(soundKey: crashSoundKeys.randomElement()!)
+            EffectsFactory.shared.playSound(soundKey: crashSoundKeys.randomElement()!, volumeKey: 1.0)
             knockType = "fallOver"
         }
         

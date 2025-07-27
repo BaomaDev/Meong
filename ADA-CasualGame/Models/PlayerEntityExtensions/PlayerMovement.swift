@@ -108,19 +108,17 @@ extension PlayerEntity {
         if surfaceType == .ground {
             surfaceKey = "dirt"
             amount = 12
-            EffectsFactory.shared.playSound(soundKey: "landing.mp3")
+            EffectsFactory.shared.playSound(soundKey: "landing.mp3", volumeKey: 1.0)
         } else if surfaceType == .semiSolidPlatform {
             surfaceKey = "spark"
             amount = 3
-            EffectsFactory.shared.playSound(soundKey: "landing_wire.mp3")
-//            EffectsFactory.shared.playSound(soundKey: "electricity.mp3", volumeKey: 0.15)
+            EffectsFactory.shared.playSound(soundKey: "landing_wire.mp3", volumeKey: 1.0)
         } else {
             surfaceKey = "smoke"
             amount = 4
-            EffectsFactory.shared.playSound(soundKey: "landingConcrete.mp3")
+            EffectsFactory.shared.playSound(soundKey: "landingConcrete.mp3", volumeKey: 1.0)
         }
         
-        restoreOriginalShape()
         // If we landed from a dive, enter the .landing state via an action.
         self.currentState = .landing
         EffectsFactory.shared.screenShake(strength: 0.3)
@@ -166,16 +164,15 @@ extension PlayerEntity {
             if surfaceType == .ground {
                 surfaceKey = "dirt"
                 amount = 6
-                EffectsFactory.shared.playSound(soundKey: "softLanding.mp3")
+                EffectsFactory.shared.playSound(soundKey: "softLanding.mp3", volumeKey: 0.5)
             } else if surfaceType == .semiSolidPlatform {
                 surfaceKey = "spark"
                 amount = 1
-                EffectsFactory.shared.playSound(soundKey: "landing_wire.mp3")
-//                EffectsFactory.shared.playSound(soundKey: "electricity.mp3", volumeKey: 0.15)
+                EffectsFactory.shared.playSound(soundKey: "landing_wire.mp3", volumeKey: 1.0)
             } else {
                 surfaceKey = "smoke"
                 amount = 2
-                EffectsFactory.shared.playSound(soundKey: "landingConcrete.mp3")
+                EffectsFactory.shared.playSound(soundKey: "landingConcrete.mp3", volumeKey: 0.5)
             }
             
             EffectsFactory.shared.createParticleEffect(at: particlePosition, key: surfaceKey, amount: amount)
@@ -198,10 +195,8 @@ extension PlayerEntity {
         guard self.currentSurface.isGrounded && canJump else {
             if isCloseToGround() {
                 if swipeDistance < longSwipeTreshold {
-//                    print("queueing normal jump")
                     queuedAction = .normalJump
                 } else {
-//                    print("queueing high jump")
                     queuedAction = .highJump
                 }
             }
@@ -220,9 +215,6 @@ extension PlayerEntity {
         canJump = false
         self.currentState = .airborne
         
-        let adjustY = playerHitboxHeight * -0.125
-        applyVerticalMovementTransformation(withYAdjustment: adjustY)
-        
         // Start jump animation
         startJumpingAnimation()
         
@@ -236,7 +228,7 @@ extension PlayerEntity {
         
         self.physicsBody?.affectedByGravity = false
         
-        EffectsFactory.shared.playSound(soundKey: "jump.mp3")
+        EffectsFactory.shared.playSound(soundKey: "jump.mp3", volumeKey: 2.5)
         
         let jumpAction = SKAction.customAction(withDuration: duration) { (node, elapsedTime) in
             let t = elapsedTime / duration
@@ -246,7 +238,6 @@ extension PlayerEntity {
         
         let completion = SKAction.run {
             self.physicsBody?.affectedByGravity = true
-            self.restoreOriginalShape()
             self.canJump = true
         }
         
@@ -261,16 +252,12 @@ extension PlayerEntity {
         var jumpAction: SKAction
         var wait: SKAction
         let restoreAction = SKAction.run {
-//            self.restoreOriginalShape()
             self.canJump = true
         }
 
         // --- 1. Set up the common properties for any jump ---
         canJump = false
         self.currentState = .airborne
-        
-        let adjustY = playerHitboxHeight * -0.17
-        applyVerticalMovementTransformation(withYAdjustment: adjustY)
 
         // Start jump animation
         startHighJumpingAnimation()
@@ -301,7 +288,7 @@ extension PlayerEntity {
         }
         
         // Play effects for either jump type
-        EffectsFactory.shared.playSound(soundKey: "highJump.mp3")
+        EffectsFactory.shared.playSound(soundKey: "highJump.mp3", volumeKey: 2.5)
 //        EffectsFactory.shared.playHaptic(strength: 1.0)
         
         // Run the chosen jumpAction followed by its corresponding completion action.
@@ -346,14 +333,10 @@ extension PlayerEntity {
         // A jump action disables gravity and changes the player's shape.
         // We must manually restore these states before we can dive.
         self.physicsBody?.affectedByGravity = true
-        self.restoreOriginalShape()
         self.canDive = false
         
         if !shortDive {
             self.currentState = .diving
-            
-//            let adjustY = self.size.height * (0.34/2)
-//            applyVerticalMovementTransformation(withYAdjustment: adjustY)
             self.startDivingAnimation()
         }
         
@@ -368,7 +351,7 @@ extension PlayerEntity {
         self.canDuck = false
 
         startDuckingAnimation()
-        EffectsFactory.shared.playSound(soundKey: "duck.wav")
+        EffectsFactory.shared.playSound(soundKey: "duck.wav", volumeKey: 1.0)
 
         // Restore after duration
         let wait = SKAction.wait(forDuration: 0.75)
@@ -397,7 +380,7 @@ extension PlayerEntity {
         // This is the existing action that restores the collision rules after a delay.
         let wait = SKAction.wait(forDuration: 0.33)
         let restoreCollision = SKAction.run {
-            EffectsFactory.shared.playSound(soundKey: "landing_wire.mp3")
+            EffectsFactory.shared.playSound(soundKey: "landing_wire.mp3", volumeKey: 1.0)
             self.setupPhysics()
             self.currentState = .airborne
             self.physicsBody?.velocity.dy = 0

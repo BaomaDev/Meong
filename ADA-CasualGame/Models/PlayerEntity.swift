@@ -253,7 +253,7 @@ class PlayerEntity: SKSpriteNode {
         case "Catur":
             EffectsFactory.shared.playSound(soundKey: surprisedSoundKeys.randomElement()!)
             EffectsFactory.shared.playSound(soundKey: crashSoundKeys.randomElement()!)
-            EffectsFactory.shared.createParticleEffect(at: self.position, key: "bigsmoke", amount: 8)
+            EffectsFactory.shared.createParticleEffect(at: self.position, key: "bigsmoke", amount: 2)
             knockType = "inplace"
             
             // 2. Change the texture to "Catur2"

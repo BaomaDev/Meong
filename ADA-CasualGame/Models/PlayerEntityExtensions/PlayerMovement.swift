@@ -252,41 +252,25 @@ extension PlayerEntity {
             self.canJump = true
         }
 
-        // --- 1. Set up the common properties for any jump ---
         canJump = false
         self.currentState = .airborne
 
         // Start jump animation
         startHighJumpingAnimation()
 
-        // --- 2. Decide which type of jump to perform ---
-        if checkForSolidPlatform() {
-            jumpAction = SKAction.run {
-                self.physicsBody?.velocity = CGVector(dx: 0, dy: 0)
-                self.physicsBody?.applyImpulse(CGVector(dx: 0, dy: defaultJumpHeight*1.5))
-            }
-
-            wait = SKAction.wait(forDuration: 0.5)
-
-        } else {
-            let jumpHeight = defaultJumpHeight * 1.75
-            let horizontalDistance = defaultJumpDistance + gameSpeed/2
-            
-            let startY = self.position.y
-            let duration = horizontalDistance / 3.5 / gameSpeed
-            
-            jumpAction = SKAction.customAction(withDuration: duration) { (node, elapsedTime) in
-                let t = elapsedTime / duration
-                let easingT = 1 - pow(1 - t, 3) // Cubic ease-out
-                node.position.y = startY + (jumpHeight * easingT)
-            }
-            
-            wait = SKAction.wait(forDuration: 0)
-        }
+        let jumpHeight = defaultJumpHeight * 1.75
+        let horizontalDistance = defaultJumpDistance + gameSpeed/2
         
-        // Play effects for either jump type
+        let startY = self.position.y
+        let duration = horizontalDistance / 3.5 / gameSpeed
+        
         EffectsFactory.shared.playSound(soundKey: "highJump.mp3")
-//        EffectsFactory.shared.playHaptic(strength: 1.0)
+        jumpAction = SKAction.customAction(withDuration: duration) { (node, elapsedTime) in
+            let t = elapsedTime / duration
+            let easingT = 1 - pow(1 - t, 3) // Cubic ease-out
+            node.position.y = startY + (jumpHeight * easingT)
+        }
+        wait = SKAction.wait(forDuration: 0.35)
         
         // Run the chosen jumpAction followed by its corresponding completion action.
         self.run(SKAction.sequence([jumpAction, wait, restoreAction]), withKey: "jumpAction")

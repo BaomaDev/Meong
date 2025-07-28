@@ -838,15 +838,20 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         // 2. Stop player's input or animation
         player.removeAllActions()
-        player.startCaughtAnimation() // ⬅️ Create this animation in your PlayerEntity
+        player.startCaughtAnimation()
         
         // 3. Move chaser to player's position over 1 second
-        let moveToPlayer = SKAction.moveTo(x: player.position.x, duration: 1.0)
+        let moveToPlayer = SKAction.moveTo(x: player.position.x, duration: 0.5)
         moveToPlayer.timingMode = .easeInEaseOut
         
         chaser.run(moveToPlayer) {
-            self.gameOver()
-            print("GameOver")
+            chaser.startCatchAnimation()
+            
+            // Delay gameOver by the length of the catch animation (e.g. 1.0 sec)
+            self.run(SKAction.wait(forDuration: 1.0)) {
+                self.gameOver()
+                print("GameOver")
+            }
         }
     }
     

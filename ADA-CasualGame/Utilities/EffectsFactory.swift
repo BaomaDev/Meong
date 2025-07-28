@@ -267,7 +267,7 @@ class EffectsFactory {
                 emitter.particleScaleSequence = SKKeyframeSequence(keyframeValues: [initialSize, initialSize * 0.2], times: [0, 1])
                 
             case "bigsmoke":
-                let initialSize: CGFloat = 0.5
+                let initialSize: CGFloat = 0.3
 
                 emitter.particleTexture = SKTexture(imageNamed: platformParticleTextures.randomElement() ?? "smoke_01")
                 emitter.particleColor = SKColor(named: "DustColor") ?? .lightGray

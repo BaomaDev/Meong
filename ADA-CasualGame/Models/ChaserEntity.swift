@@ -111,7 +111,7 @@ class ChaserEntity: SKSpriteNode {
         // Generate texture names based on your file naming
         stopAllAnimation()
         
-        let textureNames = (0...23).map { String(format: "Mak_Intro_%05d", $0) }
+        let textureNames = (0...30).map { String(format: "Mak_Nangkep_%05d", $0) }
         let textures = textureNames.map { SKTexture(imageNamed: $0) }
 
          // Create animation
@@ -121,6 +121,7 @@ class ChaserEntity: SKSpriteNode {
     }
     
     func stopAllAnimation() {
+        self.removeAction(forKey: "emakIdleAnimation")
         self.removeAction(forKey: "emakFlyingAnimation")
         self.removeAction(forKey: "emakIntroAnimation")
         self.removeAction(forKey: "emakRunAnimation")

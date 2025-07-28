@@ -67,7 +67,7 @@ struct GameView: View {
                 HomeMenu(
                     openShop: { showShop = true },
                     openSettings: { showSettings = true },
-                    openLeaderboard: { showSettings = true },
+                    openLeaderboard: { showLeaderboard = true },
                     openAchievements: { showAchievementMenu = true },
                 )
             }
@@ -173,7 +173,10 @@ struct GameView: View {
             }
             
             if showLeaderboard {
-                
+                Color.black.opacity(0.5)
+                    .ignoresSafeArea()
+                    .transition(.opacity)
+                LeaderboardView(isShowing: $showLeaderboard)
             }
                 
             if showAchievementNotif, let achievement = unlockedAchievement {

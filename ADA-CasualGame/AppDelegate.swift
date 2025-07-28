@@ -21,6 +21,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         
         // ✅ Use SwiftUI GameView as root view
         let rootView = GameView()
+        GameCenterManager.shared.authenticatePlayer()
         window.rootViewController = UIHostingController(rootView: rootView)
         
         // ✅ Present window

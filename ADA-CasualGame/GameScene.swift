@@ -700,13 +700,19 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         scoreTimer = nil
         gamePhase = .gameOver
         gameStateUpdateHandler?(gamePhase)
-        playerData.highScore = internalScore > playerData.highScore ? internalScore : playerData.highScore
+        
+        EffectsFactory.shared.playSound(soundKey: "game_over.mp3")
+        
+        // if new high score, upload to leaderboard
+        if internalScore > playerData.highScore {
+            highscoreUpdateHandler?(playerData.highScore)
+            GameCenterManager.shared.submitScore(internalScore)
+        }
+        
+        // update local coin memory
         playerData.coins += player?.coins ?? 0
         playerData.totalGamesPlayed += 1
         playerData.totalCoinsGained += player?.coins ?? 0
-        highscoreUpdateHandler?(playerData.highScore)
-        
-        print(playerData.highScore)
         
         savePlayerData()
         

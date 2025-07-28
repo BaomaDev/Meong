@@ -1,6 +1,7 @@
 // In GameViewController.swift
 import UIKit
 import SpriteKit
+import GameKit
 
 class GameViewController: UIViewController {
     override var prefersHomeIndicatorAutoHidden: Bool {

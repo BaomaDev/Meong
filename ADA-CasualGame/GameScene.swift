@@ -306,7 +306,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         let finalizeStart = SKAction.run { [weak self] in
             guard let self = self else { return }
             
-            EffectsFactory.shared.playBgm(named: "bgmtest", isMainTrack: true)
+            EffectsFactory.shared.playBgm(named: "BGM", isMainTrack: true)
             
             // Lock player in place to prevent drift
             let xConstraint = SKConstraint.positionX(SKRange(constantValue: 200))
@@ -517,8 +517,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             chaser.updateFollowPosition()
         }
         //
-        //        print(player.currentState)
-        //        print(currentSurface)
+//                print(player.currentState)
+                print(currentSurface)
     }
     
     // MARK: - SKPhysicsContactDelegate

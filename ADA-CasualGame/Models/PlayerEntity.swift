@@ -335,8 +335,6 @@ class PlayerEntity: SKSpriteNode {
     }
     
     func startRunningAnimation() {
-        print("starting run")
-        
         // Generate texture names based on your file naming
         stopAllAnimations()
         

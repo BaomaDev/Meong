@@ -12,10 +12,6 @@ extension PlayerEntity {
     // MARK: - State Management
     func updateState(currentSurface: SurfaceType) {
         guard !isDropping else { return }
-        guard self.currentState != .landing else {return}
-        
-        let previousState = self.currentState
-        let previousSurface = self.currentSurface
         
         // Ignore landing / jumping logic when flying
         if currentState == .flying {
@@ -41,59 +37,21 @@ extension PlayerEntity {
             }
             self.queuedAction = nil
             return
-        }
-        
-        if currentState != .ducking {
-            if currentSurface.isGrounded {
-                if self.currentState == .diving {
-                    self.currentState = .running
-                    self.canJump = true
-                    if currentSurface == .semiSolidPlatform {
-                        self.startTiptoeAnimation()
+        } else {
+            let previousState = self.currentState
+            let previousSurface = self.currentSurface
+            
+            if currentState == .airborne || currentState == .diving {
+                let isLanding = currentSurface.isGrounded && !previousSurface.isGrounded && (self.physicsBody?.velocity.dy ?? 0) <= 0
+                if isLanding && self.action(forKey: "jumpAction") == nil {    // Disable landing logic when going through semi solid platforms
+                    // Handle landing
+                    if previousState == .diving {
+                        hardLanding(surfaceType: currentSurface)
                     } else {
-                        self.startRunningAnimation()
+                        softLanding(surfaceType: currentSurface)
                     }
                 }
             }
-            
-            let isLanding = currentSurface.isGrounded && !previousSurface.isGrounded && (self.physicsBody?.velocity.dy ?? 0) <= 0
-            if isLanding {
-                if previousState == .diving {
-                    hardLanding(surfaceType: currentSurface)
-                } else {
-                    softLanding(surfaceType: currentSurface)
-                }
-                canJump = true
-                
-            }
-           
-            let isJumping = !currentSurface.isGrounded && previousSurface.isGrounded
-            if isJumping {
-                handleGoingAirborne()
-            }
-            
-            self.currentSurface = currentSurface
-        }
-    }
-    
-    private func updateColor() {
-        if isParrying {
-            color = .green
-            return
-        }
-        switch currentState {
-        case .running:
-            color = .orange
-        case .airborne:
-            color = .orange
-        case .ducking:
-            color = .red
-        case .diving:
-            color = .orange
-        case .landing:
-            color = .red
-        default:
-            color = .orange
         }
     }
     
@@ -116,19 +74,8 @@ extension PlayerEntity {
             EffectsFactory.shared.playSound(soundKey: "landingConcrete.mp3")
         }
         
-        // If we landed from a dive, enter the .landing state via an action.
-        self.currentState = .landing
         EffectsFactory.shared.screenShake(strength: 0.3)
-        
-        let wait = SKAction.wait(forDuration: landingDuration)
-        let transitionToRunning = SKAction.run {
-            if self.currentState == .landing {
-                self.currentState = .running
-            }
-        }
-        
         EffectsFactory.shared.playHaptic(intensity: 1.0, sharpness: 0.1, type: .hapticTransient)
-        // Particle
         EffectsFactory.shared.createParticleEffect(at: particlePosition, key: surfaceKey, amount: amount)
         
         if surfaceType == .semiSolidPlatform {
@@ -137,7 +84,9 @@ extension PlayerEntity {
             self.startRunningAnimation()
         }
         
-        self.run(SKAction.sequence([wait, transitionToRunning]))
+        self.currentSurface = surfaceType
+        self.currentState = .running
+        self.canJump = true
     }
     
     private func softLanding(surfaceType: SurfaceType) {
@@ -171,25 +120,24 @@ extension PlayerEntity {
                 amount = 2
                 EffectsFactory.shared.playSound(soundKey: "landingConcrete.mp3")
             }
-            
+
             EffectsFactory.shared.createParticleEffect(at: particlePosition, key: surfaceKey, amount: amount)
             
+            if surfaceType == .semiSolidPlatform {
+                self.startTiptoeAnimation()
+            } else {
+                self.startRunningAnimation()
+            }
             
-            // It was a normal landing, so we can run immediately.
+            self.currentSurface = surfaceType
             self.currentState = .running
-        }
-        
-        if surfaceType == .semiSolidPlatform {
-            self.startTiptoeAnimation()
-        } else {
-            self.startRunningAnimation()
+            self.canJump = true
         }
     }
     
     // MARK: - Jump
     func jump(swipeDistance: Double) {
-        guard self.currentState != .landing else { return }
-        guard self.currentSurface.isGrounded && canJump else {
+        if currentState == .airborne && !canJump {
             if isCloseToGround() {
                 if swipeDistance < longSwipeTreshold {
                     queuedAction = .normalJump
@@ -198,18 +146,24 @@ extension PlayerEntity {
                 }
             }
             return
-        }
-        
-        // --- Call the appropriate jump based on the swipe distance ---
-        if swipeDistance < longSwipeTreshold {
-            normalJump()
         } else {
-            highJump()
+            // --- Call the appropriate jump based on the swipe distance ---
+            if swipeDistance < longSwipeTreshold {
+                normalJump()
+            } else {
+                if checkForSolidPlatform() {
+                    normalJump()
+                } else {
+                    highJump()
+
+                }
+            }
         }
     }
 
     private func normalJump() {
-        canJump = false
+        self.canJump = false
+        self.currentSurface = .none
         self.currentState = .airborne
         
         // Start jump animation
@@ -235,24 +189,19 @@ extension PlayerEntity {
         
         let completion = SKAction.run {
             self.physicsBody?.affectedByGravity = true
-            self.canJump = true
         }
         
-        self.run(SKAction.sequence([jumpAction, completion]), withKey: "jumpAction")    }
+        self.run(SKAction.sequence([jumpAction, completion]), withKey: "jumpAction")
+    }
     
     private func highJump() {
         guard self.position.y <= platformHeight else {
             normalJump()
             return
         }
-        
-        var jumpAction: SKAction
-        var wait: SKAction
-        let restoreAction = SKAction.run {
-            self.canJump = true
-        }
 
         canJump = false
+        self.currentSurface = .none
         self.currentState = .airborne
 
         // Start jump animation
@@ -265,32 +214,33 @@ extension PlayerEntity {
         let duration = horizontalDistance / 3.5 / gameSpeed
         
         EffectsFactory.shared.playSound(soundKey: "highJump.mp3")
-        jumpAction = SKAction.customAction(withDuration: duration) { (node, elapsedTime) in
+        let jumpAction = SKAction.customAction(withDuration: duration) { (node, elapsedTime) in
             let t = elapsedTime / duration
             let easingT = 1 - pow(1 - t, 3) // Cubic ease-out
             node.position.y = startY + (jumpHeight * easingT)
         }
-        wait = SKAction.wait(forDuration: 0.35)
         
-        // Run the chosen jumpAction followed by its corresponding completion action.
-        self.run(SKAction.sequence([jumpAction, wait, restoreAction]), withKey: "jumpAction")
+        let completion = SKAction.run {
+            self.physicsBody?.affectedByGravity = true
+        }
+        
+        self.run(SKAction.sequence([jumpAction, completion]), withKey: "jumpAction")
     }
     
     // MARK: - Duck / Dive
     func duck() {
-        guard self.currentState != .landing else {return}
         if self.currentState == .ducking {
             self.queuedAction = .duck
             return
         }
         
         switch currentSurface {
-        case .semiSolidPlatform:
-            dropThroughPlatform()
-        case .ground, .solidPlatform:
-            performDuck()
-        case .none:
-            performDive()
+            case .semiSolidPlatform:
+                dropThroughPlatform()
+            case .ground, .solidPlatform:
+                performDuck()
+            case .none:
+                performDive()
         }
     }
     
@@ -349,14 +299,14 @@ extension PlayerEntity {
     }
     
     private func dropThroughPlatform() {
-        print("attemting to drop through")
         // This line makes the player ignore semi-solid platforms.
         self.isDropping = true
         self.canJump = false
+        self.currentSurface = .none
         physicsBody?.collisionBitMask = PhysicsCategory.ground | PhysicsCategory.solidPlatform
         
         // **NEW**: Create an action to move the player down quickly.
-        let moveAction = SKAction.moveBy(x: 0, y: -platformThickness*2, duration: 0.05)
+        let moveAction = SKAction.moveBy(x: 0, y: -platformThickness*4, duration: 0.05)
         
         // This is the existing action that restores the collision rules after a delay.
         let wait = SKAction.wait(forDuration: 0.33)

@@ -70,4 +70,10 @@ final class SaveManager {
             print("❌ Failed to delete save: \(error.localizedDescription)")
         }
     }
+    
+    func modify(_ update: (inout PlayerData) -> Void) {
+        var data = load()
+        update(&data)
+        save(data)
+    }
 }

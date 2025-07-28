@@ -15,6 +15,9 @@ struct GameView: View {
     @State private var highScore: Int = 0
     @State private var bgmVolume: Float = SaveManager.shared.load().bgmVolume
     @State private var sfxVolume: Float = SaveManager.shared.load().sfxVolume
+    @State private var showAchievementNotif = false
+    @State private var showAchievementMenu = false
+    @State private var unlockedAchievement: Achievement? = nil
 
     @State private var showPauseMenu = false
     @State private var showShop = false
@@ -44,6 +47,16 @@ struct GameView: View {
                     }
                     gameScene.gameStateUpdateHandler = { self.gamePhase = $0 }
                     gameScene.highscoreUpdateHandler = { self.highScore = $0 }
+                    
+                    AchievementManager.shared.onUnlock = { achievement in
+                        unlockedAchievement = achievement
+                        showAchievementNotif = true
+                        
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                            showAchievementNotif = false
+                        }
+                    }
+
                 }
             
             if gamePhase == .none {
@@ -55,7 +68,7 @@ struct GameView: View {
                     openShop: { showShop = true },
                     openSettings: { showSettings = true },
                     openLeaderboard: { showSettings = true },
-                    openAchievements: { showSettings = true },
+                    openAchievements: { showAchievementMenu = true },
                 )
             }
 
@@ -99,6 +112,7 @@ struct GameView: View {
                     .transition(.opacity)
                 
                 PauseMenu(showPauseMenu: $showPauseMenu, gameScene: $gameScene, onGoHome: {
+                    showPauseMenu = false
                     gameScene.returnToHomeScreen()
                 })
                 
@@ -147,6 +161,10 @@ struct GameView: View {
                     }
             }
             
+            if showAchievementMenu {
+                AchievementView(isShowing: $showAchievementMenu)
+            }
+            
             if showSettings {
                 Color.black.opacity(0.5)
                     .ignoresSafeArea()
@@ -156,6 +174,12 @@ struct GameView: View {
             
             if showLeaderboard {
                 
+            }
+                
+            if showAchievementNotif, let achievement = unlockedAchievement {
+                AchieveLiveCard(achievement: achievement)
+                    .transition(.move(edge: .top).combined(with: .opacity))
+                    .animation(.spring(), value: showAchievementNotif)
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: .gameDidAutoPause)) { _ in

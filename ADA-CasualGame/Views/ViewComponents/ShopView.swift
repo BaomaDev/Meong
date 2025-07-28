@@ -216,6 +216,7 @@ struct ShopView: View {
             scene.costumePurchasedHandler = { self.purchasedCostumes = $0 }
         }
         .onDisappear{
+            scene.savePlayerData()
             scene.coinUpdateHandler = nil
             scene.selectedCostumeHandler = nil
             scene.costumePurchasedHandler = nil

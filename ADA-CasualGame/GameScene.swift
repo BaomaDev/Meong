@@ -40,6 +40,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     private var scoreTimer: Timer?
     private var internalScore: Int = 0
+    private var catnipCount: Int = 0
     
     private static var isGamePaused: Bool = false
     
@@ -60,6 +61,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     private var gerobakIkan: SKSpriteNode?
     
     private var playerData: PlayerData!
+    
     
     // MARK: - Scene Lifecycle (Initializers)
     override func didMove(to view: SKView) {
@@ -113,6 +115,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     func showTapToStart() {
         // <<<<<<< derend3
         internalScore = 0
+        catnipCount = 0
         lastDistanceBonusScore = 0
         scoreUpdateHandler?(internalScore)
         healthUpdateHandler?(9)
@@ -389,6 +392,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     private func setupGame() {
         // Reset properties
         internalScore = 0
+        catnipCount = 0
         lastDistanceBonusScore = 0
         scoreUpdateHandler?(internalScore)
         healthUpdateHandler?(9)
@@ -576,6 +580,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         // If the player was invincible, the projectile is left in the scene to be knocked away.
         if !player.isInvincible {
             projectileNode.removeFromParent()
+            playerData.totalHittedBySandal += 1
         }
         
         checkGameOver()
@@ -594,7 +599,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             // Return early to prevent the player from taking damage during the tutorial.
             return
         }
-        
+        print(obstacleNode.name ?? "Unknown obstacle name")
         var nodeToHandle: SKNode = obstacleNode
         
         // Determine the correct node to handle (the parent for complex obstacles)
@@ -609,6 +614,15 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         // Only remove the node if the player was NOT invincible when the hit occurred.
         if !player.isInvincible {
+            if obstacleNode.name == "BapakMainCatur" {
+                playerData.totalChessKnockedOut += 1
+            } else if obstacleNode.name == "BoxPisang" {
+                playerData.totalBananaKnockedOut += 1
+            } else if obstacleNode.name == "Ayam" {
+                playerData.totalChickenKnockedOut += 1
+            } else if obstacleNode.name == "Sepeda 2" {
+                playerData.totalBikerKnockedOut += 1
+            }
             nodeToHandle.removeFromParent()
         }
         
@@ -630,6 +644,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             collectibleBody.node?.removeFromParent()
         case PhysicsCategory.catnip:
             player?.applyCatnip()
+            catnipCount+=1
+            let stats = LiveStats(catnipsEaten: catnipCount)
+            AchievementManager.shared.updateProgress(stats)
             collectibleBody.node?.removeFromParent()
         default:
             break
@@ -685,14 +702,19 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         gameStateUpdateHandler?(gamePhase)
         playerData.highScore = internalScore > playerData.highScore ? internalScore : playerData.highScore
         playerData.coins += player?.coins ?? 0
+        playerData.totalGamesPlayed += 1
+        playerData.totalCoinsGained += player?.coins ?? 0
         highscoreUpdateHandler?(playerData.highScore)
         
         print(playerData.highScore)
         
         savePlayerData()
+        
+        AchievementManager.shared.checkForUnlocks(with: playerData)
     }
     
     func returnToHomeScreen() {
+        guard gamePhase != .homeScreen || gamePhase != .tutorial else { return }
         self.isPaused = false
         GameScene.isGamePaused = false
         for child in self.children {
@@ -706,6 +728,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         scoreTimer?.invalidate()
         internalScore = 0
         isWaitingForAnimationHome = false
+        highscoreUpdateHandler?(playerData.highScore)
+        gamePhase = .homeScreen
+        gameStateUpdateHandler?(gamePhase)
+        coinUpdateHandler?(playerData.coins)
         
         worldGenerator?.stopAllSpawning()
         
@@ -717,15 +743,19 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     func pauseGame() {
         GameScene.isGamePaused = true
         isPaused = true
-        scoreTimer?.invalidate()
-        scoreTimer = nil
+        if gamePhase != .tutorial {
+            scoreTimer?.invalidate()
+            scoreTimer = nil
+        }
     }
     
     func resumeGame() {
         guard GameScene.isGamePaused else { return }
         GameScene.isGamePaused = false
         isPaused = false
-        startScoreTimer(resetScore: false)
+        if gamePhase != .tutorial {
+            startScoreTimer(resetScore: false)
+        }
     }
     
     func didEnd(_ contact: SKPhysicsContact) { }
@@ -908,7 +938,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     
     // MARK: - Save Func
-    @objc private func savePlayerData() {
+    @objc func savePlayerData() {
+        print(gamePhase)
         guard gamePhase != .tutorial || gamePhase != .playing else { return }
         SaveManager.shared.save(playerData)
     }

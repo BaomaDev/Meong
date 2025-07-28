@@ -10,6 +10,7 @@ import SwiftUI
 struct PauseMenu: View {
     @Binding var showPauseMenu: Bool
     @Binding var gameScene: GameScene
+    var onGoHome: () -> Void
     
     var body: some View {
         VStack(spacing: 20) {
@@ -33,12 +34,21 @@ struct PauseMenu: View {
                 }
                 .padding(2)
                 
+//                Button(action: {
+//                    SaveManager.shared.reset()
+//                }){
+//                    Image(systemName: "trash")
+//                }
+//                .padding(2)
                 Button(action: {
-                    SaveManager.shared.reset()
-                }){
-                    Image(systemName: "trash")
+                    onGoHome()
+                }) {
+                    Image("HomeButton")
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 75)
+                        .padding(2)
                 }
-                .padding(2)
             }
         }
         .padding(24)
@@ -51,6 +61,7 @@ struct PauseMenu: View {
 #Preview {
     PauseMenu(
         showPauseMenu: .constant(true),
-        gameScene: .constant(GameScene(size: CGSize(width: 100, height: 100)))
+        gameScene: .constant(GameScene(size: CGSize(width: 100, height: 100))),
+        onGoHome: {}
     )
 }

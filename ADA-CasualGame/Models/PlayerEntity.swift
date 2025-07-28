@@ -470,7 +470,7 @@ class PlayerEntity: SKSpriteNode {
         let textures = textureNames.map { SKTexture(imageNamed: $0) }
 
          // Create animation
-        let animation = SKAction.animate(with: textures, timePerFrame: 0.025, resize: false, restore: false)
+        let animation = SKAction.animate(with: textures, timePerFrame: 0.035, resize: false, restore: false)
         let repeatAnimation = SKAction.repeatForever(animation)
 
         self.run(repeatAnimation, withKey: "parryAnimation")

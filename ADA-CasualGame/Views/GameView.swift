@@ -96,7 +96,10 @@ struct GameView: View {
                     .ignoresSafeArea()
                     .transition(.opacity)
                 
-                PauseMenu(showPauseMenu: $showPauseMenu, gameScene: $gameScene)
+                PauseMenu(showPauseMenu: $showPauseMenu, gameScene: $gameScene, onGoHome: {
+                    gameScene.returnToHomeScreen()
+                })
+                
             } else if gamePhase == .gameOver {
                 Color.black.opacity(0.5)
                     .ignoresSafeArea()

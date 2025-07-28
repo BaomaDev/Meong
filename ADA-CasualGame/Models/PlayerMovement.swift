@@ -50,6 +50,12 @@ extension PlayerEntity {
                     } else {
                         softLanding(surfaceType: currentSurface)
                     }
+                    return
+                }
+            } else if currentState == .running {
+                let isGoingAirborne = currentSurface == .none && previousSurface.isPlatform
+                if isGoingAirborne {
+                    handleGoingAirborne()
                 }
             }
         }
@@ -300,9 +306,7 @@ extension PlayerEntity {
     
     private func dropThroughPlatform() {
         // This line makes the player ignore semi-solid platforms.
-        self.isDropping = true
-        self.canJump = false
-        self.currentSurface = .none
+        handleGoingAirborne()
         physicsBody?.collisionBitMask = PhysicsCategory.ground | PhysicsCategory.solidPlatform
         
         // **NEW**: Create an action to move the player down quickly.
@@ -328,7 +332,7 @@ extension PlayerEntity {
     
     // MARK: - Parry
     func parry(currentTime: TimeInterval) -> Bool {
-        guard self.currentState != .landing else { return false }
+        guard self.currentState != .flying else { return false }
         
         let timeSinceLastParry = currentTime - lastParryTime
         guard timeSinceLastParry > parryCooldown else {
@@ -364,6 +368,8 @@ extension PlayerEntity {
     // MARK: - Helpers
     private func handleGoingAirborne() {
         // Falling or jumping
+        self.startJumpingAnimation()
+        self.currentSurface = .none
         self.currentState = .airborne
         self.canDive = true
         self.canJump = false

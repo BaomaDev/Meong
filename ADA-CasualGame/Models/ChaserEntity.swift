@@ -97,7 +97,7 @@ class ChaserEntity: SKSpriteNode {
         // Generate texture names based on your file naming
         stopAllAnimation()
         
-        let textureNames = (0...5).map { String(format: "Mak_Terbang_%05d", $0) }
+        let textureNames = (0...59).map { String(format: "Mak_Terbang_%05d", $0) }
         let textures = textureNames.map { SKTexture(imageNamed: $0) }
 
          // Create animation

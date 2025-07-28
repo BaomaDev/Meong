@@ -266,6 +266,20 @@ class EffectsFactory {
                 
                 emitter.particleScaleSequence = SKKeyframeSequence(keyframeValues: [initialSize, initialSize * 0.2], times: [0, 1])
                 
+            case "bigsmoke":
+                let initialSize: CGFloat = 0.5
+
+                emitter.particleTexture = SKTexture(imageNamed: platformParticleTextures.randomElement() ?? "smoke_01")
+                emitter.particleColor = SKColor(named: "DustColor") ?? .lightGray
+                emitter.particleColorBlendFactor = 0.35
+                emitter.particleLifetime = 0.5
+                emitter.particleSpeed = 100
+                emitter.emissionAngleRange = .pi / 8
+                emitter.xAcceleration = -gameSpeed
+                emitter.yAcceleration = -200
+                
+                emitter.particleScaleSequence = SKKeyframeSequence(keyframeValues: [initialSize, initialSize * 0.2], times: [0, 1])
+                
             case "star":
                 let initialSize: CGFloat = 0.075
 

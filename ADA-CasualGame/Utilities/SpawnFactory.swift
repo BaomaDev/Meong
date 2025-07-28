@@ -108,7 +108,7 @@ class SpawnFactory {
     // MARK: - Obstacles
 
     static func createNoTouch(at position: CGPoint) -> SKSpriteNode {
-        let textureNames = ["BapakMainCatur", "BoxPisang"]
+        let textureNames = ["Catur", "BoxPisang"]
         let textureName = textureNames.randomElement()!
         let texture = SKTexture(imageNamed: textureName)
         
@@ -116,9 +116,9 @@ class SpawnFactory {
         var objectPosition = position
         
         switch textureName {
-            case "BapakMainCatur":
-                targetWidth = 130
-                objectPosition = CGPoint(x: position.x, y: position.y - 5)
+            case "Catur":
+                targetWidth = 120
+                objectPosition = CGPoint(x: position.x, y: position.y + 10)
             case "BoxPisang":
                 targetWidth = 70
                 objectPosition = CGPoint(x: position.x, y: position.y - 15)

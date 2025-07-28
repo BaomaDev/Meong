@@ -250,10 +250,16 @@ class PlayerEntity: SKSpriteNode {
             EffectsFactory.shared.playSound(soundKey: "parry2.mp3")
             knockType = "expel"
             
-        case "BapakMainCatur":
+        case "Catur":
             EffectsFactory.shared.playSound(soundKey: surprisedSoundKeys.randomElement()!)
             EffectsFactory.shared.playSound(soundKey: crashSoundKeys.randomElement()!)
+            EffectsFactory.shared.createParticleEffect(at: self.position, key: "bigsmoke", amount: 8)
             knockType = "inplace"
+            
+            // 2. Change the texture to "Catur2"
+            if let spriteNode = node as? SKSpriteNode {
+                spriteNode.texture = SKTexture(imageNamed: "Catur2")
+            }
             
         case "Ayam":
             EffectsFactory.shared.playSound(soundKey: "chickenHit.mp3")

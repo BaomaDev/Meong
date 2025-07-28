@@ -54,6 +54,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     private var titleUI: SKSpriteNode?
     private var isWaitingForTapToStart = false
     private var isWaitingForAnimationHome = true
+    private var waitingForLandingBeforeCatchup = false
     
     private var backgroundHome: SKSpriteNode?
     private var gerobakIkan: SKSpriteNode?
@@ -63,7 +64,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     // MARK: - Scene Lifecycle (Initializers)
     override func didMove(to view: SKView) {
         setupProperties()
-
+        
         NotificationCenter.default.addObserver(self, selector: #selector(appWillResignActive), name: UIApplication.willResignActiveNotification, object: nil)
         
         NotificationCenter.default.addObserver(
@@ -516,6 +517,13 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         if let chaser = chaser {
             chaser.updateFollowPosition()
         }
+        
+        if waitingForLandingBeforeCatchup {
+            if getSurfaceType() != .none {
+                waitingForLandingBeforeCatchup = false
+                startChaserCatchupSequence()
+            }
+        }
         //
 //                print(player.currentState)
                 print(currentSurface)
@@ -633,8 +641,13 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         guard gamePhase == .playing else { return }
         
         if player.hearts <= 0 || player.distance <= 0 {
-            // Trigger final catch-up animation
-            startChaserCatchupSequence()
+            if getSurfaceType() == .none {
+                // Player is midair, delay chaser sequence
+                waitingForLandingBeforeCatchup = true
+                player.shouldFallToGround() // optional: force downward gravity if needed
+            } else {
+                startChaserCatchupSequence()
+            }
         }
     }
     
@@ -687,7 +700,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 child.removeFromParent()
             }
         }
-
+        
         player = nil
         chaser = nil
         scoreTimer?.invalidate()
@@ -816,39 +829,55 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     private func startChaserCatchupSequence() {
         guard let chaser = chaser, let player = player else {
-//            gameOver() // fallback
             return
         }
-        
+
         guard gamePhase == .playing else { return }
-        
+
         // 1. Stop spawning and freeze background scrolling
         worldGenerator?.stopAllSpawning()
         backgroundView?.pauseScrolling()
-        
-        // 🔹 STOP MOVEMENT OF ALL EXISTING OBJECTS
-        self.enumerateChildNodes(withName: "//") { node, _ in
-            if node.name != "background_music_node" {
+
+        // Define the array of names for nodes you want to stop
+        let nodesToStopMoving: [String] = [
+            "Coin",        // Example: if coins are named "Coin"
+            "Whiskas",     // Example: if power-ups are named "Whiskas"
+            "Catnip",      // Example: if catnips are named "Catnip"
+            "Catur",       // Example: if specific obstacles are named "Catur"
+            "BoxPisang",   // Example: if specific obstacles are named "BoxPisang"
+            "BoxBuah",     // Example: if duckable obstacles are named "BoxBuah"
+            "Tong",        // Example: if specific stepable obstacles are named "Tong"
+            "Box",         // Example: if specific stepable obstacles are named "Box"
+            "BoxBerdiri",  // Example: if specific stepable obstacles are named "BoxBerdiri"
+            "GerobakSayur",// Example: if specific stepable obstacles are named "GerobakSayur"
+            "SolidPlatform", // Example: if solid platforms are named "SolidPlatform"
+            "SemiSolidPlatform" // Example: if semi-solid platforms are named "SemiSolidPlatform"
+        ]
+
+        // 🔹 STOP MOVEMENT OF ALL EXISTING OBJECTS based on the array of names
+        for nodeName in nodesToStopMoving {
+            self.enumerateChildNodes(withName: nodeName) { node, _ in
+                // Apply the stopping logic to each found node
                 node.removeAllActions()
                 node.physicsBody?.velocity = .zero
                 node.physicsBody?.angularVelocity = 0
-                node.physicsBody?.isDynamic = false
+                node.physicsBody?.isDynamic = false // Freeze the physics body
             }
         }
-        
+
         // 2. Stop player's input or animation
         player.removeAllActions()
         player.startCaughtAnimation()
-        
+
         // 3. Move chaser to player's position over 1 second
         let moveToPlayer = SKAction.moveTo(x: player.position.x, duration: 0.5)
         moveToPlayer.timingMode = .easeInEaseOut
-        
+
         chaser.run(moveToPlayer) {
             chaser.startCatchAnimation()
-            
+
             // Delay gameOver by the length of the catch animation (e.g. 1.0 sec)
-            self.run(SKAction.wait(forDuration: 1.0)) {
+            self.run(SKAction.wait(forDuration: 1.3)) {
                 self.gameOver()
                 print("GameOver")
             }
@@ -860,7 +889,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     func setBgmVolume(_ volume: Float) {
         playerData.bgmVolume = volume
         EffectsFactory.shared.refreshBgmVolume(volume: volume)
-//        EffectsFactory.shared.setBgmVolume(volume)
+        //        EffectsFactory.shared.setBgmVolume(volume)
         savePlayerData()
     }
     

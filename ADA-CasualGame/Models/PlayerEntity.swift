@@ -513,4 +513,10 @@ class PlayerEntity: SKSpriteNode {
         self.removeAction(forKey: "flyingAnimation")
         self.removeAction(forKey: "jumpAnimation")
     }
+    
+    func shouldFallToGround() {
+        self.physicsBody?.affectedByGravity = true
+        self.removeAllActions()
+        self.run(SKAction.rotate(toAngle: 0, duration: 0.4)) // optional landing pose
+    }
 }

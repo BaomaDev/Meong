@@ -501,6 +501,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         backgroundView?.updateBackgroundPosition(gameSpeed: gameSpeed)
         
+        worldGenerator?.updateGroundPosition(gameSpeed: gameSpeed)
+        
         guard gamePhase == .playing else { return }
         
         // Remove projectiles that are off screen
@@ -879,6 +881,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         // 1. Stop spawning and freeze background scrolling
         worldGenerator?.stopAllSpawning()
         backgroundView?.pauseScrolling()
+        worldGenerator?.pauseGroundScrolling()
 
         // Define the array of names for nodes you want to stop
         let nodesToStopMoving: [String] = [

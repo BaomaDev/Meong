@@ -54,9 +54,6 @@ extension PlayerEntity {
                         self.startRunningAnimation()
                     }
                 }
-                if self.size.height >= playerHitboxHeight {
-                    self.restoreOriginalShape()
-                }
             }
             
             let isLanding = currentSurface.isGrounded && !previousSurface.isGrounded && (self.physicsBody?.velocity.dy ?? 0) <= 0
@@ -478,81 +475,5 @@ extension PlayerEntity {
         let distanceToGround = playerFeetY - groundHeight
         
         return distanceToGround <= (defaultJumpHeight / 3)
-    }
-    
-    func applyHorizontalMovementTransformation(withYAdjustment adjustY: CGFloat = 0) {
-        // Define the target shape: wider and shorter (the "duck" shape).
-        let duckSize = CGSize(width: playerHitboxWidth * 1.33,
-                              height: playerHitboxHeight * 0.67)
-        
-        // 1. **Instantly** update the physics body to the final duck shape.
-        let physicsSize = CGSize(width: duckSize.width, height: duckSize.height)
-        self.physicsBody = SKPhysicsBody(rectangleOf: physicsSize)
-        setupPhysics()
-        
-        // 2. **Animate** the visual change smoothly over a short duration.
-        let resizeAction = SKAction.resize(toWidth: duckSize.width,
-                                           height: duckSize.height,
-                                           duration: transformDuration)
-        let moveAction = SKAction.moveBy(x: 0, y: adjustY, duration: transformDuration)
-        
-        // Run the visual animations together.
-        self.run(SKAction.group([resizeAction, moveAction]))
-    }
-
-    func applyVerticalMovementTransformation(withYAdjustment adjustY: CGFloat = 0) {
-        // Define the target shape: narrower and taller.
-        let jumpSize = CGSize(width: playerHitboxWidth * 0.67,
-                              height: playerHitboxHeight * 1.33)
-        
-        // 1. **Instantly** update the physics body to the final jump shape.
-        let physicsSize = CGSize(width: jumpSize.width, height: jumpSize.height)
-        self.physicsBody = SKPhysicsBody(rectangleOf: physicsSize)
-        setupPhysics()
-        
-        // 2. **Animate** the visual change smoothly.
-        let resizeAction = SKAction.resize(toWidth: jumpSize.width,
-                                           height: jumpSize.height,
-                                           duration: transformDuration)
-        let moveAction = SKAction.moveBy(x: 0, y: adjustY, duration: transformDuration)
-        
-        self.run(SKAction.group([resizeAction, moveAction]))
-    }
-
-    func restoreOriginalShape(withYAdjustment adjustY: CGFloat = 0) {
-        let originalSize = CGSize(width: playerHitboxWidth, height: playerHitboxHeight)
-
-        // 1. **Instantly** restore the physics body to the original shape.
-        let physicsSize = CGSize(width: originalSize.width, height: originalSize.height)
-        self.physicsBody = SKPhysicsBody(rectangleOf: physicsSize)
-        setupPhysics()
-
-        // 2. **Animate** the visual restoration smoothly.
-        let resizeAction = SKAction.resize(toWidth: originalSize.width,
-                                           height: originalSize.height,
-                                           duration: transformDuration)
-        let moveAction = SKAction.moveBy(x: 0, y: adjustY, duration: transformDuration)
-        
-        self.run(SKAction.group([resizeAction, moveAction]))
-    }
-    
-    func restoreOriginalShape2(withYAdjustment adjustY: CGFloat = 0) {
-        let originalSize = CGSize(width: playerHitboxWidth, height: playerHitboxHeight)
-
-        // 1. Restore the physics body
-        let physicsSize = CGSize(width: originalSize.width, height: originalSize.height)
-        self.physicsBody = SKPhysicsBody(rectangleOf: physicsSize)
-        setupPhysics()
-
-        // ✅ NEW: Reset scale so visuals go back to normal
-        self.setScale(1.0) // Resets xScale and yScale to default
-
-        // 2. Animate visual size restoration
-        let resizeAction = SKAction.resize(toWidth: originalSize.width,
-                                           height: originalSize.height,
-                                           duration: transformDuration)
-        let moveAction = SKAction.moveBy(x: 0, y: adjustY, duration: transformDuration)
-
-        self.run(SKAction.group([resizeAction, moveAction]))
     }
 }

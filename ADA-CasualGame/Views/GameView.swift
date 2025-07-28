@@ -94,8 +94,10 @@ struct GameView: View {
                             
                             Spacer()
                             
-                            PauseButton {
-                                pauseGame()
+                            if gamePhase == .playing {
+                                PauseButton {
+                                    pauseGame()
+                                }
                             }
                         }
                     }

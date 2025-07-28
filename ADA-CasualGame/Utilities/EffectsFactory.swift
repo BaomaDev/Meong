@@ -30,8 +30,8 @@ class EffectsFactory {
     }
     
     private(set) var mainBgmName: String?
-    
     private var bgmVolume: Float?
+    private let bgmKey = "sempak"
     // MARK: - Setup
     
     /// Initializes the factory with a reference to the main game scene.
@@ -140,7 +140,9 @@ class EffectsFactory {
     /// Starts playing the background music with a slow fade-in.
     func playBgm(named trackName: String, isMainTrack: Bool = false) {
         guard let scene = scene else { return }
-
+        
+        scene.removeAction(forKey: bgmKey)
+        
         if let currentTrack = bgmNode?.userData?["trackName"] as? String, currentTrack == trackName {
             return
         }
@@ -149,16 +151,18 @@ class EffectsFactory {
         if isMainTrack {
             self.mainBgmName = trackName
         }
-
+        
         if let currentNode = bgmNode {
             let fadeOut = SKAction.changeVolume(to: 0, duration: 1.0)
             let remove = SKAction.removeFromParent()
+            
+            self.bgmNode = nil
             currentNode.run(SKAction.sequence([fadeOut, remove]))
         }
-
-        let delay = bgmNode == nil ? 0.0 : 1.0
-        scene.run(SKAction.wait(forDuration: delay)) { [weak self] in
-            guard let self = self else { return }
+        
+        let delay = (bgmNode == nil && scene.childNode(withName: "background_music_node") == nil) ? 0.0 : 1.0
+        let play = SKAction.run { [weak self] in
+            guard let self = self, let scene = self.scene else { return }
             
             let newNode = SKAudioNode(fileNamed: trackName)
             newNode.name = "background_music_node"
@@ -170,8 +174,26 @@ class EffectsFactory {
             scene.addChild(newNode)
             self.bgmNode = newNode
             
-            newNode.run(SKAction.changeVolume(to: playerData.bgmVolume, duration: 1.5))
+            newNode.run(SKAction.changeVolume(to: self.playerData.bgmVolume, duration: 1.5))
         }
+        
+        let wait = SKAction.wait(forDuration: delay)
+        let sequence = SKAction.sequence([wait, play])
+        
+        scene.run(sequence, withKey: bgmKey)
+    }
+    
+    func stopAllBgm() {
+        guard let scene = scene else { return }
+        
+        scene.removeAction(forKey: bgmKey)
+        
+        scene.enumerateChildNodes(withName: "background_music_node") { node, _ in
+            node.run(SKAction.stop()) // Immediately stop playback
+            node.removeFromParent()
+        }
+        
+        self.bgmNode = nil
     }
     
     func refreshBgmVolume(volume: Float) {

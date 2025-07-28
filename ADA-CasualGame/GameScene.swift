@@ -310,7 +310,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         let finalizeStart = SKAction.run { [weak self] in
             guard let self = self else { return }
             
-            EffectsFactory.shared.playBgm(named: "BGM", isMainTrack: true)
+            EffectsFactory.shared.playBgm(named: "BGM_Ingame", isMainTrack: true)
             
             // Lock player in place to prevent drift
             let xConstraint = SKConstraint.positionX(SKRange(constantValue: 200))
@@ -451,6 +451,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         isWaitingForAnimationHome = false
         gamePhase = .playing
         gameStateUpdateHandler?(gamePhase)
+        
+        EffectsFactory.shared.playBgm(named: "BGM_Ingame", isMainTrack: true)
+        
         worldGenerator?.startProceduralSpawning()
         startScoreTimer()
     }
@@ -672,6 +675,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     func restart() {
         self.isPaused = false
         GameScene.isGamePaused = false
+        
+        EffectsFactory.shared.stopAllBgm()
+        
         for child in self.children {
             if child.name != "background_music_node" {
                 child.removeFromParent()

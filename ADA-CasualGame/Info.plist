@@ -4,11 +4,11 @@
 <dict>
 	<key>ATSApplicationFontsPath</key>
 	<string></string>
+	<key>LSSupportsGameMode</key>
+	<true/>
 	<key>UIAppFonts</key>
 	<array>
 		<string>ComicLemon.otf</string>
 	</array>
-	<key>LSSupportsGameMode</key>
-	<true/>
 </dict>
 </plist>

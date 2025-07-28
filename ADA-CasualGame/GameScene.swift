@@ -120,6 +120,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         gameSpeed = baseGameSpeed
         
         EffectsFactory.shared.playBgm(named: "BGM", isMainTrack: true)
+        EffectsFactory.shared.refreshBgmVolume(volume: playerData.bgmVolume)
         
         worldGenerator?.stopAllSpawning()
         isWaitingForTapToStart = true
@@ -380,6 +381,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         worldGenerator = WorldGenerator(scene: self)
         playerData = SaveManager.shared.load()
         worldGenerator?.setupEnvironment() // This creates the ground
+        
+        EffectsFactory.shared.setBgmVolume(playerData.bgmVolume)
     }
     
     private func setupGame() {

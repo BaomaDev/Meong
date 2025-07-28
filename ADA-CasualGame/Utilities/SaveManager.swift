@@ -22,8 +22,8 @@ struct PlayerData: Codable {
     var totalCatnipEaten: Int
     var selectedCostume: String
     var unlockedCostumes: [String] // Example: ["skin_red", "skin_blue"]
-    var bgmVolume: Float = 1.0
-    var sfxVolume: Float = 1.0
+    var bgmVolume: Float
+    var sfxVolume: Float
     var unlockedAchievements: [String]
 }
 
@@ -47,7 +47,7 @@ final class SaveManager {
             return decoded
         } catch {
             print("⚠️ Load failed: \(error.localizedDescription), using default values.")
-            return PlayerData(isFirstTimeInstall: true, highScore: 0, coins: 0, totalCoinsGained: 0, totalCoinsSpent: 0, totalGamesPlayed: 0, totalBikerKnockedOut: 0, totalChessKnockedOut: 0, totalChickenKnockedOut: 0, totalBananaKnockedOut: 0, totalHittedBySandal: 0, totalCatnipEaten: 0, selectedCostume: "costume_default", unlockedCostumes: ["costume_default"], unlockedAchievements: [])
+            return PlayerData(isFirstTimeInstall: true, highScore: 0, coins: 0, totalCoinsGained: 0, totalCoinsSpent: 0, totalGamesPlayed: 0, totalBikerKnockedOut: 0, totalChessKnockedOut: 0, totalChickenKnockedOut: 0, totalBananaKnockedOut: 0, totalHittedBySandal: 0, totalCatnipEaten: 0, selectedCostume: "costume_default", unlockedCostumes: ["costume_default"], bgmVolume: 1, sfxVolume: 1, unlockedAchievements: [])
         }
     }
 

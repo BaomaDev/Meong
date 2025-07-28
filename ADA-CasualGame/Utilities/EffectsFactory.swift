@@ -182,6 +182,7 @@ class EffectsFactory {
     func setBgmVolume(_ volume: Float) {
         playerData.bgmVolume = volume
         refreshBgmVolume(volume: volume)
+        SaveManager.shared.save(playerData)
     }
     
     /// Stops the background music with a slow fade-out.

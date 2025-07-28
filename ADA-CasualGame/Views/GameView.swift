@@ -144,8 +144,7 @@ struct GameView: View {
                 Color.black.opacity(0.5)
                     .ignoresSafeArea()
                     .transition(.opacity)
-                
-                SettingMenu(isShowing: $showSettings, scene: $gameScene)
+                SettingMenu(isShowing: $showSettings, bgmVolume: gameScene.getBgmVolume(), sfxVolume: gameScene.getSfxVolume(), scene: $gameScene)
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: .gameDidAutoPause)) { _ in

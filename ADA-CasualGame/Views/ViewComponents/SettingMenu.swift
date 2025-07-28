@@ -10,9 +10,9 @@ import SpriteKit
 
 struct SettingMenu: View {
     @Binding var isShowing: Bool
-    @State private var bgmVolume: Float = 1
+    @State var bgmVolume: Float
     @State private var isBGMEditing: Bool = false
-    @State private var sfxVolume: Float = 1
+    @State var sfxVolume: Float
     @State private var isSFXEditing: Bool = false
     @Binding var scene: GameScene
     var body: some View {
@@ -101,8 +101,10 @@ struct SettingMenu: View {
         .padding(.top, 20)
         .padding(.leading, 20)
         .onAppear{
-            bgmVolume = scene.getBgmVolume()
-            sfxVolume = scene.getSfxVolume()
+            DispatchQueue.main.async {
+                bgmVolume = scene.getBgmVolume()
+                sfxVolume = scene.getSfxVolume()
+            }
         }
     }
 }

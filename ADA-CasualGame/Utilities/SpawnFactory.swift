@@ -54,6 +54,7 @@ class SpawnFactory {
     
     static func createCoin(at position: CGPoint, characterCategory: UInt32, coinCategory: UInt32) -> SKSpriteNode {
         let coin = SKSpriteNode(imageNamed: "Coin")
+        coin.name = "Coin"
         coin.setScale(0.07)
         coin.position = position
         coin.zPosition = 1
@@ -71,6 +72,7 @@ class SpawnFactory {
 
     static func createPowerUp(at position: CGPoint, characterCategory: UInt32, powerUpCategory: UInt32) -> SKSpriteNode {
         let powerUp = SKSpriteNode(imageNamed: "Whiskas")
+        powerUp.name = "Whiskas"
         powerUp.setScale(0.1)
         powerUp.position = position
         powerUp.zPosition = 1
@@ -88,6 +90,7 @@ class SpawnFactory {
     
     static func createCatnip(at position: CGPoint, characterCategory: UInt32, catnipCategory: UInt32) -> SKSpriteNode {
         let catnip = SKSpriteNode(imageNamed: "Catnip")
+        catnip.name = "Catnip"
         catnip.setScale(0.03)
         catnip.position = position
         catnip.zPosition = 1 // Catnip is in front

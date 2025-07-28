@@ -167,6 +167,11 @@ class PlayerEntity: SKSpriteNode {
 
         startFlyingAnimation()
         
+        // 🔥 Tell the GameScene to start chaser flying animation
+        if let scene = self.scene as? GameScene {
+            scene.startChaserFlyingAnimation()
+        }
+        
         // Modify physics and game settings
         gameSpeed *= 2.0
         self.physicsBody?.affectedByGravity = false
@@ -209,6 +214,9 @@ class PlayerEntity: SKSpriteNode {
                 
                 // 🔁 Resume running animation
                 self.startRunningAnimation()
+                if let scene = self.scene as? GameScene {
+                    scene.startChaserRunningAnimation()
+                }
                 applyHitInvincibility()
             }
         ])
@@ -434,7 +442,6 @@ class PlayerEntity: SKSpriteNode {
     }
     
     func startTiptoeAnimation() {
-        print("starting tiptoe")
         // Generate texture names based on your file naming
         stopAllAnimations()
         

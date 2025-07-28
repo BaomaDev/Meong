@@ -884,4 +884,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         NotificationCenter.default.removeObserver(self)
         savePlayerData()
     }
+    
+    func startChaserFlyingAnimation() {
+        chaser?.startFlyingAnimation()
+    }
+    
+    func startChaserRunningAnimation() {
+        chaser?.startRunningAnimation()
+    }
 }

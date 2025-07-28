@@ -93,6 +93,20 @@ class ChaserEntity: SKSpriteNode {
         self.run(repeatAnimation, withKey: "emakIdleAnimation")
     }
     
+    func startFlyingAnimation() {
+        // Generate texture names based on your file naming
+        stopAllAnimation()
+        
+        let textureNames = (0...5).map { String(format: "Mak_Terbang_%05d", $0) }
+        let textures = textureNames.map { SKTexture(imageNamed: $0) }
+
+         // Create animation
+        let animation = SKAction.animate(with: textures, timePerFrame: 0.08, resize: false, restore: false)
+        let repeatAnimation = SKAction.repeatForever(animation)
+
+        self.run(repeatAnimation, withKey: "emakFlyingAnimation")
+    }
+    
     func startCatchAnimation() {
         // Generate texture names based on your file naming
         stopAllAnimation()
@@ -107,6 +121,7 @@ class ChaserEntity: SKSpriteNode {
     }
     
     func stopAllAnimation() {
+        self.removeAction(forKey: "emakFlyingAnimation")
         self.removeAction(forKey: "emakIntroAnimation")
         self.removeAction(forKey: "emakRunAnimation")
         self.removeAction(forKey: "emakCatchAnimation")

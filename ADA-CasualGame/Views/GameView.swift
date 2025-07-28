@@ -13,6 +13,8 @@ struct GameView: View {
     @State private var coin: Int = 0
     @State private var health: Int = 9
     @State private var highScore: Int = 0
+    @State private var bgmVolume: Float = SaveManager.shared.load().bgmVolume
+    @State private var sfxVolume: Float = SaveManager.shared.load().sfxVolume
 
     @State private var showPauseMenu = false
     @State private var showShop = false
@@ -144,7 +146,7 @@ struct GameView: View {
                 Color.black.opacity(0.5)
                     .ignoresSafeArea()
                     .transition(.opacity)
-                SettingMenu(isShowing: $showSettings, bgmVolume: gameScene.getBgmVolume(), sfxVolume: gameScene.getSfxVolume(), scene: $gameScene)
+                SettingMenu(isShowing: $showSettings,bgmVolume: $bgmVolume, sfxVolume: $sfxVolume, scene: $gameScene)
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: .gameDidAutoPause)) { _ in

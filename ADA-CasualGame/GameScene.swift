@@ -853,8 +853,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     //MARK: - Setting Stuff
     
     func setBgmVolume(_ volume: Float) {
+        playerData.bgmVolume = volume
         EffectsFactory.shared.refreshBgmVolume(volume: volume)
-        EffectsFactory.shared.setBgmVolume(volume)
+//        EffectsFactory.shared.setBgmVolume(volume)
         savePlayerData()
     }
     

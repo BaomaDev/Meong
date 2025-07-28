@@ -182,7 +182,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             let startXChaser = self.size.width / 2
             let startY = self.size.height * 0.2
             chaser.position = CGPoint(x: startXChaser, y: startY)
-            chaser.startIntroAnimation()
+            chaser.startIdleAnimation()
             
             gerobakIkan.position.x = chaser.position.x
             player?.position.x = chaser.position.x - 120

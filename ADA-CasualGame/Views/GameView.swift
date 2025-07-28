@@ -19,6 +19,8 @@ struct GameView: View {
     @State private var showPauseMenu = false
     @State private var showShop = false
     @State private var showSettings = false
+    @State private var showLeaderboard = false
+    
     @State private var gameScene: GameScene = {
         let scene = GameScene(size: UIScreen.main.bounds.size)
         scene.scaleMode = .resizeFill
@@ -150,6 +152,10 @@ struct GameView: View {
                     .ignoresSafeArea()
                     .transition(.opacity)
                 SettingMenu(isShowing: $showSettings,bgmVolume: $bgmVolume, sfxVolume: $sfxVolume, scene: $gameScene)
+            }
+            
+            if showLeaderboard {
+                
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: .gameDidAutoPause)) { _ in

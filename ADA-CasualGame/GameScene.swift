@@ -524,9 +524,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 startChaserCatchupSequence()
             }
         }
-        //
+
 //                print(player.currentState)
-                print(currentSurface)
+//                print(currentSurface)
     }
     
     // MARK: - SKPhysicsContactDelegate

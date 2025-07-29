@@ -84,9 +84,10 @@ final class AchievementManager: ObservableObject {
         guard achievements.indices.contains(index) else { return }
         if achievements[index].isUnlocked && !achievements[index].isClaimed {
             achievements[index].isClaimed = true
-            var playerData = SaveManager.shared.load()
-            playerData.coins += achievements[index].reward
-            SaveManager.shared.save(playerData)
+            
+            SaveManager.shared.modify { data in
+                data.coins += achievements[index].reward
+            }
             saveAchievements()
         }
     }

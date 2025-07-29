@@ -9,7 +9,6 @@ class EffectsFactory {
     private let starParticleTextures = ["star_01", "star_02", "star_03"]
     private let sparkParticleTextures = ["spark_01", "spark_02", "spark_03"]
     
-    private var playerData: PlayerData = SaveManager.shared.load()
     // MARK: - Singleton Instance
     static let shared = EffectsFactory()
     
@@ -53,7 +52,7 @@ class EffectsFactory {
         audioNode.autoplayLooped = false // Prevent looping
         
         // 2. Set volume (0.0 to 1.0)
-        audioNode.run(SKAction.changeVolume(to: playerData.sfxVolume, duration: 0))
+        audioNode.run(SKAction.changeVolume(to: SaveManager.shared.playerData.sfxVolume, duration: 0))
         
         // 3. Add to the scene
         scene.addChild(audioNode)
@@ -174,7 +173,7 @@ class EffectsFactory {
             scene.addChild(newNode)
             self.bgmNode = newNode
             
-            newNode.run(SKAction.changeVolume(to: self.playerData.bgmVolume, duration: 1.5))
+            newNode.run(SKAction.changeVolume(to: SaveManager.shared.playerData.bgmVolume, duration: 1.5))
         }
         
         let wait = SKAction.wait(forDuration: delay)
@@ -202,9 +201,11 @@ class EffectsFactory {
     }
     
     func setBgmVolume(_ volume: Float) {
-        playerData.bgmVolume = volume
+        SaveManager.shared.modify { data in
+            data.bgmVolume = volume
+        }
         refreshBgmVolume(volume: volume)
-        SaveManager.shared.save(playerData)
+        SaveManager.shared.save()
     }
     
     /// Stops the background music with a slow fade-out.

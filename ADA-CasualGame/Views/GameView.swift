@@ -13,8 +13,8 @@ struct GameView: View {
     @State private var coin: Int = 0
     @State private var health: Int = 9
     @State private var highScore: Int = 0
-    @State private var bgmVolume: Float = SaveManager.shared.load().bgmVolume
-    @State private var sfxVolume: Float = SaveManager.shared.load().sfxVolume
+    @State private var bgmVolume: Float = SaveManager.shared.playerData.bgmVolume
+    @State private var sfxVolume: Float = SaveManager.shared.playerData.sfxVolume
     @State private var showAchievementNotif = false
     @State private var showAchievementMenu = false
     @State private var unlockedAchievement: Achievement? = nil

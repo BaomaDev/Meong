@@ -15,6 +15,7 @@ struct Achievement: Codable {
     var reward: Int
     var isUnlocked: Bool
     var isClaimed: Bool
+    var isHidden: Bool
 }
 
 struct LiveStats {
@@ -57,20 +58,20 @@ final class AchievementManager: ObservableObject {
         } else {
             // default list (editable later)
             self.achievements = [
-                Achievement(image: "achv_highcore_100", title: "Newbie", description: "Get a high score of 100", reward: 50, isUnlocked: false, isClaimed: false),
-                Achievement(image: "achv_highcore_250", title: "Pro", description: "Get a high score of 250", reward: 75, isUnlocked: false, isClaimed: false),
-                Achievement(image: "achv_highcore_500", title: "Legend", description: "Get a high score of 500", reward: 100, isUnlocked: false, isClaimed: false),
-                Achievement(image: "achv_games_20", title: "Stray", description: "Play 20 games", reward: 50, isUnlocked: false, isClaimed: false),
-                Achievement(image: "achv_games_50", title: "Bandit", description: "Play 50 games", reward: 75, isUnlocked: false, isClaimed: false),
-                Achievement(image: "achv_games_100", title: "Mafia", description: "Play 100 games", reward: 100, isUnlocked: false, isClaimed: false),
-                Achievement(image: "achv_bikes_50", title: "Bike Lessons", description: "Hit Syam 50 times", reward: 50, isUnlocked: false, isClaimed: false),
-                Achievement(image: "achv_chess_50", title: "Grandmaster", description: "Hit Derend 50 times", reward: 50, isUnlocked: false, isClaimed: false),
-                Achievement(image: "achv_chicken_50", title: "Why did the cat cross the road?", description: "Hit the chicken 50 times", reward: 50, isUnlocked: false, isClaimed: false),
-                Achievement(image: "achv_banana_50", title: "Monkey Business", description: "Hit the box of bananas 50 times", reward: 50, isUnlocked: false, isClaimed: false),
-                Achievement(image: "achv_sandal_50", title: "Bullseye", description: "Get hit by the sandal 50 times", reward: 50, isUnlocked: false, isClaimed: false),
-                Achievement(image: "achv_catnip_10", title: "Zoomies", description: "Get catnip 10 times in a single run", reward: 100, isUnlocked: false, isClaimed: false),
-                Achievement(image: "achv_totalcoin_5000", title: "Tycoon", description: "Get 5000 coins total", reward: 100, isUnlocked: false, isClaimed: false),
-                Achievement(image: "achv_rere", title: "Let me break it down", description: "Encounter the elusive dancing Rere", reward: 228, isUnlocked: false, isClaimed: false)
+                Achievement(image: "achv_highcore_100", title: "Newbie", description: "Get a high score of 100", reward: 50, isUnlocked: false, isClaimed: false, isHidden: false),
+                Achievement(image: "achv_highcore_250", title: "Pro", description: "Get a high score of 250", reward: 75, isUnlocked: false, isClaimed: false, isHidden: false),
+                Achievement(image: "achv_highcore_500", title: "Legend", description: "Get a high score of 500", reward: 100, isUnlocked: false, isClaimed: false, isHidden: false),
+                Achievement(image: "achv_games_20", title: "Stray", description: "Play 20 games", reward: 50, isUnlocked: false, isClaimed: false, isHidden: false),
+                Achievement(image: "achv_games_50", title: "Bandit", description: "Play 50 games", reward: 75, isUnlocked: false, isClaimed: false, isHidden: false),
+                Achievement(image: "achv_games_100", title: "Mafia", description: "Play 100 games", reward: 100, isUnlocked: false, isClaimed: false, isHidden: false),
+                Achievement(image: "achv_bikes_50", title: "Bike Lessons", description: "Hit Syam 50 times", reward: 50, isUnlocked: false, isClaimed: false, isHidden: false),
+                Achievement(image: "achv_chess_50", title: "Grandmaster", description: "Hit Derend 50 times", reward: 50, isUnlocked: false, isClaimed: false, isHidden: false),
+                Achievement(image: "achv_chicken_50", title: "Why did the cat cross the road?", description: "Hit the chicken 50 times", reward: 50, isUnlocked: false, isClaimed: false, isHidden: false),
+                Achievement(image: "achv_banana_50", title: "Monkey Business", description: "Hit the box of bananas 50 times", reward: 50, isUnlocked: false, isClaimed: false, isHidden: false),
+                Achievement(image: "achv_sandal_50", title: "Bullseye", description: "Get hit by the sandal 50 times", reward: 50, isUnlocked: false, isClaimed: false, isHidden: false),
+                Achievement(image: "achv_catnip_10", title: "Zoomies", description: "Get catnip 10 times in a single run", reward: 100, isUnlocked: false, isClaimed: false, isHidden: false),
+                Achievement(image: "achv_totalcoin_5000", title: "Tycoon", description: "Get 5000 coins total", reward: 100, isUnlocked: false, isClaimed: false, isHidden: false),
+                Achievement(image: "achv_rere", title: "Let me break it down", description: "Encounter the elusive dancing Rere", reward: 228, isUnlocked: false, isClaimed: false, isHidden: true)
             ]
             saveAchievements()
         }

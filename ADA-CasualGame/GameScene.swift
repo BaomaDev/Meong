@@ -717,23 +717,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         EffectsFactory.shared.playSound(soundKey: "game_over.mp3")
         
-        // if new high score, upload to leaderboard
-<<<<<<< HEAD
-        if internalScore > playerData.highScore {
-            playerData.highScore = internalScore
-            GameCenterManager.shared.submitScore(internalScore)
-        }
-        highscoreUpdateHandler?(playerData.highScore)
-        
-        // update local coin memory
-        playerData.coins += player?.coins ?? 0
-        playerData.totalGamesPlayed += 1
-        playerData.totalCoinsGained += player?.coins ?? 0
-        
-        savePlayerData()
-        
-        AchievementManager.shared.checkForUnlocks(with: playerData)
-=======
         SaveManager.shared.modify { data in
             if internalScore > data.highScore {
                 data.highScore = internalScore
@@ -750,7 +733,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             
             AchievementManager.shared.checkForUnlocks(with: data)
         }
->>>>>>> ced6263df265785a5480b46d4f99c8e8b059a13c
     }
     
     func returnToHomeScreen() {

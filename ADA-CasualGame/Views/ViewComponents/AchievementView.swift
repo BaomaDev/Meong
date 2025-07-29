@@ -58,63 +58,70 @@ struct AchievementView: View {
                         ForEach(achievementManager.achievements.indices, id: \.self) { index in
                             let achievement = achievementManager.achievements[index]
                             HStack(spacing: 15) {
-                                Image(achievement.image)
-                                    .resizable()
-                                    .frame(width: 50, height: 50)
-                                    .cornerRadius(8)
-
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text(achievement.title)
+                                if achievement.isHidden {
+                                    Text("Run through the street to find something!")
                                         .font(.custom("Comic Lemon", size: 16))
-                                        .foregroundColor(.black)
+                                        .foregroundStyle(.black)
+                                        .frame(maxWidth: .infinity)
+                                        .padding(.vertical, 20)
+                                } else {
+                                    Image(achievement.image)
+                                        .resizable()
+                                        .frame(width: 50, height: 50)
+                                        .cornerRadius(8)
 
-                                    Text(achievement.description)
-                                        .font(.custom("Comic Lemon", size: 12))
-                                        .foregroundColor(.gray)
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text(achievement.title)
+                                            .font(.custom("Comic Lemon", size: 16))
+                                            .foregroundColor(.black)
 
-                                    if achievement.isUnlocked {
-                                        Text(achievement.isClaimed ? "Claimed" : "Unlocked")
+                                        Text(achievement.description)
                                             .font(.custom("Comic Lemon", size: 12))
-                                            .font(.caption)
-                                            .foregroundColor(.green)
-                                    } else {
-                                        Text("Locked")
-                                            .font(.custom("Comic Lemon", size: 12))
-                                            .font(.caption)
-                                            .foregroundColor(.red)
-                                    }
-                                }
+                                            .foregroundColor(.gray)
 
-                                Spacer()
-
-                                Button(action: {
-                                    AchievementManager.shared.claimReward(for: index)
-                                }) {
-                                    HStack {
-                                        Text(
-                                            !achievement.isUnlocked ? "Claim \(achievement.reward)" :
-                                            achievement.isClaimed ? "Claimed" :
-                                            "Claim \(achievement.reward)"
-                                        )
-                                        if !achievement.isClaimed {
-                                            Image("Coin")
-                                                .resizable()
-                                                .frame(width: 25, height: 25)
+                                        if achievement.isUnlocked {
+                                            Text(achievement.isClaimed ? "Claimed" : "Unlocked")
+                                                .font(.custom("Comic Lemon", size: 12))
+                                                .font(.caption)
+                                                .foregroundColor(.green)
+                                        } else {
+                                            Text("Locked")
+                                                .font(.custom("Comic Lemon", size: 12))
+                                                .font(.caption)
+                                                .foregroundColor(.red)
                                         }
                                     }
-                                    .font(.custom("Comic Lemon", size: 16))
-                                    .padding(.horizontal, 10)
-                                    .padding(.vertical, 5)
-                                    .background(
-                                        achievement.isUnlocked && !achievement.isClaimed
-                                            ? Color.yellow
-                                            : Color.gray.opacity(0.5)
-                                    )
-                                    .cornerRadius(5)
-                                    .foregroundStyle(.black)
-                                }
-                                .disabled(!achievement.isUnlocked || achievement.isClaimed)
 
+                                    Spacer()
+
+                                    Button(action: {
+                                        AchievementManager.shared.claimReward(for: index)
+                                    }) {
+                                        HStack {
+                                            Text(
+                                                !achievement.isUnlocked ? "Claim \(achievement.reward)" :
+                                                achievement.isClaimed ? "Claimed" :
+                                                "Claim \(achievement.reward)"
+                                            )
+                                            if !achievement.isClaimed {
+                                                Image("Coin")
+                                                    .resizable()
+                                                    .frame(width: 25, height: 25)
+                                            }
+                                        }
+                                        .font(.custom("Comic Lemon", size: 16))
+                                        .padding(.horizontal, 10)
+                                        .padding(.vertical, 5)
+                                        .background(
+                                            achievement.isUnlocked && !achievement.isClaimed
+                                                ? Color.yellow
+                                                : Color.gray.opacity(0.5)
+                                        )
+                                        .cornerRadius(5)
+                                        .foregroundStyle(.black)
+                                    }
+                                    .disabled(!achievement.isUnlocked || achievement.isClaimed)
+                                }
                             }
                             .padding()
                             .background(Color.white.opacity(0.7))

@@ -60,7 +60,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     private var backgroundHome: SKSpriteNode?
     private var gerobakIkan: SKSpriteNode?
     
-    private var playerData: PlayerData!
+//    private var playerData = SaveManager.shared.playerData
     
     
     // MARK: - Scene Lifecycle (Initializers)
@@ -89,7 +89,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             DispatchQueue.main.async {
                 guard let self = self else { return }
                 
-                if self.playerData.isFirstTimeInstall {
+                if SaveManager.shared.playerData.isFirstTimeInstall {
                     self.setupGame()
                 } else {
                     self.camera?.position = CGPoint(x: self.size.width / 2, y: 1000)
@@ -124,7 +124,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         gameSpeed = baseGameSpeed
         
         EffectsFactory.shared.playBgm(named: "BGM", isMainTrack: true)
-        EffectsFactory.shared.refreshBgmVolume(volume: playerData.bgmVolume)
+        EffectsFactory.shared.refreshBgmVolume(volume: SaveManager.shared.playerData.bgmVolume)
         
         worldGenerator?.stopAllSpawning()
         isWaitingForTapToStart = true
@@ -310,7 +310,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         let finalizeStart = SKAction.run { [weak self] in
             guard let self = self else { return }
             
-            EffectsFactory.shared.playBgm(named: "BGM", isMainTrack: true)
+            EffectsFactory.shared.playBgm(named: "BGM_Ingame", isMainTrack: true)
             
             // Lock player in place to prevent drift
             let xConstraint = SKConstraint.positionX(SKRange(constantValue: 200))
@@ -383,10 +383,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         EffectsFactory.shared.initialize(with: self)
         
         worldGenerator = WorldGenerator(scene: self)
-        playerData = SaveManager.shared.load()
+//        playerData = SaveManager.shared.playerData
         worldGenerator?.setupEnvironment() // This creates the ground
         
-        EffectsFactory.shared.setBgmVolume(playerData.bgmVolume)
+        EffectsFactory.shared.setBgmVolume(SaveManager.shared.playerData.bgmVolume)
     }
     
     private func setupGame() {
@@ -414,7 +414,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         setupSwipeRecognizers()
         
         // This logic remains the same
-        if playerData.isFirstTimeInstall {
+        if SaveManager.shared.playerData.isFirstTimeInstall {
             gamePhase = .tutorial
             gameStateUpdateHandler?(gamePhase)
             tutorialManager = TutorialManager(scene: self)
@@ -447,10 +447,15 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
     
     func endTutorial() {
-        playerData.isFirstTimeInstall = false
+        SaveManager.shared.modify { data in
+            data.isFirstTimeInstall = false
+        }
         isWaitingForAnimationHome = false
         gamePhase = .playing
         gameStateUpdateHandler?(gamePhase)
+        
+        EffectsFactory.shared.playBgm(named: "BGM_Ingame", isMainTrack: true)
+        
         worldGenerator?.startProceduralSpawning()
         startScoreTimer()
     }
@@ -497,6 +502,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         player.updateState(currentSurface: currentSurface)
         
         backgroundView?.updateBackgroundPosition(gameSpeed: gameSpeed)
+        
+        worldGenerator?.updateGroundPosition(gameSpeed: gameSpeed)
         
         guard gamePhase == .playing else { return }
         
@@ -580,7 +587,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         // If the player was invincible, the projectile is left in the scene to be knocked away.
         if !player.isInvincible {
             projectileNode.removeFromParent()
-            playerData.totalHittedBySandal += 1
+            SaveManager.shared.modify { data in
+                data.totalHittedBySandal += 1
+            }
         }
         
         checkGameOver()
@@ -614,14 +623,16 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         // Only remove the node if the player was NOT invincible when the hit occurred.
         if !player.isInvincible {
-            if obstacleNode.name == "BapakMainCatur" {
-                playerData.totalChessKnockedOut += 1
-            } else if obstacleNode.name == "BoxPisang" {
-                playerData.totalBananaKnockedOut += 1
-            } else if obstacleNode.name == "Ayam" {
-                playerData.totalChickenKnockedOut += 1
-            } else if obstacleNode.name == "Sepeda 2" {
-                playerData.totalBikerKnockedOut += 1
+            SaveManager.shared.modify { data in
+                if obstacleNode.name == "BapakMainCatur" {
+                    data.totalChessKnockedOut += 1
+                } else if obstacleNode.name == "BoxPisang" {
+                    data.totalBananaKnockedOut += 1
+                } else if obstacleNode.name == "Ayam" {
+                    data.totalChickenKnockedOut += 1
+                } else if obstacleNode.name == "Sepeda 2" {
+                    data.totalBikerKnockedOut += 1
+                }
             }
             nodeToHandle.removeFromParent()
         }
@@ -672,6 +683,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     func restart() {
         self.isPaused = false
         GameScene.isGamePaused = false
+        
+        EffectsFactory.shared.stopAllBgm()
+        
         for child in self.children {
             if child.name != "background_music_node" {
                 child.removeFromParent()
@@ -704,10 +718,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         EffectsFactory.shared.playSound(soundKey: "game_over.mp3")
         
         // if new high score, upload to leaderboard
+<<<<<<< HEAD
         if internalScore > playerData.highScore {
-            highscoreUpdateHandler?(playerData.highScore)
+            playerData.highScore = internalScore
             GameCenterManager.shared.submitScore(internalScore)
         }
+        highscoreUpdateHandler?(playerData.highScore)
         
         // update local coin memory
         playerData.coins += player?.coins ?? 0
@@ -717,10 +733,35 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         savePlayerData()
         
         AchievementManager.shared.checkForUnlocks(with: playerData)
+=======
+        SaveManager.shared.modify { data in
+            if internalScore > data.highScore {
+                data.highScore = internalScore
+                GameCenterManager.shared.submitScore(internalScore)
+            }
+            highscoreUpdateHandler?(data.highScore)
+            
+            // update local coin memory
+            data.coins += player?.coins ?? 0
+            data.totalGamesPlayed += 1
+            data.totalCoinsGained += player?.coins ?? 0
+            
+            savePlayerData()
+            
+            AchievementManager.shared.checkForUnlocks(with: data)
+        }
+>>>>>>> ced6263df265785a5480b46d4f99c8e8b059a13c
     }
     
     func returnToHomeScreen() {
         guard gamePhase != .homeScreen || gamePhase != .tutorial else { return }
+        
+        if let recognizers = self.view?.gestureRecognizers {
+            for recognizer in recognizers {
+                self.view?.removeGestureRecognizer(recognizer)
+            }
+        }
+        
         self.isPaused = false
         GameScene.isGamePaused = false
         for child in self.children {
@@ -734,10 +775,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         scoreTimer?.invalidate()
         internalScore = 0
         isWaitingForAnimationHome = false
-        highscoreUpdateHandler?(playerData.highScore)
+        highscoreUpdateHandler?(SaveManager.shared.playerData.highScore)
         gamePhase = .homeScreen
         gameStateUpdateHandler?(gamePhase)
-        coinUpdateHandler?(playerData.coins)
+        coinUpdateHandler?(SaveManager.shared.playerData.coins)
         
         worldGenerator?.stopAllSpawning()
         
@@ -837,30 +878,33 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     // MARK: - Shop Logic
     func buyCostume(costume: String, price coin:Int) {
-        if playerData.coins < coin {
+        if SaveManager.shared.playerData.coins < coin {
             print("Not enough coin")
             return
         }
-        if playerData.unlockedCostumes.contains(costume) {
+        if SaveManager.shared.playerData.unlockedCostumes.contains(costume) {
             print("Already purchased")
             return
         }
         
-        playerData.coins -= coin
-        playerData.unlockedCostumes.append(costume)
-        coinUpdateHandler?(playerData.coins)
-        costumePurchasedHandler?(playerData.unlockedCostumes)
-        savePlayerData()
+        SaveManager.shared.modify { data in
+            data.coins -= coin
+            data.unlockedCostumes.append(costume)
+            coinUpdateHandler?(data.coins)
+            costumePurchasedHandler?(data.unlockedCostumes)
+        }
     }
     
     func selectCostume(_ costume: String) {
-        if !playerData.unlockedCostumes.contains(costume) {
+        if !SaveManager.shared.playerData.unlockedCostumes.contains(costume) {
             print("Costume not purchased yet")
             return
         }
-        playerData.selectedCostume = costume
-        selectedCostumeHandler?(costume)
-        savePlayerData()
+        print(costume)
+        SaveManager.shared.modify { data in
+            data.selectedCostume = costume
+            selectedCostumeHandler?(costume)
+        }
     }
     
     private func startChaserCatchupSequence() {
@@ -873,6 +917,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         // 1. Stop spawning and freeze background scrolling
         worldGenerator?.stopAllSpawning()
         backgroundView?.pauseScrolling()
+        worldGenerator?.pauseGroundScrolling()
 
         // Define the array of names for nodes you want to stop
         let nodesToStopMoving: [String] = [
@@ -923,31 +968,28 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     //MARK: - Setting Stuff
     
     func setBgmVolume(_ volume: Float) {
-        playerData.bgmVolume = volume
+        SaveManager.shared.modify { data in data.bgmVolume = volume}
         EffectsFactory.shared.refreshBgmVolume(volume: volume)
         //        EffectsFactory.shared.setBgmVolume(volume)
-        savePlayerData()
     }
     
     func setSfxVolume(_ volume: Float) {
-        playerData.sfxVolume = volume
-        savePlayerData()
-    }
+        SaveManager.shared.modify { data in data.sfxVolume = volume}    }
     
     func getBgmVolume() -> Float {
-        return playerData.bgmVolume
+        return  SaveManager.shared.playerData.bgmVolume
     }
     
     func getSfxVolume() -> Float {
-        return playerData.sfxVolume
+        return  SaveManager.shared.playerData.sfxVolume
     }
     
     
     // MARK: - Save Func
     @objc func savePlayerData() {
         print(gamePhase)
-        guard gamePhase != .tutorial || gamePhase != .playing else { return }
-        SaveManager.shared.save(playerData)
+        guard gamePhase == .gameOver || gamePhase == .homeScreen || gamePhase == .none || gamePhase == .tutorial else { return }
+        SaveManager.shared.save()
     }
     
     // MARK: - Deinit

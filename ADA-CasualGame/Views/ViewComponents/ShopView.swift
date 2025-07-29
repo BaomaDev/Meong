@@ -13,7 +13,6 @@ struct ShopView: View {
     @State private var coins: Int = 0
     @State private var selectedCostume: String? = "costume_default"
     @State private var purchasedCostumes: [String] = []
-    @State private var playerData: PlayerData = SaveManager.shared.load()
     @Binding var scene: GameScene
     var body: some View {
         ZStack {
@@ -205,17 +204,18 @@ struct ShopView: View {
         .padding(.top, 20)
         .padding(.leading, 20)
         .onAppear{
-            playerData = SaveManager.shared.load()
+            print("Opening ShopView")
             DispatchQueue.main.async {
-                coins = playerData.coins
-                purchasedCostumes = playerData.unlockedCostumes
-                selectedCostume = playerData.selectedCostume
+                coins = SaveManager.shared.playerData.coins
+                purchasedCostumes = SaveManager.shared.playerData.unlockedCostumes
+                selectedCostume = SaveManager.shared.playerData.selectedCostume
             }
             scene.coinUpdateHandler = { self.coins = $0 }
             scene.selectedCostumeHandler = { self.selectedCostume = $0 }
             scene.costumePurchasedHandler = { self.purchasedCostumes = $0 }
         }
         .onDisappear{
+            print("Closed ShopView")
             scene.savePlayerData()
             scene.coinUpdateHandler = nil
             scene.selectedCostumeHandler = nil

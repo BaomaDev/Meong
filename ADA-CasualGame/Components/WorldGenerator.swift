@@ -39,7 +39,9 @@ class WorldGenerator {
     
     private var powerUpBonus: Float = 0
     private var catnipBonus: Float = 0
-
+    
+    private var grounds: [SKSpriteNode] = []
+    private var isGroundScrollingPaused = false
 
     init(scene: SKScene) {
         self.scene = scene
@@ -114,15 +116,53 @@ class WorldGenerator {
 
     private func createGround() {
         guard let scene = scene else { return }
+
+        for ground in grounds {
+            ground.removeFromParent()
+        }
+        grounds.removeAll()
+
         let texture = SKTexture(imageNamed: "Ground")
         let groundSize = CGSize(width: scene.size.width, height: groundHeight)
-        let ground = SKSpriteNode(texture: texture, color: .gray, size: groundSize)
-        ground.position = CGPoint(x: scene.size.width / 2, y: groundSize.height / 2)
-        ground.physicsBody = SKPhysicsBody(rectangleOf: ground.size)
-        ground.physicsBody?.isDynamic = false
-        ground.physicsBody?.categoryBitMask = PhysicsCategory.ground
-        ground.physicsBody?.collisionBitMask = PhysicsCategory.player
-        scene.addChild(ground)
+
+        for i in 0..<2 {
+            let ground = SKSpriteNode(texture: texture)
+            ground.anchorPoint = .zero
+            ground.size = groundSize
+            ground.position = CGPoint(x: CGFloat(i) * ground.size.width, y: 0)
+            ground.zPosition = 1
+
+            ground.physicsBody = SKPhysicsBody(rectangleOf: ground.size, center: CGPoint(x: ground.size.width / 2, y: ground.size.height / 2))
+            ground.physicsBody?.isDynamic = false
+            ground.physicsBody?.categoryBitMask = PhysicsCategory.ground
+            ground.physicsBody?.collisionBitMask = PhysicsCategory.player
+            ground.physicsBody?.restitution = 0
+            ground.physicsBody?.friction = 1.0
+            
+            scene.addChild(ground)
+            grounds.append(ground)
+        }
+    }
+
+    // MARK: - Ground Scrolling Methods
+    func pauseGroundScrolling() {
+        isGroundScrollingPaused = true
+    }
+    
+    func updateGroundPosition(gameSpeed: CGFloat) {
+        guard !isGroundScrollingPaused else { return }
+        guard gameSpeed > 0 else { return }
+
+        let deltaTime: CGFloat = 1 / 60.0
+        let distanceToMove = gameSpeed * deltaTime
+
+        for ground in grounds {
+            ground.position.x -= distanceToMove
+
+            if ground.position.x <= -ground.size.width {
+                ground.position.x += ground.size.width * 2
+            }
+        }
     }
 
     func startProceduralSpawning() {

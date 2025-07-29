@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_2" data-name="Layer 2" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 70.66 70.82">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: url(#linear-gradient);
+      }
+
+      .cls-2 {
+        stroke-width: 6.34px;
+      }
+
+      .cls-2, .cls-3 {
+        fill: none;
+        stroke: #fff;
+      }
+
+      .cls-4 {
+        fill: #fff;
+      }
+
+      .cls-3 {
+        stroke-miterlimit: 4;
+        stroke-width: 6.34px;
+      }
+
+      .cls-5 {
+        fill: #ed7d7d;
+      }
+    </style>
+    <linearGradient id="linear-gradient" x1="35.33" y1="867.8" x2="35.33" y2="796.98" gradientTransform="translate(0 867.8) scale(1 -1)" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#f7c1c1"/>
+      <stop offset=".46" stop-color="#efa2a2"/>
+      <stop offset="1" stop-color="#cf4141"/>
+    </linearGradient>
+  </defs>
+  <g id="Layer_1-2" data-name="Layer 1">
+    <g>
+      <rect class="cls-1" width="70.66" height="70.82" rx="19.87" ry="19.87"/>
+      <rect class="cls-5" x="5.05" y="4.42" width="60.25" height="61.83" rx="15.14" ry="15.14"/>
+      <ellipse class="cls-4" cx="15.33" cy="12.73" rx="6.53" ry="2.94" transform="translate(-4.3 9.28) rotate(-29.73)"/>
+      <g>
+        <line class="cls-2" x1="21.17" y1="22.36" x2="50.23" y2="51.42"/>
+        <line class="cls-3" x1="49.18" y1="22.36" x2="20.12" y2="51.42"/>
+      </g>
+    </g>
+  </g>
+</svg>

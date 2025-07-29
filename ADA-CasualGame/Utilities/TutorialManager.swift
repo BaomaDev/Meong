@@ -146,7 +146,7 @@ class TutorialManager {
             noTouchObstacle.name = "TutorialObstacle"
             scene.addChild(noTouchObstacle)
             
-            let stepablePosition = CGPoint(x: scene.size.width + 400, y: groundHeight + 30)
+            let stepablePosition = CGPoint(x: scene.size.width + 525, y: groundHeight + 30)
             let stepableObstacle = SpawnFactory.createStepable(at: stepablePosition)
             stepableObstacle.name = "TutorialObstacle"
             scene.addChild(stepableObstacle)

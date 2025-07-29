@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import GameKit
 
 struct Achievement: Codable {
     var image: String
@@ -56,9 +57,9 @@ final class AchievementManager: ObservableObject {
         } else {
             // default list (editable later)
             self.achievements = [
-                Achievement(image: "achv_highcore_100", title: "Newbie", description: "Get a High Score of 100", reward: 50, isUnlocked: false, isClaimed: false),
-                Achievement(image: "achv_highcore_250", title: "Pro", description: "Get a High Score of 250", reward: 75, isUnlocked: false, isClaimed: false),
-                Achievement(image: "achv_highcore_500", title: "Legend", description: "Get a High Score of 500", reward: 100, isUnlocked: false, isClaimed: false),
+                Achievement(image: "achv_highcore_100", title: "Newbie", description: "Get a high score of 100", reward: 50, isUnlocked: false, isClaimed: false),
+                Achievement(image: "achv_highcore_250", title: "Pro", description: "Get a high score of 250", reward: 75, isUnlocked: false, isClaimed: false),
+                Achievement(image: "achv_highcore_500", title: "Legend", description: "Get a high score of 500", reward: 100, isUnlocked: false, isClaimed: false),
                 Achievement(image: "achv_games_20", title: "Stray", description: "Play 20 games", reward: 50, isUnlocked: false, isClaimed: false),
                 Achievement(image: "achv_games_50", title: "Bandit", description: "Play 50 games", reward: 75, isUnlocked: false, isClaimed: false),
                 Achievement(image: "achv_games_100", title: "Mafia", description: "Play 100 games", reward: 100, isUnlocked: false, isClaimed: false),
@@ -66,9 +67,10 @@ final class AchievementManager: ObservableObject {
                 Achievement(image: "achv_chess_50", title: "Grandmaster", description: "Hit Derend 50 times", reward: 50, isUnlocked: false, isClaimed: false),
                 Achievement(image: "achv_chicken_50", title: "Why did the cat cross the road?", description: "Hit the chicken 50 times", reward: 50, isUnlocked: false, isClaimed: false),
                 Achievement(image: "achv_banana_50", title: "Monkey Business", description: "Hit the box of bananas 50 times", reward: 50, isUnlocked: false, isClaimed: false),
-                Achievement(image: "achv_sandal_50", title: "Bullseye", description: "Get hit by the Sandal 50 times", reward: 50, isUnlocked: false, isClaimed: false),
+                Achievement(image: "achv_sandal_50", title: "Bullseye", description: "Get hit by the sandal 50 times", reward: 50, isUnlocked: false, isClaimed: false),
                 Achievement(image: "achv_catnip_10", title: "Zoomies", description: "Get catnip 10 times in a single run", reward: 100, isUnlocked: false, isClaimed: false),
-                Achievement(image: "achv_totalcoin_5000", title: "Tycoon", description: "Get 5000 coins total", reward: 100, isUnlocked: false, isClaimed: false)
+                Achievement(image: "achv_totalcoin_5000", title: "Tycoon", description: "Get 5000 coins total", reward: 100, isUnlocked: false, isClaimed: false),
+                Achievement(image: "achv_rere", title: "Let me break it down", description: "Encounter the elusive dancing Rere", reward: 228, isUnlocked: false, isClaimed: false)
             ]
             saveAchievements()
         }
@@ -79,14 +81,40 @@ final class AchievementManager: ObservableObject {
             UserDefaults.standard.set(encoded, forKey: "achievements")
         }
     }
+    
+    private func unlockAchievement(at index: Int) {
+        let achievementID = achievements[index].image
+
+        
+        // Now, create the Game Center achievement with the correct ID.
+        let achievement = GKAchievement(identifier: achievementID)
+        
+        // Mark the achievement as 100% completed.
+        achievement.percentComplete = 100.0
+        
+        // Show the "Achievement Unlocked!" banner at the top of the screen.
+        achievement.showsCompletionBanner = true
+        
+        // Submit the achievement to Game Center.
+        GKAchievement.report([achievement]) { error in
+            if let error = error {
+                print("Error reporting achievement: \(error.localizedDescription)")
+            } else {
+                print("Successfully reported achievement: \(achievementID)")
+            }
+        }
+        
+        onUnlock?(achievements[index])
+    }
 
     func claimReward(for index: Int) {
         guard achievements.indices.contains(index) else { return }
         if achievements[index].isUnlocked && !achievements[index].isClaimed {
             achievements[index].isClaimed = true
-            var playerData = SaveManager.shared.load()
-            playerData.coins += achievements[index].reward
-            SaveManager.shared.save(playerData)
+            
+            SaveManager.shared.modify { data in
+                data.coins += achievements[index].reward
+            }
             saveAchievements()
         }
     }
@@ -100,6 +128,7 @@ final class AchievementManager: ObservableObject {
                 condition(playerData) {
                 achievements[i].isUnlocked = true
                 onUnlock?(achievements[i])
+                unlockAchievement(at: i)
             }
         }
         saveAchievements()
@@ -114,6 +143,7 @@ final class AchievementManager: ObservableObject {
             saveAchievements()
             print("Unlocked: \(achievements[index].title)")
             onUnlock?(achievements[index])
+            unlockAchievement(at: index)
         }
     }
     

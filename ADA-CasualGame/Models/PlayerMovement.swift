@@ -143,7 +143,7 @@ extension PlayerEntity {
     
     // MARK: - Jump
     func jump(swipeDistance: Double) {
-        if currentState == .airborne && !canJump {
+        if currentState == .airborne || currentState == .diving {
             if isCloseToGround() {
                 if swipeDistance < longSwipeTreshold {
                     queuedAction = .normalJump
@@ -256,6 +256,11 @@ extension PlayerEntity {
             return
         }
         
+        self.removeAction(forKey: "jumpAction")
+        self.physicsBody?.affectedByGravity = true
+        self.canJump = false
+        self.canDive = false
+        
         var shortDive = false   // if the dive is short, no need to transform
         if let gameScene = self.scene as? GameScene {
             let surfaceBelow = gameScene.getSurfaceType(rayLength: 80.0)
@@ -263,14 +268,6 @@ extension PlayerEntity {
                 shortDive = true
             }
         }
-        
-        // Remove any ongoing scripted jump action. This is the core of the fix.
-        self.removeAction(forKey: "jumpAction")
-        
-        // A jump action disables gravity and changes the player's shape.
-        // We must manually restore these states before we can dive.
-        self.physicsBody?.affectedByGravity = true
-        self.canDive = false
         
         if !shortDive {
             self.currentState = .diving

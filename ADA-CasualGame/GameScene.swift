@@ -896,6 +896,14 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         }
 
         guard gamePhase == .playing else { return }
+        
+        if let view = self.view {
+            if let recognizers = view.gestureRecognizers {
+                for recognizer in recognizers {
+                    view.removeGestureRecognizer(recognizer)
+                }
+            }
+        }
 
         // 1. Stop spawning and freeze background scrolling
         worldGenerator?.stopAllSpawning()

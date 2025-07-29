@@ -738,6 +738,13 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     func returnToHomeScreen() {
         guard gamePhase != .homeScreen || gamePhase != .tutorial else { return }
+        
+        if let recognizers = self.view?.gestureRecognizers {
+            for recognizer in recognizers {
+                self.view?.removeGestureRecognizer(recognizer)
+            }
+        }
+        
         self.isPaused = false
         GameScene.isGamePaused = false
         for child in self.children {

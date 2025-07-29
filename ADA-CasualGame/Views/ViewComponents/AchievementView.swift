@@ -54,7 +54,7 @@ struct AchievementView: View {
                 .padding(.top, -90)
                 
                 ScrollView {
-                    VStack(spacing: 20) {
+                    VStack(spacing: 10) {
                         ForEach(achievementManager.achievements.indices, id: \.self) { index in
                             let achievement = achievementManager.achievements[index]
                             HStack(spacing: 15) {
@@ -74,10 +74,12 @@ struct AchievementView: View {
 
                                     if achievement.isUnlocked {
                                         Text(achievement.isClaimed ? "Claimed" : "Unlocked")
+                                            .font(.custom("Comic Lemon", size: 12))
                                             .font(.caption)
                                             .foregroundColor(.green)
                                     } else {
                                         Text("Locked")
+                                            .font(.custom("Comic Lemon", size: 12))
                                             .font(.caption)
                                             .foregroundColor(.red)
                                     }

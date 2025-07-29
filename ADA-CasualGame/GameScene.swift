@@ -56,6 +56,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     private var isWaitingForTapToStart = false
     private var isWaitingForAnimationHome = true
     private var waitingForLandingBeforeCatchup = false
+    private var catnipScreenOverlay: SKSpriteNode?
     
     private var backgroundHome: SKSpriteNode?
     private var gerobakIkan: SKSpriteNode?
@@ -986,5 +987,41 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     func startChaserRunningAnimation() {
         chaser?.startRunningAnimation()
+    }
+    
+    func startCatnipOverlayEffect() {
+        guard catnipScreenOverlay == nil else { return }
+
+        let overlay = SKSpriteNode(color: .red, size: self.size)
+        overlay.name = "CatnipScreenOverlay"
+        overlay.alpha = 0.04 // 🔹 Lower base opacity for subtlety
+        overlay.zPosition = 9999
+        overlay.position = CGPoint(x: size.width / 2, y: size.height / 2)
+        overlay.blendMode = .add
+        overlay.isUserInteractionEnabled = false
+
+        self.addChild(overlay)
+        self.catnipScreenOverlay = overlay
+
+        let colors: [SKColor] = [.red, .orange, .yellow, .green, .cyan, .blue, .magenta]
+        let colorActions = colors.map { color in
+            SKAction.group([
+                SKAction.colorize(with: color, colorBlendFactor: 1.0, duration: 0.2),
+                SKAction.sequence([
+                    SKAction.fadeAlpha(to: 0.08, duration: 0.2),
+                    SKAction.fadeAlpha(to: 0.04, duration: 0.2)
+                ])
+            ])
+        }
+
+        let fullCycle = SKAction.sequence(colorActions)
+        let repeatCycle = SKAction.repeatForever(fullCycle)
+        overlay.run(repeatCycle)
+    }
+
+    func stopCatnipOverlayEffect() {
+        catnipScreenOverlay?.removeAllActions()
+        catnipScreenOverlay?.removeFromParent()
+        catnipScreenOverlay = nil
     }
 }

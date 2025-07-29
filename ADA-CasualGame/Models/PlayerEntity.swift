@@ -170,6 +170,7 @@ class PlayerEntity: SKSpriteNode {
         // 🔥 Tell the GameScene to start chaser flying animation
         if let scene = self.scene as? GameScene {
             scene.startChaserFlyingAnimation()
+            scene.startCatnipOverlayEffect() // <-- Add this line
         }
         
         // Modify physics and game settings
@@ -216,6 +217,7 @@ class PlayerEntity: SKSpriteNode {
                 self.startRunningAnimation()
                 if let scene = self.scene as? GameScene {
                     scene.startChaserRunningAnimation()
+                    scene.stopCatnipOverlayEffect()
                 }
                 applyHitInvincibility()
             }

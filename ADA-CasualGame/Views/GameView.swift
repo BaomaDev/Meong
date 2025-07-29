@@ -164,6 +164,9 @@ struct GameView: View {
             }
             
             if showAchievementMenu {
+                Color.black.opacity(0.5)
+                        .ignoresSafeArea()
+                        .transition(.opacity)
                 AchievementView(isShowing: $showAchievementMenu)
             }
             

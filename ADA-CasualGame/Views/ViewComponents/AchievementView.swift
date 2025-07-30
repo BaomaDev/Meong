@@ -16,7 +16,8 @@ struct AchievementView: View {
             Image("UI_Box")
                 .resizable()
                 .aspectRatio(contentMode: .fit)
-                .frame(width: 700)
+                .frame(width: UIBoxWidth)
+            
             VStack (spacing: 20){
                 ZStack {
                     HStack {

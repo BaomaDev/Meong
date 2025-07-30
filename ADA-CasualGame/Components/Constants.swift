@@ -51,6 +51,10 @@ let rainbowColors: [SKColor] = [
     SKColor(hue: 0.0, saturation: 1.0, brightness: 1.0, alpha: 1.0),  // Red
 ]
 
+// MARK: - HUD
+let UIBoxWidth = 700.0
+let UIBoxHeight = 300.0
+
 enum PlayerState {
     case running
     case airborne

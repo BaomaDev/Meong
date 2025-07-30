@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Scheme
+   version = "1.3">
+   <BuildAction>
+      <BuildActionEntries>
+         <BuildActionEntry
+            buildForRunning = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "2C4EABD92E1E0CCB007E8D71"
+               BuildableName = "ADA-CasualGame.app"
+               BlueprintName = "ADA-CasualGame"
+               ReferencedContainer = "container:ADA-CasualGame.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
+      </BuildActionEntries>
+   </BuildAction>
+   <LaunchAction
+      useCustomWorkingDirectory = "NO"
+      buildConfiguration = "Debug"
+      allowLocationSimulation = "YES">
+      <BuildableProductRunnable>
+         <BuildableReference
+            BuildableIdentifier = "primary"
+            BlueprintIdentifier = "2C4EABD92E1E0CCB007E8D71"
+            BuildableName = "ADA-CasualGame.app"
+            BlueprintName = "ADA-CasualGame"
+            ReferencedContainer = "container:ADA-CasualGame.xcodeproj">
+         </BuildableReference>
+      </BuildableProductRunnable>
+   </LaunchAction>
+</Scheme>

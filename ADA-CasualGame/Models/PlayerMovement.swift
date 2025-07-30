@@ -168,6 +168,7 @@ extension PlayerEntity {
     }
 
     private func normalJump() {
+        self.removeAction(forKey: "duckAction")
         self.canJump = false
         self.currentSurface = .none
         self.currentState = .airborne
@@ -206,6 +207,7 @@ extension PlayerEntity {
             return
         }
 
+        self.removeAction(forKey: "duckAction")
         canJump = false
         self.currentSurface = .none
         self.currentState = .airborne
@@ -293,12 +295,10 @@ extension PlayerEntity {
             guard let self = self else { return }
             self.currentState = .running
             self.canDuck = true
-
-            // ✅ Resume running animation
             self.startRunningAnimation()
         }
 
-        run(SKAction.sequence([wait, restore]))
+        run(SKAction.sequence([wait, restore]), withKey: "duckAction")
     }
     
     private func dropThroughPlatform() {

@@ -7,6 +7,7 @@ struct LeaderboardEntry: Identifiable {
     let rank: Int
     let playerName: String
     let score: Int
+    let profilePicture: Image?
 }
 
 /// A singleton class to manage all Game Center interactions.
@@ -49,32 +50,43 @@ class GameCenterManager: ObservableObject {
     }
     
     /// Fetches the top scores from the leaderboard.
-    func fetchLeaderboard() {
-        GKLeaderboard.loadLeaderboards(IDs: [leaderboardID]) { [weak self] (leaderboards, error) in
-            guard let self = self, let leaderboard = leaderboards?.first else {
-                print("Error fetching leaderboards: \(error?.localizedDescription ?? "Unknown error")")
+    @MainActor // Ensures UI updates happen on the main thread
+    func fetchLeaderboard() async {
+        let leaderboardID = "meong_high_score"
+        
+        do {
+            // 1. Load the specific leaderboard.
+            let leaderboards = try await GKLeaderboard.loadLeaderboards(IDs: [leaderboardID])
+            guard let leaderboard = leaderboards.first else {
+                print("Leaderboard not found.")
                 return
             }
+
+            // 2. Fetch the top 100 entries from the leaderboard.
+            let (localPlayerEntry, allEntries, totalPlayerCount) = try await leaderboard.loadEntries(for: .global, timeScope: .allTime, range: NSRange(location: 1, length: 100))
             
-            // **THE FIX**: The parameter names in the completion handler have been corrected.
-            // The second parameter is the array of entries.
-            leaderboard.loadEntries(for: .global, timeScope: .allTime, range: NSRange(location: 1, length: 100)) { (localPlayerEntry, entries, totalPlayerCount, error) in
-                guard let entries = entries else {
-                    print("Error fetching leaderboard entries: \(error?.localizedDescription ?? "Unknown error")")
-                    return
+            // 3. Asynchronously load the photo for each entry.
+            var leaderboardData: [LeaderboardEntry] = []
+            for entry in allEntries {
+                var profileImage: Image? = nil
+                
+                // loadPhoto is an async function, so we must 'await' its result.
+                if let uiImage = try? await entry.player.loadPhoto(for: .normal) {
+                    profileImage = Image(uiImage: uiImage)
                 }
                 
-                // Now that 'entries' is correctly identified as an array, .map will work.
-                let leaderboardData = entries.map { (entry: GKLeaderboard.Entry) -> LeaderboardEntry in
-                    return LeaderboardEntry(rank: entry.rank,
-                                            playerName: entry.player.displayName,
-                                            score: entry.score)
-                }
-                
-                DispatchQueue.main.async {
-                    self.leaderboardEntries = leaderboardData
-                }
+                let newEntry = LeaderboardEntry(rank: entry.rank,
+                                                playerName: entry.player.displayName,
+                                                score: entry.score,
+                                                profilePicture: profileImage)
+                leaderboardData.append(newEntry)
             }
+            
+            // 4. Update the @Published property to refresh the SwiftUI view.
+            self.leaderboardEntries = leaderboardData
+            
+        } catch {
+            print("Error fetching leaderboard data: \(error.localizedDescription)")
         }
     }
 }

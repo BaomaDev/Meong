@@ -279,7 +279,7 @@ class EffectsFactory {
     
     private func createEmitterTemplate(key: String) -> SKEmitterNode? {
         let emitter = SKEmitterNode()
-        emitter.zPosition = 10
+        emitter.zPosition = 1
         emitter.particlePositionRange = CGVector(dx: playerHitboxWidth, dy: 0)
         
         // The entire switch statement from your old createParticleEffect function goes here.

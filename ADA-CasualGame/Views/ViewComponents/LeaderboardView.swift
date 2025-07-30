@@ -9,7 +9,7 @@ struct LeaderboardView: View {
             
             VStack {
                 Text("High Scores")
-                    .font(.largeTitle)
+                    .font(.custom("Comic Lemon", size: 36))
                     .bold()
                     .padding(.bottom, 20)
                 

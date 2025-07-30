@@ -3,6 +3,7 @@ import SpriteKit
 
 class PlayerEntity: SKSpriteNode {
     // MARK: - Properties
+    private static var animationTextures: [String: [SKTexture]] = [:]
     var currentState: PlayerState = .airborne
     var currentSurface: SurfaceType = .none
     private let originalSize = CGSize(width: playerHitboxWidth, height: playerHitboxHeight)
@@ -340,8 +341,10 @@ class PlayerEntity: SKSpriteNode {
         // Generate texture names based on your file naming
         stopAllAnimations()
         
-        let textureNames = (0...11).map { String(format: "CatRunning_%05d", $0) }
-        let textures = textureNames.map { SKTexture(imageNamed: $0) }
+        guard let textures = PlayerEntity.animationTextures["CatRunning"] else {
+            print("Error: Running animation textures not found.")
+            return
+        }
 
          // Create animation
         let animation = SKAction.animate(with: textures, timePerFrame: 0.05, resize: false, restore: false)
@@ -354,8 +357,10 @@ class PlayerEntity: SKSpriteNode {
         // Generate texture names based on your file naming
         stopAllAnimations()
         
-        let textureNames = (0...14).map { String(format: "CatDucking_%05d", $0) }
-        let textures = textureNames.map { SKTexture(imageNamed: $0) }
+        guard let textures = PlayerEntity.animationTextures["CatDucking"] else {
+            print("Error: Running animation textures not found.")
+            return
+        }
 
          // Create animation
         let animation = SKAction.animate(with: textures, timePerFrame: 0.05, resize: false, restore: false)
@@ -367,8 +372,10 @@ class PlayerEntity: SKSpriteNode {
     func startFlyingAnimation() {
         stopAllAnimations()
         
-        let textureNames = (1...58).map { String(format: "CatFlying_%05d", $0) }
-        let textures = textureNames.map { SKTexture(imageNamed: $0) }
+        guard let textures = PlayerEntity.animationTextures["CatFlying"] else {
+            print("Error: Running animation textures not found.")
+            return
+        }
 
          // Create animation
         let animation = SKAction.animate(with: textures, timePerFrame: 0.05, resize: false, restore: false)
@@ -381,8 +388,10 @@ class PlayerEntity: SKSpriteNode {
         // Generate texture names based on your file naming
         stopAllAnimations()
         
-        let textureNames = (0...22).map { String(format: "CatJumping_%05d", $0) }
-        let textures = textureNames.map { SKTexture(imageNamed: $0) }
+        guard let textures = PlayerEntity.animationTextures["CatJumping"] else {
+            print("Error: Running animation textures not found.")
+            return
+        }
 
          // Create animation
         let animation = SKAction.animate(with: textures, timePerFrame: 0.025, resize: false, restore: false)
@@ -395,8 +404,10 @@ class PlayerEntity: SKSpriteNode {
         // Generate texture names based on your file naming
         stopAllAnimations()
         
-        let textureNames = (0...22).map { String(format: "CatJumping_%05d", $0) }
-        let textures = textureNames.map { SKTexture(imageNamed: $0) }
+        guard let textures = PlayerEntity.animationTextures["CatJumping"] else {
+            print("Error: Running animation textures not found.")
+            return
+        }
 
          // Create animation
         let animation = SKAction.animate(with: textures, timePerFrame: 0.065, resize: false, restore: false)
@@ -409,8 +420,10 @@ class PlayerEntity: SKSpriteNode {
         // Generate texture names based on your file naming
         stopAllAnimations()
         
-        let textureNames = (0...11).map { String(format: "CatWithoutFish_%05d", $0) }
-        let textures = textureNames.map { SKTexture(imageNamed: $0) }
+        guard let textures = PlayerEntity.animationTextures["CatWithoutFish"] else {
+            print("Error: Running animation textures not found.")
+            return
+        }
 
          // Create animation
         let animation = SKAction.animate(with: textures, timePerFrame: 0.05, resize: false, restore: false)
@@ -423,8 +436,10 @@ class PlayerEntity: SKSpriteNode {
         // Generate texture names based on your file naming
         stopAllAnimations()
         
-        let textureNames = (0...11).map { String(format: "CatTakesFish_%05d", $0) }
-        let textures = textureNames.map { SKTexture(imageNamed: $0) }
+        guard let textures = PlayerEntity.animationTextures["CatTakesFish"] else {
+            print("Error: Running animation textures not found.")
+            return
+        }
 
          // Create animation
         let animation = SKAction.animate(with: textures, timePerFrame: 0.05, resize: false, restore: false)
@@ -437,8 +452,10 @@ class PlayerEntity: SKSpriteNode {
         // Generate texture names based on your file naming
         stopAllAnimations()
         
-        let textureNames = (0...26).map { String(format: "CatIdle_%05d", $0) }
-        let textures = textureNames.map { SKTexture(imageNamed: $0) }
+        guard let textures = PlayerEntity.animationTextures["CatIdle"] else {
+            print("Error: Running animation textures not found.")
+            return
+        }
 
          // Create animation
         let animation = SKAction.animate(with: textures, timePerFrame: 0.085, resize: false, restore: false)
@@ -451,8 +468,10 @@ class PlayerEntity: SKSpriteNode {
         // Generate texture names based on your file naming
         stopAllAnimations()
         
-        let textureNames = (2...49).map { String(format: "CatWalk_%05d", $0) }
-        let textures = textureNames.map { SKTexture(imageNamed: $0) }
+        guard let textures = PlayerEntity.animationTextures["CatWalk"] else {
+            print("Error: Running animation textures not found.")
+            return
+        }
 
          // Create animation
         let animation = SKAction.animate(with: textures, timePerFrame: 0.035, resize: false, restore: false)
@@ -465,8 +484,10 @@ class PlayerEntity: SKSpriteNode {
         // Generate texture names based on your file naming
         stopAllAnimations()
         
-        let textureNames = (0...24).map { String(format: "CatDiving_%05d", $0) }
-        let textures = textureNames.map { SKTexture(imageNamed: $0) }
+        guard let textures = PlayerEntity.animationTextures["CatDiving"] else {
+            print("Error: Running animation textures not found.")
+            return
+        }
 
          // Create animation
         let animation = SKAction.animate(with: textures, timePerFrame: 0.01, resize: false, restore: false)
@@ -479,8 +500,10 @@ class PlayerEntity: SKSpriteNode {
         // Generate texture names based on your file naming
         stopAllAnimations()
         
-        let textureNames = (1...12).map { String(format: "CatParry_%05d", $0) }
-        let textures = textureNames.map { SKTexture(imageNamed: $0) }
+        guard let textures = PlayerEntity.animationTextures["CatParry"] else {
+            print("Error: Running animation textures not found.")
+            return
+        }
 
          // Create animation
         let animation = SKAction.animate(with: textures, timePerFrame: 0.035, resize: false, restore: false)
@@ -493,8 +516,10 @@ class PlayerEntity: SKSpriteNode {
         // Generate texture names based on your file naming
         stopAllAnimations()
         
-        let textureNames = (0...29).map { String(format: "CatDead_%05d", $0) }
-        let textures = textureNames.map { SKTexture(imageNamed: $0) }
+        guard let textures = PlayerEntity.animationTextures["CatDead"] else {
+            print("Error: Running animation textures not found.")
+            return
+        }
 
          // Create animation
         let animation = SKAction.animate(with: textures, timePerFrame: 0.02, resize: false, restore: false)
@@ -520,5 +545,34 @@ class PlayerEntity: SKSpriteNode {
         self.physicsBody?.affectedByGravity = true
         self.removeAllActions()
         self.run(SKAction.rotate(toAngle: 0, duration: 0.4)) // optional landing pose
+    }
+    
+    static func preloadAnimationTextures() {
+        // Only run this once.
+        guard animationTextures.isEmpty else { return }
+
+        print("Preloading animation textures...")
+        
+        let animations: [String: ClosedRange<Int>] = [
+            "CatRunning": 0...11,
+            "CatDucking": 0...14,
+            "CatFlying": 1...58,
+            "CatJumping": 0...22,
+            "CatWithoutFish": 0...11,
+            "CatTakesFish": 0...11,
+            "CatIdle": 0...26,
+            "CatWalk": 2...49,
+            "CatDiving": 0...24,
+            "CatParry": 1...12,
+            "CatDead": 0...29
+        ]
+
+        for (name, range) in animations {
+            let textures = range.map { String(format: "\(name)_%05d", $0) }
+                                .map { SKTexture(imageNamed: $0) }
+            animationTextures[name] = textures
+        }
+        
+        print("Finished preloading textures.")
     }
 }

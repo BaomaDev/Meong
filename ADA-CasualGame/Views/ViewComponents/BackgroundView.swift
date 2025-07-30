@@ -1,10 +1,3 @@
-//
-//  BackgroundView.swift
-//  ADA-CasualGame
-//
-//  Created by Derend Marvel Hanson Prionggo on 23/07/25.
-//
-
 import SpriteKit
 
 class BackgroundView {
@@ -16,10 +9,10 @@ class BackgroundView {
     init(scene: SKScene) {
         self.scene = scene
     }
-    
+
     func setupScrollingBackground(imageNamed: String) {
         guard let scene = scene else { return }
-        
+
         // Remove existing backgrounds to prevent duplicates on restart
         for bg in backgrounds {
             bg.removeFromParent()
@@ -28,7 +21,7 @@ class BackgroundView {
 
         let texture = SKTexture(imageNamed: imageNamed)
         let scale = scene.size.height / texture.size().height
-        
+
         for i in 0..<2 {
             let background = SKSpriteNode(texture: texture)
             background.anchorPoint = .zero
@@ -43,10 +36,46 @@ class BackgroundView {
             backgrounds.append(background)
         }
         
-        if Double.random(in: 0...1) <= 0.05 { // 0.5% chance
+        // Give the second background an initial chance to spawn the easter egg
+        if let secondBackground = backgrounds.last {
+            trySpawningEasterEgg(on: secondBackground)
+        }
+    }
+
+    func pauseScrolling() {
+        isPaused = true
+    }
+    
+    // --- MODIFIED METHOD ---
+    func updateBackgroundPosition(gameSpeed: CGFloat) {
+        guard !isPaused else { return }
+        guard gameSpeed > 0 else { return }
+
+        for background in backgrounds {
+            background.position.x -= gameSpeed * 0.016
+
+            // When a background moves off-screen...
+            if background.position.x <= -background.size.width {
+                // 1. Remove all children (the old easter egg) before repositioning. ✅
+                background.removeAllChildren()
+                
+                // 2. Reposition the background segment.
+                background.position.x += background.size.width * 2
+                
+                // 3. Give it a new chance to spawn an easter egg. ✅
+                trySpawningEasterEgg(on: background)
+            }
+        }
+    }
+    
+    // --- NEW HELPER METHOD ---
+    private func trySpawningEasterEgg(on background: SKSpriteNode) {
+        // Use a constant for the spawn chance for clarity
+        let spawnChance = 0.01 // 1% chance
+        
+        if Double.random(in: 0...1) <= spawnChance {
             var easterEggFrames: [SKTexture] = []
             for i in 0...68 {
-                // Use the correct filename format to load each frame.
                 let textureName = String(format: "easter-egg-%d", i)
                 easterEggFrames.append(SKTexture(imageNamed: textureName))
             }
@@ -55,35 +84,18 @@ class BackgroundView {
             
             let easterEgg = SKSpriteNode(texture: easterEggFrames[0])
             easterEgg.setScale(0.25)
+            easterEgg.position = CGPoint(x: background.size.width * 0.5,
+                                          y: groundHeight + 55) // Assuming groundHeight is accessible
+            easterEgg.zPosition = 1
+            easterEgg.run(SKAction.repeatForever(animationAction))
             
-            if let secondBackground = backgrounds.last {
-                easterEgg.position = CGPoint(x: secondBackground.size.width * 0.5,
-                                             y: groundHeight + 55)
-                easterEgg.zPosition = 1
-                easterEgg.run(SKAction.repeatForever(animationAction))
-                secondBackground.addChild(easterEgg)
-            }
-            rereAppear+=1
+            // Add the new easter egg as a child
+            background.addChild(easterEgg)
+            
+            // Update stats
+            rereAppear += 1
             let stats = LiveStats(rereAppearances: rereAppear)
             AchievementManager.shared.updateProgress(stats)
-        }
-    }
-    
-    func pauseScrolling() {
-        isPaused = true
-    }
-    
-    // --- MODIFY THIS EXISTING METHOD ---
-    func updateBackgroundPosition(gameSpeed: CGFloat) {
-        guard !isPaused else { return } // ← Only scroll if not paused
-        guard gameSpeed > 0 else { return }
-
-        for background in backgrounds {
-            background.position.x -= gameSpeed * 0.016
-
-            if background.position.x <= -background.size.width {
-                background.position.x += background.size.width * 2
-            }
         }
     }
 }

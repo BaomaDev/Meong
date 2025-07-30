@@ -23,8 +23,6 @@ class WorldNoiseMap {
         self.width = chunkCount
         self.height = layerCount
         
-        print("Seed: \(seed)")
-        
         let source: GKNoiseSource
         switch noiseType {
         case "Perlin" :

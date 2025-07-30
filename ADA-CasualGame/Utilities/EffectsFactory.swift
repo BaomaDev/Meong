@@ -4,6 +4,8 @@ import CoreHaptics // For haptic feedback
 /// A singleton class to manage all game-wide visual and audio effects.
 class EffectsFactory {
     // MARK: - Assets
+    private var particleEmitters: [String: SKEmitterNode] = [:]
+    
     private let groundParticleTextures = ["dirt_01", "dirt_02", "dirt_03"]
     private let platformParticleTextures = ["smoke_01", "smoke_02", "smoke_03"]
     private let starParticleTextures = ["star_01", "star_02", "star_03"]
@@ -32,12 +34,19 @@ class EffectsFactory {
     private var bgmVolume: Float?
     private let bgmKey = "sempak"
     // MARK: - Setup
-    
-    /// Initializes the factory with a reference to the main game scene.
-    /// This should be called once in the GameScene's `didMove(to:)` method.
-    /// - Parameter scene: The main SKScene of the game.
     func initialize(with scene: SKScene) {
         self.scene = scene
+    }
+    
+    func preloadAssets() {
+        // --- Preload Particle Emitter Templates ---
+        let particleKeys = ["dirt", "smoke", "bigsmoke", "star", "spark", "banana", "bling", "feather"]
+        for key in particleKeys {
+            // Create a template emitter for each key.
+            if let emitter = createEmitterTemplate(key: key) {
+                particleEmitters[key] = emitter
+            }
+        }
     }
     
     // MARK: - Public Methods
@@ -80,7 +89,6 @@ class EffectsFactory {
         do {
             try hapticEngine.start()
         } catch {
-            print("Failed to start haptic engine: \(error)")
             return
         }
 
@@ -111,7 +119,7 @@ class EffectsFactory {
             let player = try hapticEngine.makePlayer(with: pattern)
             try player.start(atTime: 0)
         } catch {
-            print("Failed to play haptic pattern: \(error.localizedDescription)")
+//            print("Failed to play haptic pattern: \(error.localizedDescription)")
         }
     }
 
@@ -230,169 +238,180 @@ class EffectsFactory {
             // This handler is called when the engine is stopped by the system (e.g., app suspended).
             // Its main purpose is for logging or cleaning up resources.
             hapticEngine?.stoppedHandler = { reason in
-                print("Haptic engine stopped for reason: \(reason).")
+//                print("Haptic engine stopped for reason: \(reason).")
             }
             
             // **MODIFIED**: The reset handler is the primary place to attempt a restart after a server failure.
             hapticEngine?.resetHandler = { [weak self] in
-                print("Haptic engine reset. Attempting to restart.")
+//                print("Haptic engine reset. Attempting to restart.")
                 do {
                     try self?.hapticEngine?.start()
                 } catch {
-                    print("Failed to restart haptic engine after reset: \(error)")
+//                    print("Failed to restart haptic engine after reset: \(error)")
                 }
             }
             
         } catch {
-            print("There was an error creating the haptic engine: \(error.localizedDescription)")
+//            print("There was an error creating the haptic engine: \(error.localizedDescription)")
         }
     }
     
     // MARK: - Particle Handler
     func createParticleEffect(at position: CGPoint, key: String, amount: Int) {
-            guard let scene = scene else { return }
-            
-            let emitter = SKEmitterNode()
-            emitter.position = position
-            emitter.numParticlesToEmit = amount
-            emitter.zPosition = -1
-            emitter.particlePositionRange = CGVector(dx: playerHitboxWidth, dy: 0)
-            
-            switch key {
-            case "dirt":
-                let initialSize: CGFloat = 0.05
-                
-                emitter.particleTexture = SKTexture(imageNamed: groundParticleTextures.randomElement() ?? "dirt_01")
-                emitter.particleColor = .brown
-                emitter.particleColorBlendFactor = 0.8
-                emitter.particleLifetime = 0.6
-                emitter.particleSpeed = 80
-                emitter.emissionAngleRange = .pi / 8
-                emitter.xAcceleration = -gameSpeed*1.5
-                emitter.yAcceleration = -150
-
-                emitter.particleScaleSequence = SKKeyframeSequence(keyframeValues: [initialSize, initialSize * 0.2], times: [0, 1])
-                
-            case "smoke":
-                let initialSize: CGFloat = 0.1
-
-                emitter.particleTexture = SKTexture(imageNamed: platformParticleTextures.randomElement() ?? "smoke_01")
-                emitter.particleColor = SKColor(named: "DustColor") ?? .lightGray
-                emitter.particleColorBlendFactor = 0.35
-                emitter.particleLifetime = 0.5
-                emitter.particleSpeed = 100
-                emitter.emissionAngleRange = .pi / 8
-                emitter.xAcceleration = -gameSpeed
-                emitter.yAcceleration = -200
-                
-                emitter.particleScaleSequence = SKKeyframeSequence(keyframeValues: [initialSize, initialSize * 0.2], times: [0, 1])
-                
-            case "bigsmoke":
-                let initialSize: CGFloat = 0.3
-
-                emitter.particleTexture = SKTexture(imageNamed: platformParticleTextures.randomElement() ?? "smoke_01")
-                emitter.particleColor = SKColor(named: "DustColor") ?? .lightGray
-                emitter.particleColorBlendFactor = 0.35
-                emitter.particleLifetime = 0.5
-                emitter.particleSpeed = 100
-                emitter.emissionAngleRange = .pi / 8
-                emitter.xAcceleration = -gameSpeed
-                emitter.yAcceleration = -200
-                
-                emitter.particleScaleSequence = SKKeyframeSequence(keyframeValues: [initialSize, initialSize * 0.2], times: [0, 1])
-                
-            case "star":
-                let initialSize: CGFloat = 0.075
-
-                emitter.particleTexture = SKTexture(imageNamed: starParticleTextures.randomElement() ?? "star_01")
-                emitter.particleLifetime = 1.0
-                emitter.particleSpeed = 0
-                emitter.xAcceleration = -gameSpeed*2
-                emitter.yAcceleration = -50
-                emitter.particleScaleSequence = SKKeyframeSequence(keyframeValues: [initialSize, initialSize * 0.7], times: [0, 1]) // Shrinks less
-                
-                let keyframeTimes: [NSNumber] = [0.0, 0.2, 0.4, 0.6, 0.8, 1.0]
-                emitter.particleColorSequence = SKKeyframeSequence(keyframeValues: rainbowColors, times: keyframeTimes)
-                emitter.particleColorBlendFactor = 1.0
-                
-            case "spark":
-                let initialSize: CGFloat = 0.1
-
-                emitter.particleTexture = SKTexture(imageNamed: sparkParticleTextures.randomElement() ?? "spark_01")
-                emitter.particleColor = .yellow
-                emitter.particleColorBlendFactor = 0.8
-                emitter.particleLifetime = 0.6
-                emitter.particleSpeed = 80
-                emitter.emissionAngleRange = .pi / 8
-                emitter.xAcceleration = -gameSpeed
-                emitter.yAcceleration = 0
-
-                emitter.particleScaleSequence = SKKeyframeSequence(keyframeValues: [initialSize, initialSize * 0.2], times: [0, 1])
-                
-            case "banana":
-                let initialSize: CGFloat = 0.4
-
-                emitter.particleTexture = SKTexture(imageNamed: "Banana")
-                emitter.particleLifetime = 2.0
-                emitter.particleSpeed = 200
-                emitter.emissionAngleRange = .pi / 8
-                emitter.xAcceleration = -gameSpeed*2
-                emitter.yAcceleration = -800
-                
-                // **NEW**: Add these two lines to make the particles spin.
-                emitter.particleRotationRange = .pi * 2 // Random starting angle (0 to 360 degrees)
-                emitter.particleRotationSpeed = 5.0      // Spin speed in radians per second
-
-                emitter.particleScaleSequence = SKKeyframeSequence(keyframeValues: [initialSize, initialSize * 0.2], times: [0, 1])
-                
-            case "bling":
-                let initialSize: CGFloat = 0.025
-
-                emitter.particleTexture = SKTexture(imageNamed: starParticleTextures.randomElement() ?? "star_01")
-                emitter.particleColor = .yellow
-                emitter.particleColorBlendFactor = 0.6
-                emitter.particleLifetime = 0.6
-                emitter.particleSpeed = 80
-                emitter.emissionAngleRange = .pi / 8
-                emitter.xAcceleration = -gameSpeed
-                emitter.yAcceleration = 0
-                emitter.particlePositionRange = CGVector(dx: 10, dy: 0)
-
-                emitter.particleScaleSequence = SKKeyframeSequence(keyframeValues: [initialSize, initialSize * 0.2], times: [0, 1])
-                
-            case "feather":
-                let initialSize: CGFloat = 0.1
-
-                emitter.particleTexture = SKTexture(imageNamed: "bulu")
-                emitter.particleLifetime = 2.0
-                emitter.particleSpeed = 200
-                emitter.emissionAngleRange = .pi / 8
-                emitter.xAcceleration = -gameSpeed*2
-                emitter.yAcceleration = -800
-                
-                // **NEW**: Add these two lines to make the particles spin.
-                emitter.particleRotationRange = .pi * 2 // Random starting angle (0 to 360 degrees)
-                emitter.particleRotationSpeed = 5.0      // Spin speed in radians per second
-                emitter.particlePositionRange = CGVector(dx: 20, dy: 20)
-
-                emitter.particleScaleSequence = SKKeyframeSequence(keyframeValues: [initialSize, initialSize * 0.2], times: [0, 1])
-                
-            default:
-                print("Warning: Unknown particle key '\(key)'")
-                return
-            }
-            
-            // --- Common Properties ---
-            emitter.particleBirthRate = 200
-            emitter.particleAlphaSequence = SKKeyframeSequence(keyframeValues: [0.8, 0], times: [0, 1])
-            
-            // --- Cleanup ---
-            let waitAction = SKAction.wait(forDuration: 1.5)
-            let removeAction = SKAction.removeFromParent()
-            
-            scene.addChild(emitter)
-            emitter.run(SKAction.sequence([waitAction, removeAction]))
+        guard let scene = scene, let templateEmitter = particleEmitters[key] else {
+            return
         }
+        
+        // Create a copy of the preloaded template.
+        let emitter = templateEmitter.copy() as! SKEmitterNode
+        
+        // Configure the instance-specific properties.
+        emitter.position = position
+        emitter.numParticlesToEmit = amount
+        
+        // Cleanup
+        let waitAction = SKAction.wait(forDuration: 1.5)
+        let removeAction = SKAction.removeFromParent()
+        
+        scene.addChild(emitter)
+        emitter.run(SKAction.sequence([waitAction, removeAction]))
+    }
+    
+    private func createEmitterTemplate(key: String) -> SKEmitterNode? {
+        let emitter = SKEmitterNode()
+        emitter.zPosition = 10
+        emitter.particlePositionRange = CGVector(dx: playerHitboxWidth, dy: 0)
+        
+        // The entire switch statement from your old createParticleEffect function goes here.
+        switch key {
+        case "dirt":
+            let initialSize: CGFloat = 0.05
+            
+            emitter.particleTexture = SKTexture(imageNamed: groundParticleTextures.randomElement() ?? "dirt_01")
+            emitter.particleColor = .brown
+            emitter.particleColorBlendFactor = 0.8
+            emitter.particleLifetime = 0.6
+            emitter.particleSpeed = 80
+            emitter.emissionAngleRange = .pi / 8
+            emitter.xAcceleration = -gameSpeed*1.5
+            emitter.yAcceleration = -150
+
+            emitter.particleScaleSequence = SKKeyframeSequence(keyframeValues: [initialSize, initialSize * 0.2], times: [0, 1])
+            
+        case "smoke":
+            let initialSize: CGFloat = 0.1
+
+            emitter.particleTexture = SKTexture(imageNamed: platformParticleTextures.randomElement() ?? "smoke_01")
+            emitter.particleColor = SKColor(named: "DustColor") ?? .lightGray
+            emitter.particleColorBlendFactor = 0.35
+            emitter.particleLifetime = 0.5
+            emitter.particleSpeed = 100
+            emitter.emissionAngleRange = .pi / 8
+            emitter.xAcceleration = -gameSpeed
+            emitter.yAcceleration = -200
+            
+            emitter.particleScaleSequence = SKKeyframeSequence(keyframeValues: [initialSize, initialSize * 0.2], times: [0, 1])
+            
+        case "bigsmoke":
+            let initialSize: CGFloat = 0.3
+
+            emitter.particleTexture = SKTexture(imageNamed: platformParticleTextures.randomElement() ?? "smoke_01")
+            emitter.particleColor = SKColor(named: "DustColor") ?? .lightGray
+            emitter.particleColorBlendFactor = 0.35
+            emitter.particleLifetime = 0.5
+            emitter.particleSpeed = 100
+            emitter.emissionAngleRange = .pi / 8
+            emitter.xAcceleration = -gameSpeed
+            emitter.yAcceleration = -200
+            
+            emitter.particleScaleSequence = SKKeyframeSequence(keyframeValues: [initialSize, initialSize * 0.2], times: [0, 1])
+            
+        case "star":
+            let initialSize: CGFloat = 0.075
+
+            emitter.particleTexture = SKTexture(imageNamed: starParticleTextures.randomElement() ?? "star_01")
+            emitter.particleLifetime = 1.0
+            emitter.particleSpeed = 0
+            emitter.xAcceleration = -gameSpeed*2
+            emitter.yAcceleration = -50
+            emitter.particleScaleSequence = SKKeyframeSequence(keyframeValues: [initialSize, initialSize * 0.7], times: [0, 1]) // Shrinks less
+            
+            let keyframeTimes: [NSNumber] = [0.0, 0.2, 0.4, 0.6, 0.8, 1.0]
+            emitter.particleColorSequence = SKKeyframeSequence(keyframeValues: rainbowColors, times: keyframeTimes)
+            emitter.particleColorBlendFactor = 1.0
+            
+        case "spark":
+            let initialSize: CGFloat = 0.1
+
+            emitter.particleTexture = SKTexture(imageNamed: sparkParticleTextures.randomElement() ?? "spark_01")
+            emitter.particleColor = .yellow
+            emitter.particleColorBlendFactor = 0.8
+            emitter.particleLifetime = 0.6
+            emitter.particleSpeed = 80
+            emitter.emissionAngleRange = .pi / 8
+            emitter.xAcceleration = -gameSpeed
+            emitter.yAcceleration = 0
+
+            emitter.particleScaleSequence = SKKeyframeSequence(keyframeValues: [initialSize, initialSize * 0.2], times: [0, 1])
+            
+        case "banana":
+            let initialSize: CGFloat = 0.4
+
+            emitter.particleTexture = SKTexture(imageNamed: "Banana")
+            emitter.particleLifetime = 2.0
+            emitter.particleSpeed = 200
+            emitter.emissionAngleRange = .pi / 8
+            emitter.xAcceleration = -gameSpeed*2
+            emitter.yAcceleration = -800
+            
+            // **NEW**: Add these two lines to make the particles spin.
+            emitter.particleRotationRange = .pi * 2 // Random starting angle (0 to 360 degrees)
+            emitter.particleRotationSpeed = 5.0      // Spin speed in radians per second
+
+            emitter.particleScaleSequence = SKKeyframeSequence(keyframeValues: [initialSize, initialSize * 0.2], times: [0, 1])
+            
+        case "bling":
+            let initialSize: CGFloat = 0.025
+
+            emitter.particleTexture = SKTexture(imageNamed: starParticleTextures.randomElement() ?? "star_01")
+            emitter.particleColor = .yellow
+            emitter.particleColorBlendFactor = 0.6
+            emitter.particleLifetime = 0.6
+            emitter.particleSpeed = 80
+            emitter.emissionAngleRange = .pi / 8
+            emitter.xAcceleration = -gameSpeed
+            emitter.yAcceleration = 0
+            emitter.particlePositionRange = CGVector(dx: 10, dy: 0)
+
+            emitter.particleScaleSequence = SKKeyframeSequence(keyframeValues: [initialSize, initialSize * 0.2], times: [0, 1])
+            
+        case "feather":
+            let initialSize: CGFloat = 0.1
+
+            emitter.particleTexture = SKTexture(imageNamed: "bulu")
+            emitter.particleLifetime = 2.0
+            emitter.particleSpeed = 200
+            emitter.emissionAngleRange = .pi / 8
+            emitter.xAcceleration = -gameSpeed*2
+            emitter.yAcceleration = -800
+            
+            // **NEW**: Add these two lines to make the particles spin.
+            emitter.particleRotationRange = .pi * 2 // Random starting angle (0 to 360 degrees)
+            emitter.particleRotationSpeed = 5.0      // Spin speed in radians per second
+            emitter.particlePositionRange = CGVector(dx: 20, dy: 20)
+
+            emitter.particleScaleSequence = SKKeyframeSequence(keyframeValues: [initialSize, initialSize * 0.2], times: [0, 1])
+            
+        default:
+            return nil
+        }
+        
+        // Common properties
+        emitter.particleBirthRate = 200
+        emitter.particleAlphaSequence = SKKeyframeSequence(keyframeValues: [0.8, 0], times: [0, 1])
+        
+        return emitter
+    }
 
     func createHaloEffect(on parentNode: SKNode) {
         // 1. Create the halo node.

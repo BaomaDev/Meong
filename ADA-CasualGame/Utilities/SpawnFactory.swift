@@ -38,6 +38,33 @@ enum MoveKey {
 
 class SpawnFactory {
     // MARK: - Reusable Movement Action
+    private static var textureCache: [String: SKTexture] = [:]
+    private static var movingObstacleTextures: [String: [SKTexture]] = [:]
+    
+    static func preloadTextures() {
+        // Prevent re-loading if already done.
+        guard textureCache.isEmpty && movingObstacleTextures.isEmpty else { return }
+        
+        // --- 1. Preload all single textures ---
+        let singleTextureNames = [
+            "Coin", "Whiskas", "Catnip", "Catur", "BoxPisang", "alert", "BoxBuah",
+            "Tong", "Box", "BoxBerdiri", "GerobakSayur", "Sendal",
+            "BuildingWithSignwPlatform", "BuildingTallwPlatform", "TiangListrik"
+        ]
+        for name in singleTextureNames {
+            textureCache[name] = SKTexture(imageNamed: name)
+        }
+        
+        // --- 2. Preload all animation textures ---
+        let animatedObstacles: [String: ClosedRange<Int>] = [
+            "Ayam": 0...5,
+            "Sepeda 2": 0...7
+        ]
+        for (name, range) in animatedObstacles {
+            let textures = range.map { SKTexture(imageNamed: String(format: "\(name)_%05d", $0)) }
+            movingObstacleTextures[name] = textures
+        }
+    }
     
     static func createMovementAction(distance: CGFloat, speed: CGFloat) -> SKAction {
         let duration = TimeInterval(distance / speed)
@@ -53,7 +80,9 @@ class SpawnFactory {
     // MARK: - Collectibles
     
     static func createCoin(at position: CGPoint, characterCategory: UInt32, coinCategory: UInt32) -> SKSpriteNode {
-        let coin = SKSpriteNode(imageNamed: "Coin")
+        guard let coinTexture = textureCache["Coin"] else { fatalError("Coin texture not preloaded.") }
+        let coin = SKSpriteNode(texture: coinTexture)
+        
         coin.name = "Coin"
         coin.setScale(0.07)
         coin.position = position
@@ -71,7 +100,9 @@ class SpawnFactory {
     }
 
     static func createPowerUp(at position: CGPoint, characterCategory: UInt32, powerUpCategory: UInt32) -> SKSpriteNode {
-        let powerUp = SKSpriteNode(imageNamed: "Whiskas")
+        guard let powerUpTexture = textureCache["Whiskas"] else { fatalError("Whiskas texture not preloaded.") }
+        let powerUp = SKSpriteNode(texture: powerUpTexture)
+        
         powerUp.name = "Whiskas"
         powerUp.setScale(0.1)
         powerUp.position = position
@@ -89,7 +120,9 @@ class SpawnFactory {
     }
     
     static func createCatnip(at position: CGPoint, characterCategory: UInt32, catnipCategory: UInt32) -> SKSpriteNode {
-        let catnip = SKSpriteNode(imageNamed: "Catnip")
+        guard let catnipTexture = textureCache["Catnip"] else { fatalError("Catnip texture not preloaded.") }
+        let catnip = SKSpriteNode(texture: catnipTexture)
+        
         catnip.name = "Catnip"
         catnip.setScale(0.03)
         catnip.position = position
@@ -113,7 +146,9 @@ class SpawnFactory {
     static func createNoTouch(at position: CGPoint) -> SKSpriteNode {
         let textureNames = ["Catur", "BoxPisang"]
         let textureName = textureNames.randomElement()!
-        let texture = SKTexture(imageNamed: textureName)
+        
+        // Pull the randomly chosen texture from the cache.
+        guard let texture = textureCache[textureName] else { fatalError("\(textureName) texture not preloaded.") }
         
         var targetWidth: CGFloat = 0
         var objectPosition = position
@@ -151,10 +186,7 @@ class SpawnFactory {
     }
     
     static func createMovingAlert(at position: CGPoint, in scene: SKScene) {
-        print("test \(position)")
-        
-        let alertTexture = SKTexture(imageNamed: "alert")
-        let alert = SKSpriteNode(texture: alertTexture, color: .yellow, size: CGSize(width: 40, height: 40))
+        let alert = SKSpriteNode(texture: textureCache["alert"], color: .yellow, size: CGSize(width: 40, height: 40))
         
         // Place it slightly to the left of where the moving object will appear
         alert.position = CGPoint(x: position.x - 100, y: position.y)
@@ -177,19 +209,23 @@ class SpawnFactory {
     static func createMoving(at position: CGPoint) -> SKSpriteNode {
         let isChicken = Bool.random()
         let textureName = isChicken ? "Ayam" : "Sepeda 2"
-        let initialTexture = SKTexture(imageNamed: "\(textureName)_00000") // use first frame of animation
+        
+        guard let textures = movingObstacleTextures[textureName], let initialTexture = textures.first else {
+            fatalError("Moving obstacle textures for \(textureName) not preloaded.")
+        }
+        
         var desiredSize = CGSize(width: 50, height: 50)
         var desiredPosition = position
         
-        switch textureName{
+        switch textureName {
             case "Sepeda 2":
                 desiredSize = CGSize(width: 100, height: 100)
                 desiredPosition = CGPoint(x: position.x, y: position.y + 25)
             default:
                 desiredSize = CGSize(width: 50, height: 50)
                 desiredPosition = position
-            break
         }
+        
         let moving = SKSpriteNode(texture: initialTexture, color: .clear, size: desiredSize)
         
         moving.name = textureName
@@ -218,15 +254,9 @@ class SpawnFactory {
         let bobSequence = SKAction.sequence([bobUp, bobDown])
         let bobRepeat = SKAction.repeatForever(bobSequence)
 
-        // 🟨 Animation setup
-        let frameCount = isChicken ? 6 : 8  // Adjust if Chicken/gojek have different frame counts
-        let texturePrefix = "\(textureName)_"
-        let textureNames = (0..<frameCount).map { String(format: "\(texturePrefix)%05d", $0) }
-        let textures = textureNames.map { SKTexture(imageNamed: $0) }
         let animation = SKAction.animate(with: textures, timePerFrame: 0.05, resize: false, restore: false)
         let repeatAnimation = SKAction.repeatForever(animation)
 
-        // 🟦 Combine all actions
         moving.run(repeatAnimation, withKey: "moveAnim")
         let group = SKAction.group([moveAction, bobRepeat])
         let removeAction = SKAction.removeFromParent()
@@ -236,27 +266,17 @@ class SpawnFactory {
     }
     
     static func createDuckable(at position: CGPoint) -> Duckable {
-        let textureNames = ["BoxBuah"]
-        let textureName = textureNames.randomElement()!
-        let texture = SKTexture(imageNamed: textureName)
+        guard let duckableTexture = textureCache["BoxBuah"] else { fatalError("Duckable texture not preloaded.") }
         
-        var targetWidth: CGFloat = 0
+        var targetWidth = 70.0
         var objectPosition = position
         
-        switch textureName {
-            case "BoxBuah":
-                targetWidth = 70
-            default:
-                targetWidth = 50
-                objectPosition = CGPoint(x: position.x, y: position.y + 15)
-        }
-        
-        let aspectRatio = texture.size().height / texture.size().width
+        let aspectRatio = duckableTexture.size().height / duckableTexture.size().width
         let targetHeight = targetWidth * aspectRatio
         let size = CGSize(width: targetWidth, height: targetHeight)
         
-        let duckable = Duckable(texture: texture, color: .clear, size: size)
-        duckable.name = textureName
+        let duckable = Duckable(texture: duckableTexture, color: .clear, size: size)
+        duckable.name = "BoxBuah"
         duckable.position = objectPosition
         duckable.userData = ["obstacleType": "duckable"]
         
@@ -286,7 +306,9 @@ class SpawnFactory {
     static func createStepable(at position: CGPoint) -> Stepable {
         let textureNames = ["Tong", "Box", "BoxBerdiri", "GerobakSayur"]
         let textureName = textureNames.randomElement()!
-        let texture = SKTexture(imageNamed: textureName)
+        
+        // Pull the randomly chosen texture from the cache.
+        guard let texture = textureCache[textureName] else { fatalError("\(textureName) texture not preloaded.") }
         
         var targetWidth: CGFloat = 0
         var objectPosition = position
@@ -371,7 +393,7 @@ class SpawnFactory {
     // MARK: - Projectiles
 
     static func createProjectile(in scene: SKScene) -> (node: SKSpriteNode, startPoint: CGPoint) {
-        let texture = SKTexture(imageNamed: "Sendal")
+        guard let texture = textureCache["Sendal"] else { fatalError("Sendal texture not preloaded.") }
         
         let targetWidth: CGFloat = 30
         let aspectRatio = texture.size().height / texture.size().width
@@ -437,8 +459,8 @@ class SpawnFactory {
     }
     
     static func createTutorialProjectile(in scene: SKScene) -> SKSpriteNode {
-        let texture = SKTexture(imageNamed: "Sendal")
-        
+        guard let texture = textureCache["Sendal"] else { fatalError("Sendal texture not preloaded.") }
+
         let targetWidth: CGFloat = 30
         let aspectRatio = texture.size().height / texture.size().width
         let targetHeight = targetWidth * aspectRatio
@@ -553,7 +575,6 @@ class SpawnFactory {
 
         // Create the "TiangListrik" decoration as a child of the platform
         let decorationTexture = SKTexture(imageNamed: "TiangListrik")
-        let aspectRatio = decorationTexture.size().height / decorationTexture.size().width
         let decorationHeight = 300.0
         let decorationWidth = 600.0
         let decorationSize = CGSize(width: decorationWidth, height: decorationHeight)

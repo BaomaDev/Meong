@@ -98,14 +98,14 @@ class TutorialManager {
     
     // This method is called from GameScene when the player hits an obstacle
     func playerDidFail() {
-        print("Player failed step: \(currentStep). Retrying...")
+//        print("Player failed step: \(currentStep). Retrying...")
         // Immediately re-run the same step
         presentCurrentStep()
     }
     
     // This method is called from GameScene on a successful parry during the tutorial
     func playerDidSucceed() {
-        print("Player passed step: \(currentStep).")
+//        print("Player passed step: \(currentStep).")
         advance()
     }
     

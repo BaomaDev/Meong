@@ -49,7 +49,7 @@ final class SaveManager {
             let decoded = try JSONDecoder().decode(PlayerData.self, from: data)
             return decoded
         } catch {
-            print("⚠️ Load failed: \(error.localizedDescription), using default values.")
+//            print("⚠️ Load failed: \(error.localizedDescription), using default values.")
             return PlayerData(
                 isFirstTimeInstall: true, highScore: 0, coins: 0,
                 totalCoinsGained: 0, totalCoinsSpent: 0, totalGamesPlayed: 0,
@@ -66,19 +66,19 @@ final class SaveManager {
         do {
             let encoded = try JSONEncoder().encode(playerData)
             try encoded.write(to: fileURL, options: .atomic)
-            print("✅ Saved PlayerData: \(playerData)")
+//            print("✅ Saved PlayerData: \(playerData)")
         } catch {
-            print("❌ Save failed: \(error.localizedDescription)")
+//            print("❌ Save failed: \(error.localizedDescription)")
         }
     }
 
     func reset() {
         do {
             try FileManager.default.removeItem(at: fileURL)
-            print("🗑 Save data reset.")
+//            print("🗑 Save data reset.")
             playerData = Self.loadFromDisk(from: fileURL)
         } catch {
-            print("❌ Failed to delete save: \(error.localizedDescription)")
+//            print("❌ Failed to delete save: \(error.localizedDescription)")
         }
     }
     

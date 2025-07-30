@@ -144,7 +144,6 @@ final class AchievementManager: ObservableObject {
             achievements[index].isUnlocked = true
             achievements[index].isHidden = false
             saveAchievements()
-            print("Unlocked: \(achievements[index].title)")
             onUnlock?(achievements[index])
             unlockAchievement(at: index)
         }

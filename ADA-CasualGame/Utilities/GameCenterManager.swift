@@ -23,7 +23,6 @@ class GameCenterManager: ObservableObject {
     
     /// Authenticates the local player with Game Center.
     func authenticatePlayer() {
-        print("attempting authentication")
         GKLocalPlayer.local.authenticateHandler = { viewController, error in
             if let vc = viewController {
                 let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene

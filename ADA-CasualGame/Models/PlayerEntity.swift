@@ -342,7 +342,6 @@ class PlayerEntity: SKSpriteNode {
         stopAllAnimations()
         
         guard let textures = PlayerEntity.animationTextures["CatRunning"] else {
-            print("Error: Running animation textures not found.")
             return
         }
 
@@ -358,7 +357,6 @@ class PlayerEntity: SKSpriteNode {
         stopAllAnimations()
         
         guard let textures = PlayerEntity.animationTextures["CatDucking"] else {
-            print("Error: Running animation textures not found.")
             return
         }
 
@@ -373,7 +371,6 @@ class PlayerEntity: SKSpriteNode {
         stopAllAnimations()
         
         guard let textures = PlayerEntity.animationTextures["CatFlying"] else {
-            print("Error: Running animation textures not found.")
             return
         }
 
@@ -389,7 +386,6 @@ class PlayerEntity: SKSpriteNode {
         stopAllAnimations()
         
         guard let textures = PlayerEntity.animationTextures["CatJumping"] else {
-            print("Error: Running animation textures not found.")
             return
         }
 
@@ -405,7 +401,6 @@ class PlayerEntity: SKSpriteNode {
         stopAllAnimations()
         
         guard let textures = PlayerEntity.animationTextures["CatJumping"] else {
-            print("Error: Running animation textures not found.")
             return
         }
 
@@ -421,7 +416,6 @@ class PlayerEntity: SKSpriteNode {
         stopAllAnimations()
         
         guard let textures = PlayerEntity.animationTextures["CatWithoutFish"] else {
-            print("Error: Running animation textures not found.")
             return
         }
 
@@ -437,7 +431,6 @@ class PlayerEntity: SKSpriteNode {
         stopAllAnimations()
         
         guard let textures = PlayerEntity.animationTextures["CatTakesFish"] else {
-            print("Error: Running animation textures not found.")
             return
         }
 
@@ -453,7 +446,6 @@ class PlayerEntity: SKSpriteNode {
         stopAllAnimations()
         
         guard let textures = PlayerEntity.animationTextures["CatIdle"] else {
-            print("Error: Running animation textures not found.")
             return
         }
 
@@ -469,7 +461,6 @@ class PlayerEntity: SKSpriteNode {
         stopAllAnimations()
         
         guard let textures = PlayerEntity.animationTextures["CatWalk"] else {
-            print("Error: Running animation textures not found.")
             return
         }
 
@@ -485,7 +476,6 @@ class PlayerEntity: SKSpriteNode {
         stopAllAnimations()
         
         guard let textures = PlayerEntity.animationTextures["CatDiving"] else {
-            print("Error: Running animation textures not found.")
             return
         }
 
@@ -501,7 +491,6 @@ class PlayerEntity: SKSpriteNode {
         stopAllAnimations()
         
         guard let textures = PlayerEntity.animationTextures["CatParry"] else {
-            print("Error: Running animation textures not found.")
             return
         }
 
@@ -517,7 +506,6 @@ class PlayerEntity: SKSpriteNode {
         stopAllAnimations()
         
         guard let textures = PlayerEntity.animationTextures["CatDead"] else {
-            print("Error: Running animation textures not found.")
             return
         }
 
@@ -550,8 +538,6 @@ class PlayerEntity: SKSpriteNode {
     static func preloadAnimationTextures() {
         // Only run this once.
         guard animationTextures.isEmpty else { return }
-
-        print("Preloading animation textures...")
         
         let animations: [String: ClosedRange<Int>] = [
             "CatRunning": 0...11,
@@ -572,7 +558,5 @@ class PlayerEntity: SKSpriteNode {
                                 .map { SKTexture(imageNamed: $0) }
             animationTextures[name] = textures
         }
-        
-        print("Finished preloading textures.")
     }
 }

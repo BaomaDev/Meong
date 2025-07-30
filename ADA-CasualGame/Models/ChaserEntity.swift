@@ -11,13 +11,13 @@ import SpriteKit
 class ChaserEntity: SKSpriteNode {
     // Reference to the player
     weak var player: PlayerEntity?
+    private static var animationTextures: [String: [SKTexture]] = [:]
 
     init(player: PlayerEntity) {
         let texture = SKTexture(imageNamed: "Mak_Intro_00000")
 
         // Target width (for example)
         let targetWidth: CGFloat = 110
-        let aspectRatio = texture.size().height / texture.size().width
         let targetHeight : CGFloat = 110
 
         super.init(texture: texture, color: .clear, size: CGSize(width: targetWidth, height: targetHeight))  // ✅ calculated size
@@ -33,6 +33,20 @@ class ChaserEntity: SKSpriteNode {
 
     required init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+    
+    static func preloadAnimationTextures() {
+        guard animationTextures.isEmpty else { return }
+        
+        let animations: [String: ClosedRange<Int>] = [
+            "Mak_Run": 0...5, "Mak_Intro": 0...23, "Mak_Idle": 0...11,
+            "Mak_Terbang": 0...59, "Mak_Nangkep": 0...30
+        ]
+        
+        for (name, range) in animations {
+            let textures = range.map { SKTexture(imageNamed: String(format: "\(name)_%05d", $0)) }
+            animationTextures[name] = textures
+        }
     }
 
     func updateFollowPosition() {
@@ -55,8 +69,7 @@ class ChaserEntity: SKSpriteNode {
         // Generate texture names based on your file naming
         stopAllAnimation()
         
-        let textureNames = (0...5).map { String(format: "Mak_Run_%05d", $0) }
-        let textures = textureNames.map { SKTexture(imageNamed: $0) }
+        guard let textures = ChaserEntity.animationTextures["Mak_Run"] else { return }
 
          // Create animation
         let animation = SKAction.animate(with: textures, timePerFrame: 0.1, resize: false, restore: false)
@@ -69,8 +82,7 @@ class ChaserEntity: SKSpriteNode {
         // Generate texture names based on your file naming
         stopAllAnimation()
         
-        let textureNames = (0...23).map { String(format: "Mak_Intro_%05d", $0) }
-        let textures = textureNames.map { SKTexture(imageNamed: $0) }
+        guard let textures = ChaserEntity.animationTextures["Mak_Intro"] else { return }
 
          // Create animation
         let animation = SKAction.animate(with: textures, timePerFrame: 0.1, resize: false, restore: false)
@@ -83,8 +95,7 @@ class ChaserEntity: SKSpriteNode {
         // Generate texture names based on your file naming
         stopAllAnimation()
         
-        let textureNames = (0...11).map { String(format: "Mak_Idle_%05d", $0) }
-        let textures = textureNames.map { SKTexture(imageNamed: $0) }
+        guard let textures = ChaserEntity.animationTextures["Mak_Idle"] else { return }
 
          // Create animation
         let animation = SKAction.animate(with: textures, timePerFrame: 0.1, resize: false, restore: false)
@@ -97,8 +108,7 @@ class ChaserEntity: SKSpriteNode {
         // Generate texture names based on your file naming
         stopAllAnimation()
         
-        let textureNames = (0...59).map { String(format: "Mak_Terbang_%05d", $0) }
-        let textures = textureNames.map { SKTexture(imageNamed: $0) }
+        guard let textures = ChaserEntity.animationTextures["Mak_Terbang"] else { return }
 
          // Create animation
         let animation = SKAction.animate(with: textures, timePerFrame: 0.08, resize: false, restore: false)
@@ -111,8 +121,7 @@ class ChaserEntity: SKSpriteNode {
         // Generate texture names based on your file naming
         stopAllAnimation()
         
-        let textureNames = (0...30).map { String(format: "Mak_Nangkep_%05d", $0) }
-        let textures = textureNames.map { SKTexture(imageNamed: $0) }
+        guard let textures = ChaserEntity.animationTextures["Mak_Nangkep"] else { return }
 
          // Create animation
         let animation = SKAction.animate(with: textures, timePerFrame: 0.1, resize: false, restore: false)

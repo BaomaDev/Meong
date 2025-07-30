@@ -344,7 +344,6 @@ struct ShopView: View {
         .padding(.top, 20)
         .padding(.leading, 20)
         .onAppear{
-            print("Opening ShopView")
             DispatchQueue.main.async {
                 coins = SaveManager.shared.playerData.coins
                 purchasedCostumes = SaveManager.shared.playerData.unlockedCostumes
@@ -355,7 +354,6 @@ struct ShopView: View {
             scene.costumePurchasedHandler = { self.purchasedCostumes = $0 }
         }
         .onDisappear{
-            print("Closed ShopView")
             scene.savePlayerData()
             scene.coinUpdateHandler = nil
             scene.selectedCostumeHandler = nil

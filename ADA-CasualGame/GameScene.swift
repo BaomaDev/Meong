@@ -66,7 +66,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     // MARK: - Scene Lifecycle (Initializers)
     override func didMove(to view: SKView) {
+        // Preload sprites
         PlayerEntity.preloadAnimationTextures()
+        ChaserEntity.preloadAnimationTextures()
+        EffectsFactory.shared.preloadAssets()
+        SpawnFactory.preloadTextures()
+        
         setupProperties()
         
         NotificationCenter.default.addObserver(self, selector: #selector(appWillResignActive), name: UIApplication.willResignActiveNotification, object: nil)
@@ -452,7 +457,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     @objc private func appWillResignActive() {
         guard gamePhase == .playing || gamePhase == .tutorial else { return }
         
-        print("App is resigning active, pausing game.")
+//        print("App is resigning active, pausing game.")
         GameScene.isGamePaused = true
         // 1. Pause the game's internal logic.
         self.pauseGame()
@@ -550,9 +555,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
                 startChaserCatchupSequence()
             }
         }
-
-//                print(player.currentState)
-//                print(currentSurface)
     }
     
     // MARK: - SKPhysicsContactDelegate
@@ -623,7 +625,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             // Return early to prevent the player from taking damage during the tutorial.
             return
         }
-        print(obstacleNode.name ?? "Unknown obstacle name")
+//        print(obstacleNode.name ?? "Unknown obstacle name")
         var nodeToHandle: SKNode = obstacleNode
         
         // Determine the correct node to handle (the parent for complex obstacles)
@@ -864,7 +866,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         guard abs(newFactor - lastSpeedFactor) >= 0.3 else { return }
         
         lastSpeedFactor = newFactor
-        print("current game speed: \(gameSpeed)")
+//        print("current game speed: \(gameSpeed)")
         
         worldGenerator?.updateAllNodeSpeedsToMatchGameSpeed()
         worldGenerator?.stopAllSpawning()
@@ -880,11 +882,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     // MARK: - Shop Logic
     func buyCostume(costume: String, price coin:Int) {
         if SaveManager.shared.playerData.coins < coin {
-            print("Not enough coin")
+//            print("Not enough coin")
             return
         }
         if SaveManager.shared.playerData.unlockedCostumes.contains(costume) {
-            print("Already purchased")
+//            print("Already purchased")
             return
         }
         
@@ -898,10 +900,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     func selectCostume(_ costume: String) {
         if !SaveManager.shared.playerData.unlockedCostumes.contains(costume) {
-            print("Costume not purchased yet")
+//            print("Costume not purchased yet")
             return
         }
-        print(costume)
+//        print(costume)
         SaveManager.shared.modify { data in
             data.selectedCostume = costume
             selectedCostumeHandler?(costume)
@@ -969,7 +971,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             // Delay gameOver by the length of the catch animation (e.g. 1.0 sec)
             self.run(SKAction.wait(forDuration: 1.3)) {
                 self.gameOver()
-                print("GameOver")
+//                print("GameOver")
             }
         }
     }
@@ -996,7 +998,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     // MARK: - Save Func
     @objc func savePlayerData() {
-        print(gamePhase)
+//        print(gamePhase)
         guard gamePhase == .gameOver || gamePhase == .homeScreen || gamePhase == .none || gamePhase == .tutorial else { return }
         SaveManager.shared.save()
     }

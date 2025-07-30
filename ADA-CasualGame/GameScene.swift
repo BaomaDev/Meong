@@ -132,7 +132,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             // MARK: - Title UI (Still using image)
             titleUI = SKSpriteNode(imageNamed: "UI_Title")
             titleUI?.position = CGPoint(x: size.width / 2, y: size.height * 0.8)
-            titleUI?.setScale(0.3)
+            titleUI?.setScale(0.06)
             titleUI?.zPosition = 1000
             titleUI?.alpha = 0
             addChild(titleUI!)

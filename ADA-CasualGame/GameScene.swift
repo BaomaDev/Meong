@@ -66,6 +66,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     // MARK: - Scene Lifecycle (Initializers)
     override func didMove(to view: SKView) {
+        PlayerEntity.preloadAnimationTextures()
         setupProperties()
         
         NotificationCenter.default.addObserver(self, selector: #selector(appWillResignActive), name: UIApplication.willResignActiveNotification, object: nil)

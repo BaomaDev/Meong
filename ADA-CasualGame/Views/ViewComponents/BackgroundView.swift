@@ -11,6 +11,7 @@ class BackgroundView {
     private weak var scene: SKScene?
     private var backgrounds: [SKSpriteNode] = []
     private var isPaused: Bool = false
+    private var rereAppear: Int = 0
 
     init(scene: SKScene) {
         self.scene = scene
@@ -42,7 +43,7 @@ class BackgroundView {
             backgrounds.append(background)
         }
         
-        if Double.random(in: 0...1) <= 0.005 { // 0.5% chance
+        if Double.random(in: 0...1) <= 0.05 { // 0.5% chance
             var easterEggFrames: [SKTexture] = []
             for i in 0...68 {
                 // Use the correct filename format to load each frame.
@@ -62,6 +63,9 @@ class BackgroundView {
                 easterEgg.run(SKAction.repeatForever(animationAction))
                 secondBackground.addChild(easterEgg)
             }
+            rereAppear+=1
+            let stats = LiveStats(rereAppearances: rereAppear)
+            AchievementManager.shared.updateProgress(stats)
         }
     }
     

@@ -19,7 +19,8 @@ struct Achievement: Codable {
 }
 
 struct LiveStats {
-    var catnipsEaten: Int
+    var catnipsEaten: Int?
+    var rereAppearances: Int?
 }
 
 final class AchievementManager: ObservableObject {
@@ -141,6 +142,7 @@ final class AchievementManager: ObservableObject {
            !achievements[index].isUnlocked,
            condition() {
             achievements[index].isUnlocked = true
+            achievements[index].isHidden = false
             saveAchievements()
             print("Unlocked: \(achievements[index].title)")
             onUnlock?(achievements[index])
@@ -150,7 +152,10 @@ final class AchievementManager: ObservableObject {
     
     func updateProgress(_ stats: LiveStats) {
         unlockIf("Zoomies") {
-            stats.catnipsEaten >= 10
+            stats.catnipsEaten ?? 0 >= 10
+        }
+        unlockIf("Let me break it down") {
+            stats.rereAppearances ?? 0 >= 1
         }
     }
 }

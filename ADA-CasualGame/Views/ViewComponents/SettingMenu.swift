@@ -74,6 +74,7 @@ struct SettingMenu: View {
                             scene.setBgmVolume(bgmVolume)
                         }
                         .frame(width: 300)
+                        .tint(.orange)
                         
                         Text("SFX Volume")
                             .font(.custom("Comic Lemon", size: 16))
@@ -93,6 +94,7 @@ struct SettingMenu: View {
                             scene.setSfxVolume(sfxVolume)
                         }
                         .frame(width: 300)
+                        .tint(.orange)
                     }
                 }
                 .padding(.bottom, 40)

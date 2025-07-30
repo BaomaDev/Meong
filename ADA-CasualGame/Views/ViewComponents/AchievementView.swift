@@ -99,7 +99,7 @@ struct AchievementView: View {
                             .padding(.horizontal, 25)
                         }
                     }
-                    .padding(.top, 20)
+                    .padding(.vertical, 20)
                     .background(
                         GeometryReader { contentProxy in
                             Color.clear

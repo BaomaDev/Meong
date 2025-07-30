@@ -203,14 +203,13 @@ struct LeaderboardView: View {
                 .frame(width: UIBoxWidth*0.9, height: UIBoxHeight*0.85)
                 .clipped()
             }
-            .padding(.top, 40)
-            .offset(y: -50)
+            .padding(.top, -60)
         }
-        .padding(.top, 20)
-        .padding(.leading, 20)
         .task {
             await manager.fetchLeaderboard()
         }
+        .padding(.top, 20)
+        .padding(.leading, 20)
     }
 }
 

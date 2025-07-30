@@ -685,6 +685,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         self.isPaused = false
         GameScene.isGamePaused = false
         
+        self.removeAllActions()
+        
         EffectsFactory.shared.stopAllBgm()
         
         for child in self.children {
@@ -738,6 +740,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     func returnToHomeScreen() {
         guard gamePhase != .homeScreen || gamePhase != .tutorial else { return }
+        
+        self.removeAllActions()
         
         if let recognizers = self.view?.gestureRecognizers {
             for recognizer in recognizers {

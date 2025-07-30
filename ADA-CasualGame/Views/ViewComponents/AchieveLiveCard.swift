@@ -31,7 +31,7 @@ struct AchieveLiveCard: View {
                             .foregroundStyle(.black)
                             .lineLimit(1)
                         Text(achievement.description)
-                            .font(.custom("Comic Lemon", size: 9))
+                            .font(.custom("Comic Lemon", size: 12))
                             .foregroundColor(.gray)
                             .lineLimit(1)
                             .truncationMode(.tail)
@@ -39,7 +39,7 @@ struct AchieveLiveCard: View {
                 }
                 .padding(.horizontal, 10)
             }
-            .frame(width: 300, height: 50)
+            .frame(width: 300, height: 60)
             .padding(.top, 20)
             
             Spacer()

@@ -465,7 +465,7 @@ class WorldGenerator {
         if catnipCoolDown > 0 {
             catnipCoolDown -= 1
         } else {
-            if catnipChance + Double(catnipBonus) > 0.1 {
+            if catnipChance + Double(catnipBonus) > 0.65 {
                 attempts = 0
                 while attempts < 10 {
                     attempts += 1

@@ -115,7 +115,7 @@ struct ShopView: View {
                                         .font(.custom("Comic Lemon", size: 12))
                                         .foregroundStyle(.black)
                                     Button(action: {
-                                        scene.buyCostume(costume: "costume_kitter", price: 1)
+                                        scene.buyCostume(costume: "costume_kitter", price: 1000)
                                     }){
                                         Image("BuyButton")
                                             .resizable()

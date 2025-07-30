@@ -159,7 +159,6 @@ class EffectsFactory {
             currentNode.run(SKAction.sequence([fadeOut, remove]))
         }
         
-        let delay = (bgmNode == nil && scene.childNode(withName: "background_music_node") == nil) ? 0.0 : 1.0
         let play = SKAction.run { [weak self] in
             guard let self = self, let scene = self.scene else { return }
             
@@ -176,8 +175,7 @@ class EffectsFactory {
             newNode.run(SKAction.changeVolume(to: SaveManager.shared.playerData.bgmVolume, duration: 1.5))
         }
         
-        let wait = SKAction.wait(forDuration: delay)
-        let sequence = SKAction.sequence([wait, play])
+        let sequence = SKAction.sequence([play])
         
         scene.run(sequence, withKey: bgmKey)
     }

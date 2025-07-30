@@ -11,7 +11,6 @@ class BackgroundView {
     private weak var scene: SKScene?
     private var backgrounds: [SKSpriteNode] = []
     private var isPaused: Bool = false
-    // private var cloudTextures: [SKTexture] = [] // Removed as per your request
 
     init(scene: SKScene) {
         self.scene = scene
@@ -38,13 +37,34 @@ class BackgroundView {
             )
             background.position = CGPoint(x: CGFloat(i) * background.size.width, y: 0)
             background.zPosition = -9
-            background.name = "scrollingBackground" // Consistent name for reference
+            background.name = "scrollingBackground"
             scene.addChild(background)
             backgrounds.append(background)
         }
+        
+        if Double.random(in: 0...1) <= 0.005 { // 0.5% chance
+            var easterEggFrames: [SKTexture] = []
+            for i in 0...68 {
+                // Use the correct filename format to load each frame.
+                let textureName = String(format: "easter-egg-%d", i)
+                easterEggFrames.append(SKTexture(imageNamed: textureName))
+            }
+
+            let animationAction = SKAction.animate(with: easterEggFrames, timePerFrame: 0.05)
+            
+            let easterEgg = SKSpriteNode(texture: easterEggFrames[0])
+            easterEgg.setScale(0.25)
+            
+            if let secondBackground = backgrounds.last {
+                easterEgg.position = CGPoint(x: secondBackground.size.width * 0.5,
+                                             y: groundHeight + 55)
+                easterEgg.zPosition = 1
+                easterEgg.run(SKAction.repeatForever(animationAction))
+                secondBackground.addChild(easterEgg)
+            }
+        }
     }
     
-    // --- ADD THIS NEW METHOD ---
     func pauseScrolling() {
         isPaused = true
     }

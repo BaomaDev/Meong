@@ -17,16 +17,15 @@ struct AchievementView: View {
                 .resizable()
                 .aspectRatio(contentMode: .fit)
                 .frame(width: UIBoxWidth)
-            
-            VStack (spacing: 20){
+            VStack{
                 ZStack {
                     HStack {
                         Spacer()
-                        Image("ShopBanner")
+                        Image("Achievements_Banner")
                             .resizable()
                             .aspectRatio(contentMode: .fit)
-                            .frame(width: 200)
-                            .padding(.top, -50)
+                            .frame(width: 300)
+                            .padding(.bottom, 20)
                         Spacer()
                     }
                     
@@ -39,105 +38,97 @@ struct AchievementView: View {
                                     .resizable()
                                     .aspectRatio(contentMode: .fit)
                                     .frame(width: 50)
-                                    .padding(.leading, 15)
-                                    .padding(.top, 20)
                             }
                             .padding(2)
+                            .padding(.bottom, 12)
                             
                             Spacer()
                             
                             Spacer()
                         }
-                        .padding(.top, 10)
+                        .padding(.leading, 40)
                     }
                 }
                 .padding(.horizontal)
-                .padding(.top, -90)
+                .padding(.top, -70)
                 
                 ScrollView {
-                    VStack(spacing: 10) {
+                    VStack(spacing: 20) {
                         ForEach(achievementManager.achievements.indices, id: \.self) { index in
                             let achievement = achievementManager.achievements[index]
-                            HStack(spacing: 15) {
-                                if achievement.isHidden {
-                                    Text("Run through the street to find something!")
-                                        .font(.custom("Comic Lemon", size: 16))
-                                        .foregroundStyle(.black)
-                                        .frame(maxWidth: .infinity)
-                                        .padding(.vertical, 20)
-                                } else {
-                                    Image(achievement.image)
-                                        .resizable()
-                                        .frame(width: 50, height: 50)
-                                        .cornerRadius(8)
-
-                                    VStack(alignment: .leading, spacing: 4) {
-                                        Text(achievement.title)
+                            ZStack {
+                                Color.white.opacity(0.7)
+                                    .cornerRadius(20)
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 10)
+                                            .stroke(Color(CGColor(red: 242/255, green: 190/255, blue: 85/255, alpha: 1)), lineWidth: 5)
+                                    )
+                                    .shadow(color: .black.opacity(0.2), radius: 4, x: 0, y: 2)
+//                                    .frame(maxWidth: .infinity)
+                                HStack (spacing: 15) {
+                                    if achievement.isHidden {
+                                        Text("Run through the street to find something!")
                                             .font(.custom("Comic Lemon", size: 16))
-                                            .foregroundColor(.black)
-
-                                        Text(achievement.description)
-                                            .font(.custom("Comic Lemon", size: 12))
-                                            .foregroundColor(.gray)
-
-                                        if achievement.isUnlocked {
-                                            Text(achievement.isClaimed ? "Claimed" : "Unlocked")
-                                                .font(.custom("Comic Lemon", size: 12))
-                                                .font(.caption)
-                                                .foregroundColor(.green)
-                                        } else {
-                                            Text("Locked")
-                                                .font(.custom("Comic Lemon", size: 12))
-                                                .font(.caption)
-                                                .foregroundColor(.red)
-                                        }
-                                    }
-
-                                    Spacer()
-
-                                    Button(action: {
-                                        AchievementManager.shared.claimReward(for: index)
-                                    }) {
-                                        HStack {
-                                            Text(
-                                                !achievement.isUnlocked ? "Claim \(achievement.reward)" :
-                                                achievement.isClaimed ? "Claimed" :
-                                                "Claim \(achievement.reward)"
+                                            .foregroundColor(Color(CGColor(red: 150/255, green: 85/255, blue: 45/255, alpha: 1)))
+                                            .frame(maxWidth: .infinity)
+                                            .padding(.vertical, 35)
+                                    } else {
+                                        Image(achievement.image)
+                                            .resizable()
+                                            .frame(width: 80, height: 80)
+                                            .overlay(
+                                                Circle()
+                                                    .stroke(Color(CGColor(red: 242/255, green: 190/255, blue: 85/255, alpha: 1)), lineWidth: 5)
                                             )
-                                            if !achievement.isClaimed {
-                                                Image("Coin")
-                                                    .resizable()
-                                                    .frame(width: 25, height: 25)
-                                            }
+                                            .padding(.leading, -20)
+                                            
+                                        VStack(alignment: .leading, spacing: 4) {
+                                            Text(achievement.title)
+                                                .font(.custom("Comic Lemon", size: 16))
+                                                .foregroundColor(Color(CGColor(red: 150/255, green: 85/255, blue: 45/255, alpha: 1)))
+
+                                            Text(achievement.description)
+                                                .font(.custom("Comic Lemon", size: 16))
+                                                .foregroundColor(Color(CGColor(red: 200/255, green: 160/255, blue: 130/255, alpha: 1)))
                                         }
-                                        .font(.custom("Comic Lemon", size: 16))
-                                        .padding(.horizontal, 10)
-                                        .padding(.vertical, 5)
-                                        .background(
-                                            achievement.isUnlocked && !achievement.isClaimed
-                                                ? Color.yellow
-                                                : Color.gray.opacity(0.5)
-                                        )
-                                        .cornerRadius(5)
-                                        .foregroundStyle(.black)
+
+                                        Spacer()
+
+                                        Button(action: {
+                                            AchievementManager.shared.claimReward(for: index)
+                                        }) {
+                                            ZStack {
+                                                Image(!achievement.isUnlocked ? "Achievements_ButtonClaimInactive" :
+                                                        achievement.isClaimed ? "Achievements_ButtonClaimed" :
+                                                        "Achievements_ButtonClaim")
+                                                .resizable()
+                                                .aspectRatio(contentMode: .fit)
+                                                .frame(width: 100)
+                                                Text(achievement.isClaimed ? "" :
+                                                    "\(achievement.reward)"
+                                                )
+                                                .padding(.leading, 15)
+                                            }
+                                            .font(.custom("Comic Lemon", size: 20))
+                                            .padding(.horizontal, 10)
+                                            .padding(.vertical, 5)
+                                            .cornerRadius(5)
+                                            .foregroundStyle(.white)
+                                        }
+                                        .disabled(!achievement.isUnlocked || achievement.isClaimed)
+                                        .padding(.trailing, -25)
                                     }
-                                    .disabled(!achievement.isUnlocked || achievement.isClaimed)
                                 }
+                                .padding(.horizontal, 25)
+                                .padding(.vertical, -5)
+                                .padding(.leading, -25)
                             }
-                            .padding()
-                            .background(Color.white.opacity(0.7))
-                            .cornerRadius(10)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 10)
-                                    .stroke(Color(CGColor(red: 242/255, green: 190/255, blue: 85/255, alpha: 1)), lineWidth: 2.5)
-                            )
-                            .shadow(color: .black.opacity(0.2), radius: 4, x: 0, y: 2)
                         }
                     }
                     .padding()
                     .padding(.horizontal, 20)
                 }
-                .frame(maxHeight: 220)
+                .frame(maxWidth: 650, maxHeight: 220)
             }
             .padding(.top, 60)
         }

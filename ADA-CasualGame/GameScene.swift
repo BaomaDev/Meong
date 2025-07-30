@@ -114,134 +114,147 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
     
     func showTapToStart() {
-        // <<<<<<< derend3
-        internalScore = 0
-        catnipCount = 0
-        lastDistanceBonusScore = 0
-        scoreUpdateHandler?(internalScore)
-        healthUpdateHandler?(9)
-        distanceUpdateHandler?(3)
-        coinUpdateHandler?(0)
-        gameSpeed = baseGameSpeed
-        
-        EffectsFactory.shared.playBgm(named: "BGM", isMainTrack: true)
-        EffectsFactory.shared.refreshBgmVolume(volume: SaveManager.shared.playerData.bgmVolume)
-        
-        worldGenerator?.stopAllSpawning()
-        isWaitingForTapToStart = true
-        
-        // MARK: - Tap to Start Label (Text-based)
-        // Shadow label
-        let shadowLabel = SKLabelNode(text: "Tap to Start")
-        shadowLabel.name = "TapToStartShadowLabel"
-        shadowLabel.fontSize = 32
-        shadowLabel.fontName = "Comic Lemon"
-        shadowLabel.fontColor = SKColor.black.withAlphaComponent(0.5)
-        shadowLabel.position = CGPoint(x: size.width / 2 + 2, y: (size.height / 2) - 2)
-        shadowLabel.zPosition = 999 // Behind the main label
-        addChild(shadowLabel)
-        
-        // Main label
-        let label = SKLabelNode(text: "Tap to Start")
-        label.fontSize = 32
-        label.fontName = "Comic Lemon"
-        label.fontColor = .white
-        label.position = CGPoint(x: size.width / 2, y: (size.height / 2))
-        label.zPosition = 1000
-        label.name = "TapToStartLabel"
-        addChild(label)
-        tapToStartUI = nil
-        
-        // MARK: - Title UI (Still using image)
-        titleUI = SKSpriteNode(imageNamed: "UI_Title")
-        titleUI?.position = CGPoint(x: size.width / 2, y: size.height * 0.8)
-        titleUI?.setScale(0.3)
-        titleUI?.zPosition = 1000
-        titleUI?.alpha = 0
-        addChild(titleUI!)
-        
-        gamePhase = .none
-        gameStateUpdateHandler?(gamePhase)
-        
-        let backgroundHome = SKSpriteNode(imageNamed: "Background_Home")
-        backgroundHome.zPosition = -1
-        backgroundHome.position = CGPoint(x: size.width / 2, y: size.height / 2)
-        backgroundHome.size = size
-        addChild(backgroundHome)
-        self.backgroundHome = backgroundHome
-        
-        createPlayer(x: 10)
-        createChaser()
-        
-        // MARK: - Gerobak Ikan
-        let gerobakIkan = SKSpriteNode(imageNamed: "TokoIkan")
-        gerobakIkan.position = CGPoint(x: 126, y: 137)
-        gerobakIkan.setScale(0.18)
-        gerobakIkan.zPosition = 2
-        addChild(gerobakIkan)
-        self.gerobakIkan = gerobakIkan
-        
-        // MARK: - Finalize layout after frame update
-        run(SKAction.wait(forDuration: 0.01)) { [weak self] in
-            guard let self = self, let chaser = self.chaser else { return }
-            let startXChaser = self.size.width / 2
-            let startY = self.size.height * 0.2
-            chaser.position = CGPoint(x: startXChaser, y: startY)
-            chaser.startIdleAnimation()
-            
-            gerobakIkan.position.x = chaser.position.x
-            player?.position.x = chaser.position.x - 120
-            player?.startIdleAnimation()
-            player?.constraints = nil
-            
-            if self.isWaitingForAnimationHome {
-                let moveCamera = SKAction.moveTo(y: size.height / 2, duration: 3)
-                self.camera?.run(moveCamera, completion: {
-                    let moveTitle = SKAction.moveTo(y: self.size.height * 0.8, duration: 2)
-                    let changeOpacityTitle = SKAction.fadeAlpha(to: 1.0, duration: 1.0)
-                    let sequenceTitle = SKAction.sequence([changeOpacityTitle, moveTitle, .wait(forDuration: 2)])
-                    self.titleUI?.run(sequenceTitle)
-                    self.titleUI?.run(moveTitle, completion: {
-                        let fadeInOut = SKAction.sequence([
-                            SKAction.fadeAlpha(to: 0.4, duration: 0.8),
-                            SKAction.fadeAlpha(to: 1.0, duration: 0.8)
-                        ])
-                        label.run(SKAction.repeatForever(fadeInOut))
-                        let fadeIn = SKAction.fadeIn(withDuration: 3)
-                        let fadeOut = SKAction.fadeOut(withDuration: 3)
-                        let repeatAnimation = SKAction.repeatForever(SKAction.sequence([fadeIn, fadeOut]))
-                        self.tapToStartUI?.run(repeatAnimation)
-                        self.gamePhase = .homeScreen
-                        self.gameStateUpdateHandler?(self.gamePhase)
-                        self.run(SKAction.wait(forDuration: 1)) {
-                            self.isWaitingForAnimationHome = false
-                            self.isWaitingForTapToStart = true
-                        }
+            internalScore = 0
+            catnipCount = 0
+            lastDistanceBonusScore = 0
+            scoreUpdateHandler?(internalScore)
+            healthUpdateHandler?(9)
+            distanceUpdateHandler?(3)
+            coinUpdateHandler?(0)
+            gameSpeed = baseGameSpeed
+
+            EffectsFactory.shared.playBgm(named: "BGM", isMainTrack: true)
+            EffectsFactory.shared.refreshBgmVolume(volume: SaveManager.shared.playerData.bgmVolume)
+
+            worldGenerator?.stopAllSpawning()
+            isWaitingForTapToStart = true
+
+            // MARK: - Title UI (Still using image)
+            titleUI = SKSpriteNode(imageNamed: "UI_Title")
+            titleUI?.position = CGPoint(x: size.width / 2, y: size.height * 0.8)
+            titleUI?.setScale(0.3)
+            titleUI?.zPosition = 1000
+            titleUI?.alpha = 0
+            addChild(titleUI!)
+
+            gamePhase = .none
+            gameStateUpdateHandler?(gamePhase)
+
+            let backgroundHome = SKSpriteNode(imageNamed: "Background_Home")
+            backgroundHome.zPosition = -1
+            backgroundHome.position = CGPoint(x: size.width / 2, y: size.height / 2)
+            backgroundHome.size = size
+            addChild(backgroundHome)
+            self.backgroundHome = backgroundHome
+
+            createPlayer(x: 10)
+            createChaser()
+
+            // MARK: - Gerobak Ikan
+            let gerobakIkan = SKSpriteNode(imageNamed: "TokoIkan")
+            gerobakIkan.position = CGPoint(x: 126, y: 137)
+            gerobakIkan.setScale(0.18)
+            gerobakIkan.zPosition = 2
+            addChild(gerobakIkan)
+            self.gerobakIkan = gerobakIkan
+
+            // MARK: - Finalize layout after frame update
+            run(SKAction.wait(forDuration: 0.01)) { [weak self] in
+                guard let self = self, let chaser = self.chaser else { return }
+                let startXChaser = self.size.width / 2
+                let startY = self.size.height * 0.2
+                chaser.position = CGPoint(x: startXChaser, y: startY)
+                chaser.startIdleAnimation()
+
+                gerobakIkan.position.x = chaser.position.x
+                player?.position.x = chaser.position.x - 120
+                player?.startIdleAnimation()
+                player?.constraints = nil
+
+                if self.isWaitingForAnimationHome {
+                    let moveCamera = SKAction.moveTo(y: self.size.height / 2, duration: 3)
+                    self.camera?.run(moveCamera, completion: {
+                        let moveTitle = SKAction.moveTo(y: self.size.height * 0.8, duration: 2)
+                        let changeOpacityTitle = SKAction.fadeAlpha(to: 1.0, duration: 1.0)
+                        let sequenceTitle = SKAction.sequence([changeOpacityTitle, moveTitle, .wait(forDuration: 2)])
+                        self.titleUI?.run(sequenceTitle)
+                        self.titleUI?.run(moveTitle, completion: {
+                            // Shadow label
+                            let shadowLabel = SKLabelNode(text: "Tap to Start")
+                            shadowLabel.name = "TapToStartShadowLabel"
+                            shadowLabel.fontSize = 32
+                            shadowLabel.fontName = "Comic Lemon"
+                            shadowLabel.fontColor = SKColor.black.withAlphaComponent(0.5)
+                            shadowLabel.position = CGPoint(x: self.size.width / 2 + 2, y: (self.size.height / 2) - 2)
+                            shadowLabel.zPosition = 999
+                            self.addChild(shadowLabel)
+
+                            // Main label
+                            let label = SKLabelNode(text: "Tap to Start")
+                            label.fontSize = 32
+                            label.fontName = "Comic Lemon"
+                            label.fontColor = .white
+                            label.position = CGPoint(x: self.size.width / 2, y: (self.size.height / 2))
+                            label.zPosition = 1000
+                            label.name = "TapToStartLabel"
+                            self.addChild(label)
+                            self.tapToStartUI = label
+
+                            let fadeInOut = SKAction.sequence([
+                                SKAction.fadeAlpha(to: 0.4, duration: 0.8),
+                                SKAction.fadeAlpha(to: 1.0, duration: 0.8)
+                            ])
+                            label.run(SKAction.repeatForever(fadeInOut))
+
+                            self.gamePhase = .homeScreen
+                            self.gameStateUpdateHandler?(self.gamePhase)
+                            self.run(SKAction.wait(forDuration: 1)) {
+                                self.isWaitingForAnimationHome = false
+                                self.isWaitingForTapToStart = true
+                            }
+                        })
                     })
-                })
-            } else {
-                self.titleUI?.alpha = 1.0
-                self.titleUI?.position.y = self.size.height * 0.8
-                self.camera?.position.y = self.size.height / 2
-                let fadeInOut = SKAction.sequence([
-                    SKAction.fadeAlpha(to: 0.4, duration: 0.8),
-                    SKAction.fadeAlpha(to: 1.0, duration: 0.8)
-                ])
-                label.run(SKAction.repeatForever(fadeInOut))
-                
-                let fadeIn = SKAction.fadeIn(withDuration: 3)
-                let fadeOut = SKAction.fadeOut(withDuration: 3)
-                let repeatAnimation = SKAction.repeatForever(SKAction.sequence([fadeIn, fadeOut]))
-                self.tapToStartUI?.run(repeatAnimation)
-                self.gamePhase = .homeScreen
-                self.gameStateUpdateHandler?(self.gamePhase)
-                self.run(SKAction.wait(forDuration: 1)) {
-                    self.isWaitingForAnimationHome = false
-                    self.isWaitingForTapToStart = true
+                } else {
+                    self.titleUI?.alpha = 1.0
+                    self.titleUI?.position.y = self.size.height * 0.8
+                    self.camera?.position.y = self.size.height / 2
+
+                    // Shadow label
+                    let shadowLabel = SKLabelNode(text: "Tap to Start")
+                    shadowLabel.name = "TapToStartShadowLabel"
+                    shadowLabel.fontSize = 32
+                    shadowLabel.fontName = "Comic Lemon"
+                    shadowLabel.fontColor = SKColor.black.withAlphaComponent(0.5)
+                    shadowLabel.position = CGPoint(x: self.size.width / 2 + 2, y: (self.size.height / 2) - 2)
+                    shadowLabel.zPosition = 999
+                    self.addChild(shadowLabel)
+
+                    // Main label
+                    let label = SKLabelNode(text: "Tap to Start")
+                    label.fontSize = 32
+                    label.fontName = "Comic Lemon"
+                    label.fontColor = .white
+                    label.position = CGPoint(x: self.size.width / 2, y: (self.size.height / 2))
+                    label.zPosition = 1000
+                    label.name = "TapToStartLabel"
+                    self.addChild(label)
+                    self.tapToStartUI = label
+
+                    let fadeInOut = SKAction.sequence([
+                        SKAction.fadeAlpha(to: 0.4, duration: 0.8),
+                        SKAction.fadeAlpha(to: 1.0, duration: 0.8)
+                    ])
+                    label.run(SKAction.repeatForever(fadeInOut))
+
+                    self.gamePhase = .homeScreen
+                    self.gameStateUpdateHandler?(self.gamePhase)
+                    self.run(SKAction.wait(forDuration: 1)) {
+                        self.isWaitingForAnimationHome = false
+                        self.isWaitingForTapToStart = true
+                    }
                 }
             }
         }
-    }
     
     private func startGameAfterTap() {
         guard let player = player else { return }

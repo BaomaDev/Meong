@@ -3,8 +3,15 @@ import SwiftUI
 struct LeaderboardView: View {
     @Binding var isShowing: Bool
     @StateObject private var manager = GameCenterManager.shared
-    let placeholderEntry = LeaderboardEntry(rank: 0, playerName: "Placeholder", score: 0, profilePicture: nil)
-
+    
+    // This placeholder is used if the leaderboard has fewer than 3 players.
+    let placeholderEntry = LeaderboardEntry(rank: 0, playerName: "Player", score: 0, profilePicture: nil)
+    
+    // MARK: - State for Scroll Tracking
+    @State private var scrollOffset: CGFloat = 0
+    @State private var contentHeight: CGFloat = 0
+    
+    // Constants for podium styling
     let trophyHeight = 100.0
     let podiumProfileSize = 62.0
     let podiumMaxPlayerName = 10
@@ -22,16 +29,7 @@ struct LeaderboardView: View {
                 .frame(width: UIBoxWidth-20, height: UIBoxHeight-30)
                 .padding(.top, 60)
             
-            Button(action: {
-                isShowing = false
-            }){
-                Image("CloseButton")
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(width: 50)
-            }
-            .position(x: 60, y: 90)
-            
+            // Main UI Content VStack
             VStack {
                 Image("leaderboard_banner")
                     .resizable()
@@ -40,176 +38,180 @@ struct LeaderboardView: View {
                     .padding(.top, 50)
 
                 ScrollView {
-                    HStack(spacing: 40) {
-                        ZStack {
-                            let entry = manager.leaderboardEntries.indices.contains(1) ? manager.leaderboardEntries[1] : placeholderEntry
-
-                            Image("podium_2")
-                                .resizable()
-                                .scaledToFit()
-                                .frame(height: trophyHeight)
+                    // This VStack contains all the scrollable content
+                    VStack {
+                        // --- Top 3 Podiums ---
+                        HStack {
+                            // 2nd Place
+                            PodiumView(
+                                entry: manager.leaderboardEntries.indices.contains(1) ? manager.leaderboardEntries[1] : placeholderEntry,
+                                podiumImage: "podium_2",
+                                trophyHeight: trophyHeight,
+                                profileSize: podiumProfileSize,
+                                maxNameLength: podiumMaxPlayerName
+                            )
                             
-                            VStack {
-                                Text(entry.playerName.truncated(to: podiumMaxPlayerName))
-                                    .font(.custom("Comic Lemon", size: 16))
-                                    .foregroundColor(Color("CustomLightBrown"))
-                                Text("\(entry.score)")
-                                    .font(.custom("Comic Lemon", size: 24))
-                                    .foregroundColor(Color("CustomLightBrown"))
-                                
-                                if let picture = entry.profilePicture {
-                                    picture
+                            Spacer()
+                            
+                            // 1st Place
+                            PodiumView(
+                                entry: manager.leaderboardEntries.indices.contains(0) ? manager.leaderboardEntries[0] : placeholderEntry,
+                                podiumImage: "podium_1",
+                                trophyHeight: trophyHeight * 1.35,
+                                profileSize: podiumProfileSize,
+                                maxNameLength: podiumMaxPlayerName
+                            )
+                            
+                            Spacer()
+                            
+                            // 3rd Place
+                            PodiumView(
+                                entry: manager.leaderboardEntries.indices.contains(2) ? manager.leaderboardEntries[2] : placeholderEntry,
+                                podiumImage: "podium_3",
+                                trophyHeight: trophyHeight,
+                                profileSize: podiumProfileSize,
+                                maxNameLength: podiumMaxPlayerName
+                            )
+                        }
+                        .padding(.horizontal, 100)
+                        .frame(width: UIBoxWidth, height: UIBoxHeight * 0.75)
+                        
+                        // --- Ranks 4 and below ---
+                        VStack(spacing: 40) {
+                            ForEach(manager.leaderboardEntries.dropFirst(3)) { entry in
+                                HStack {
+                                    Text("\(entry.rank)")
+                                        .font(.custom("Comic Lemon", size: 16))
+                                        .foregroundColor(.white)
+                                        .frame(width: 30, height: 30)
+                                        .background(
+                                            Circle().fill(Color("CustomOrange"))
+                                        )
+                                        .frame(width: 40)
+                                    
+                                    if let picture = entry.profilePicture {
+                                        picture
+                                            .resizable()
+                                            .scaledToFit()
+                                            .frame(width: 40, height: 40)
+                                            .clipShape(Circle())
+                                    } else {
+                                        Image(systemName: "person.circle.fill")
+                                            .resizable()
+                                            .scaledToFit()
+                                            .frame(width: 40, height: 40)
+                                            .foregroundColor(.gray)
+                                    }
+                                    
+                                    Text(entry.playerName)
+                                        .font(.custom("Comic Lemon", size: 18))
+                                        .foregroundColor(Color("CustomLightBrown"))
+
+                                    Spacer()
+                                    
+                                    Text("\(entry.score)")
+                                        .font(.custom("Comic Lemon", size: 25))
+                                        .foregroundColor(Color("CustomLightBrown"))
+                                }
+                                .background {
+                                    Image("leaderboard_bar")
                                         .resizable()
-                                        .scaledToFit()
-                                        .frame(width: podiumProfileSize, height: podiumProfileSize)
-                                        .clipShape(Circle())
-                                } else {
-                                    // Provide a default placeholder image.
-                                    Image(systemName: "person.circle.fill")
-                                        .resizable()
-                                        .scaledToFit()
-                                        .frame(width: podiumProfileSize, height: podiumProfileSize)
-                                        .foregroundColor(.gray)
+                                        .scaledToFill()
+                                        .frame(width: 600.0)
                                 }
                             }
-                            .offset(y: -38)
                         }
-
-                        Spacer()
-                        
-                        ZStack {
-                            let entry = manager.leaderboardEntries.indices.contains(0) ? manager.leaderboardEntries[0] : placeholderEntry
-
-                            Image("podium_1")
-                                .resizable()
-                                .scaledToFit()
-                                .frame(height: trophyHeight*1.35)
-                            
-                            VStack {
-                                Text(entry.playerName.truncated(to: podiumMaxPlayerName))
-                                    .font(.custom("Comic Lemon", size: 16))
-                                    .foregroundColor(Color("CustomLightBrown"))
-                                Text("\(entry.score)")
-                                    .font(.custom("Comic Lemon", size: 24))
-                                    .foregroundColor(Color("CustomLightBrown"))
-                                    .padding(.bottom)
-                                
-                                if let picture = entry.profilePicture {
-                                    picture
-                                        .resizable()
-                                        .scaledToFit()
-                                        .frame(width: podiumProfileSize, height: podiumProfileSize)
-                                        .clipShape(Circle())
-                                } else {
-                                    // Provide a default placeholder image.
-                                    Image(systemName: "person.circle.fill")
-                                        .resizable()
-                                        .scaledToFit()
-                                        .frame(width: podiumProfileSize, height: podiumProfileSize)
-                                        .foregroundColor(.gray)
-                                }
-                            }
-                            .offset(y: -44)
-                        }
-                        
-                        Spacer()
-                        
-                        ZStack {
-                            let entry = manager.leaderboardEntries.indices.contains(2) ? manager.leaderboardEntries[2] : placeholderEntry
-
-                            Image("podium_3")
-                                .resizable()
-                                .scaledToFit()
-                                .frame(height: trophyHeight)
-                            
-                            VStack {
-                                Text(entry.playerName.truncated(to: podiumMaxPlayerName))
-                                    .font(.custom("Comic Lemon", size: 16))
-                                    .foregroundColor(Color("CustomLightBrown"))
-                                Text("\(entry.score)")
-                                    .font(.custom("Comic Lemon", size: 24))
-                                    .foregroundColor(Color("CustomLightBrown"))
-                                
-                                if let picture = entry.profilePicture {
-                                    picture
-                                        .resizable()
-                                        .scaledToFit()
-                                        .frame(width: podiumProfileSize, height: podiumProfileSize)
-                                        .clipShape(Circle())
-                                } else {
-                                    // Provide a default placeholder image.
-                                    Image(systemName: "person.circle.fill")
-                                        .resizable()
-                                        .scaledToFit()
-                                        .frame(width: podiumProfileSize, height: podiumProfileSize)
-                                        .foregroundColor(.gray)
-                                }
-                            }
-                            .offset(y: -38)
-                        }
+                        .padding(.horizontal, 80)
+                        .offset(y: -20)
                     }
-                    .padding(.horizontal, 100)
-                    .frame(width: UIBoxWidth,height: UIBoxHeight*0.75)
-                    
-                    VStack(spacing: 40) {
-                        ForEach(manager.leaderboardEntries.dropFirst(3)) { entry in
-                            HStack {
-                                Text("\(entry.rank)")
-                                    .font(.custom("Comic Lemon", size: 16))
-                                    .foregroundColor(.white) // White text for contrast
-                                    .frame(width: 30, height: 30) // Fixed size for the circle
-                                    .background(
-                                        Circle()
-                                            .fill(Color("CustomOrange")) // Use your custom color from assets
-                                    )
-                                    .frame(width: 40) // Keep the outer frame for alignment
-                                
-                                if let picture = entry.profilePicture {
-                                    picture
-                                        .resizable()
-                                        .scaledToFit()
-                                        .frame(width: 40, height: 40)
-                                        .clipShape(Circle())
-                                } else {
-                                    // Provide a default placeholder image.
-                                    Image(systemName: "person.circle.fill")
-                                        .resizable()
-                                        .scaledToFit()
-                                        .frame(width: 40, height: 40)
-                                        .foregroundColor(.gray)
-                                }
-                                
-                                Text(entry.playerName)
-                                    .font(.custom("Comic Lemon", size: 18))
-                                    .foregroundColor(Color("CustomLightBrown"))
-
-                                Spacer()
-                                
-                                Text("\(entry.score)")
-                                    .font(.custom("Comic Lemon", size: 25))
-                                    .foregroundColor(Color("CustomLightBrown"))
-                            }
-                            .background {
-                                Image("leaderboard_bar")
-                                    .resizable()
-                                    .scaledToFill()
-                                    .frame(width: 600.0)
-                            }
+                    .background(
+                        GeometryReader { contentProxy in
+                            Color.clear
+                                .onAppear { self.contentHeight = contentProxy.size.height }
                         }
-                    }
-                    .padding(.horizontal, 80)
-                    .offset(y: -20)
+                    )
+                    .background(
+                        GeometryReader { proxy in
+                            Color.clear
+                                .onChange(of: proxy.frame(in: .named("scroll")).minY) { _, newMinY in
+                                    self.scrollOffset = -newMinY
+                                }
+                        }
+                    )
                 }
-                .frame(width: UIBoxWidth*0.9, height: UIBoxHeight*0.85)
-                .clipped()
+                .scrollIndicators(.hidden)
+                .coordinateSpace(name: "scroll")
+                .customScrollIndicator(
+                    scrollOffset: $scrollOffset,
+                    contentHeight: $contentHeight,
+                    positionXoffset: -30.0
+                )
             }
+            .frame(width: UIBoxWidth, height: UIBoxHeight*1.3)
             .padding(.top, -60)
+            .padding(.leading, 10)
+            .clipped()
+            
+            // Close Button
+            Button(action: {
+                isShowing = false
+            }){
+                Image("CloseButton")
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 50)
+            }
+            .position(x: 60, y: 50)
         }
         .task {
             await manager.fetchLeaderboard()
         }
         .padding(.top, 20)
         .padding(.leading, 20)
+    }
+}
+
+/// A reusable view for the top 3 player podiums.
+struct PodiumView: View {
+    let entry: LeaderboardEntry
+    let podiumImage: String
+    let trophyHeight: CGFloat
+    let profileSize: CGFloat
+    let maxNameLength: Int
+    
+    var body: some View {
+        ZStack {
+            Image(podiumImage)
+                .resizable()
+                .scaledToFit()
+                .frame(height: trophyHeight)
+            
+            VStack {
+                Text(entry.playerName.truncated(to: maxNameLength))
+                    .font(.custom("Comic Lemon", size: 16))
+                    .foregroundColor(Color("CustomLightBrown"))
+                Text("\(entry.score)")
+                    .font(.custom("Comic Lemon", size: 24))
+                    .foregroundColor(Color("CustomLightBrown"))
+                    .padding(.bottom, entry.rank == 1 ? 16 : 0) // Extra padding for 1st place
+                
+                if let picture = entry.profilePicture {
+                    picture
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: profileSize, height: profileSize)
+                        .clipShape(Circle())
+                } else {
+                    Image(systemName: "person.circle.fill")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: profileSize, height: profileSize)
+                        .foregroundColor(.gray)
+                }
+            }
+            .offset(y: entry.rank == 1 ? -44 : -38)
+        }
+        .frame(width: UIBoxWidth/5)
     }
 }
 
@@ -224,7 +226,10 @@ struct LeaderboardView: View {
         LeaderboardEntry(rank: 3, playerName: "babi_ngepet18", score: 700, profilePicture: Image(systemName: "person.circle.fill")),
         LeaderboardEntry(rank: 4, playerName: "trash_player", score: 550, profilePicture: Image(systemName: "person.circle.fill")),
         LeaderboardEntry(rank: 5, playerName: "rererere", score: 400, profilePicture: Image(systemName: "person.circle.fill")),
-        LeaderboardEntry(rank: 6, playerName: "joel", score: 250, profilePicture: Image(systemName: "person.circle.fill"))
+        LeaderboardEntry(rank: 6, playerName: "joel", score: 250, profilePicture: Image(systemName: "person.circle.fill")),
+        LeaderboardEntry(rank: 7, playerName: "joel", score: 250, profilePicture: Image(systemName: "person.circle.fill")),
+        LeaderboardEntry(rank: 8, playerName: "joel", score: 250, profilePicture: Image(systemName: "person.circle.fill")),
+        LeaderboardEntry(rank: 9, playerName: "joel", score: 250, profilePicture: Image(systemName: "person.circle.fill"))
     ]
     
     // 3. Assign the mock data to the manager's published property.

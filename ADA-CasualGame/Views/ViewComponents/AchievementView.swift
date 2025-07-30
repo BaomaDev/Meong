@@ -11,46 +11,23 @@ import SpriteKit
 struct AchievementView: View {
     @Binding var isShowing: Bool
     @ObservedObject var achievementManager: AchievementManager = .shared
+    
+    @State private var scrollOffset: CGFloat = 0
+    @State private var contentHeight: CGFloat = 0
+    
     var body: some View {
         ZStack {
             Image("UI_Box")
                 .resizable()
                 .aspectRatio(contentMode: .fit)
                 .frame(width: UIBoxWidth)
-            VStack{
-                ZStack {
-                    HStack {
-                        Spacer()
-                        Image("Achievements_Banner")
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .frame(width: 300)
-                            .padding(.bottom, 20)
-                        Spacer()
-                    }
-                    
-                    HStack {
-                        HStack {
-                            Button(action: {
-                                isShowing = false
-                            }){
-                                Image("CloseButton")
-                                    .resizable()
-                                    .aspectRatio(contentMode: .fit)
-                                    .frame(width: 50)
-                            }
-                            .padding(2)
-                            .padding(.bottom, 12)
-                            
-                            Spacer()
-                            
-                            Spacer()
-                        }
-                        .padding(.leading, 40)
-                    }
-                }
-                .padding(.horizontal)
-                .padding(.top, -70)
+            
+            VStack(alignment: .center) {
+                Image("Achievements_Banner_1")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: UIBoxWidth/2, height: UIBoxHeight/4)
+                    .padding(.top, 60)
                 
                 ScrollView {
                     VStack(spacing: 20) {
@@ -64,8 +41,8 @@ struct AchievementView: View {
                                             .stroke(Color(CGColor(red: 242/255, green: 190/255, blue: 85/255, alpha: 1)), lineWidth: 5)
                                     )
                                     .shadow(color: .black.opacity(0.2), radius: 4, x: 0, y: 2)
-//                                    .frame(maxWidth: .infinity)
-                                HStack (spacing: 15) {
+                                
+                                HStack {
                                     if achievement.isHidden {
                                         Text("Run through the street to find something!")
                                             .font(.custom("Comic Lemon", size: 16))
@@ -105,38 +82,66 @@ struct AchievementView: View {
                                                 .aspectRatio(contentMode: .fit)
                                                 .frame(width: 100)
                                                 Text(achievement.isClaimed ? "" :
-                                                    "\(achievement.reward)"
+                                                    "  \(achievement.reward)"
                                                 )
                                                 .padding(.leading, 15)
                                             }
-                                            .font(.custom("Comic Lemon", size: 20))
+                                            .font(.custom("Comic Lemon", size: 16))
                                             .padding(.horizontal, 10)
                                             .padding(.vertical, 5)
                                             .cornerRadius(5)
                                             .foregroundStyle(.white)
                                         }
                                         .disabled(!achievement.isUnlocked || achievement.isClaimed)
-                                        .padding(.trailing, -25)
                                     }
                                 }
-                                .padding(.horizontal, 25)
-                                .padding(.vertical, -5)
-                                .padding(.leading, -25)
                             }
+                            .padding(.horizontal, 25)
                         }
                     }
-                    .padding()
-                    .padding(.horizontal, 20)
+                    .padding(.top, 20)
+                    .background(
+                        GeometryReader { contentProxy in
+                            Color.clear
+                                .onAppear {
+                                    self.contentHeight = contentProxy.size.height
+                                }
+                        }
+                    )
+                    .background(
+                        GeometryReader { proxy in
+                            Color.clear
+                                .onChange(of: proxy.frame(in: .named("achievementScroll")).minY) { _, newMinY in
+                                    self.scrollOffset = -newMinY
+                                }
+                        }
+                    )
                 }
-                .frame(maxWidth: 650, maxHeight: 220)
+                .padding(.horizontal, 50)
+                .scrollIndicators(.hidden)
+                .coordinateSpace(name: "achievementScroll") // Use a unique name
+                .customScrollIndicator(
+                    scrollOffset: $scrollOffset,
+                    contentHeight: $contentHeight,
+                    positionXoffset: -30.0
+                )
             }
-            .padding(.top, 60)
+            .frame(width: UIBoxWidth, height: UIBoxHeight*1.3)
+            .padding(.top, -60)
+            .padding(.leading, 10)
+            .clipped()
+            
+            Button(action: {
+                isShowing = false
+            }){
+                Image("CloseButton")
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 50)
+            }
+            .position(x: 60, y: 50)
         }
         .padding(.top, 20)
         .padding(.leading, 20)
     }
 }
-
-//#Preview {
-//    ShopView(isShowing: .constant(true))
-//}

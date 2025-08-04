@@ -47,8 +47,8 @@ class SpawnFactory {
         
         // --- 1. Preload all single textures ---
         let singleTextureNames = [
-            "Coin", "Whiskas", "Catnip", "Catur", "BoxPisang", "alert", "BoxBuah",
-            "Tong", "Box", "BoxBerdiri", "GerobakSayur", "Sendal",
+            "coin", "Whiskas", "Catnip", "Catur", "BoxPisang", "alert", "BoxBuah",
+            "Tong", "Box", "BoxBerdiri", "GerobakSayur", "sendal",
             "BuildingWithSignwPlatform", "BuildingTallwPlatform", "TiangListrik"
         ]
         for name in singleTextureNames {
@@ -80,7 +80,7 @@ class SpawnFactory {
     // MARK: - Collectibles
     
     static func createCoin(at position: CGPoint, characterCategory: UInt32, coinCategory: UInt32) -> SKSpriteNode {
-        guard let coinTexture = textureCache["Coin"] else { fatalError("Coin texture not preloaded.") }
+        guard let coinTexture = textureCache["coin"] else { fatalError("Coin texture not preloaded.") }
         let coin = SKSpriteNode(texture: coinTexture)
         
         coin.name = "Coin"
@@ -155,10 +155,10 @@ class SpawnFactory {
         
         switch textureName {
             case "Catur":
-                targetWidth = 120
-                objectPosition = CGPoint(x: position.x, y: position.y + 10)
+                targetWidth = 100
+                objectPosition = CGPoint(x: position.x, y: position.y)
             case "BoxPisang":
-                targetWidth = 70
+                targetWidth = 60
                 objectPosition = CGPoint(x: position.x, y: position.y - 15)
             default:
                 targetWidth = 50
@@ -219,8 +219,8 @@ class SpawnFactory {
         
         switch textureName {
             case "Sepeda 2":
-                desiredSize = CGSize(width: 100, height: 100)
-                desiredPosition = CGPoint(x: position.x, y: position.y + 25)
+                desiredSize = CGSize(width: 90, height: 90)
+            desiredPosition = CGPoint(x: position.x, y: position.y + 17)
             default:
                 desiredSize = CGSize(width: 50, height: 50)
                 desiredPosition = position
@@ -280,7 +280,7 @@ class SpawnFactory {
         duckable.position = objectPosition
         duckable.userData = ["obstacleType": "duckable"]
         
-        let collisionHeight = duckable.size.height * 0.4
+        let collisionHeight = duckable.size.height * 0.6
         let collisionZone = SKSpriteNode(color: .clear, size: CGSize(width: duckable.size.width, height: collisionHeight))
         collisionZone.position = CGPoint(x: 0, y: duckable.size.height/2 - collisionHeight/2)
         collisionZone.physicsBody = SKPhysicsBody(rectangleOf: collisionZone.size)
@@ -291,7 +291,7 @@ class SpawnFactory {
         collisionZone.name = "collisionZone"
         duckable.addChild(collisionZone)
         
-        let duckZoneHeight = duckable.size.height * 0.6
+        let duckZoneHeight = duckable.size.height * 0.4
         let duckZone = SKSpriteNode(color: .clear, size: CGSize(width: duckable.size.width, height: duckZoneHeight))
         duckZone.position = CGPoint(x: 0, y: -duckable.size.height/2 + duckZoneHeight/2)
         duckZone.alpha = 0.3
@@ -324,8 +324,8 @@ class SpawnFactory {
                 targetWidth = 40
                 objectPosition = CGPoint(x: position.x, y: position.y - 10)
             case "GerobakSayur":
-                targetWidth = 160
-                objectPosition = CGPoint(x: position.x, y: position.y + 45)
+                targetWidth = 140
+                objectPosition = CGPoint(x: position.x, y: position.y + 35)
             default:
                 targetWidth = 50
                 objectPosition = CGPoint(x: position.x, y: position.y - 10)
@@ -351,39 +351,56 @@ class SpawnFactory {
         safeZone.name = "safeZone"
         stepable.addChild(safeZone)
 
-        let damageZoneWidth: CGFloat = 15
-        let damageZoneHeight = stepable.size.height - safeZoneHeight
-        
-        let leftDamageZone = SKSpriteNode(color: .clear, size: CGSize(width: damageZoneWidth, height: damageZoneHeight))
-        leftDamageZone.position = CGPoint(x: -stepable.size.width/2 + damageZoneWidth/2, y: -safeZoneHeight/2)
-        leftDamageZone.physicsBody = SKPhysicsBody(rectangleOf: leftDamageZone.size)
-        leftDamageZone.physicsBody?.isDynamic = false
-        leftDamageZone.physicsBody?.categoryBitMask = PhysicsCategory.obstacle
-        leftDamageZone.physicsBody?.contactTestBitMask = PhysicsCategory.player
-        leftDamageZone.physicsBody?.collisionBitMask = PhysicsCategory.none
-        leftDamageZone.name = "damageZone"
-        stepable.addChild(leftDamageZone)
-        
-        let rightDamageZone = SKSpriteNode(color: .clear, size: CGSize(width: damageZoneWidth, height: damageZoneHeight))
-        rightDamageZone.position = CGPoint(x: stepable.size.width/2 - damageZoneWidth/2, y: -safeZoneHeight/2)
-        rightDamageZone.physicsBody = SKPhysicsBody(rectangleOf: rightDamageZone.size)
-        rightDamageZone.physicsBody?.isDynamic = false
-        rightDamageZone.physicsBody?.categoryBitMask = PhysicsCategory.obstacle
-        rightDamageZone.physicsBody?.contactTestBitMask = PhysicsCategory.player
-        rightDamageZone.physicsBody?.collisionBitMask = PhysicsCategory.none
-        rightDamageZone.name = "damageZone"
-        stepable.addChild(rightDamageZone)
-        
-        let bottomZoneHeight: CGFloat = 10
-        let bottomZone = SKSpriteNode(color: .clear, size: CGSize(width: stepable.size.width - 30, height: bottomZoneHeight))
-        bottomZone.position = CGPoint(x: 0, y: -stepable.size.height/2 + bottomZoneHeight/2)
-        bottomZone.physicsBody = SKPhysicsBody(rectangleOf: bottomZone.size)
-        bottomZone.physicsBody?.isDynamic = false
-        bottomZone.physicsBody?.categoryBitMask = PhysicsCategory.ground
-        bottomZone.physicsBody?.contactTestBitMask = PhysicsCategory.player
-        bottomZone.physicsBody?.collisionBitMask = PhysicsCategory.player
-        bottomZone.name = "bottomZone"
-        stepable.addChild(bottomZone)
+        if textureName == "GerobakSayur" {  // Type gerobak sayur can be stepped on AND ducked under.
+            let gapHeight = playerHitboxHeight * 0.67
+            let damageZoneHeight = stepable.size.height - safeZone.size.height - gapHeight
+            let damageZone = SKSpriteNode(color: .clear, size: CGSize(width: stepable.size.width, height: damageZoneHeight))
+            
+            let yPos = (gapHeight - safeZone.size.height) / 2
+            damageZone.position = CGPoint(x: 0, y: yPos)
+            
+            damageZone.physicsBody = SKPhysicsBody(rectangleOf: damageZone.size)
+            damageZone.physicsBody?.isDynamic = false
+            damageZone.physicsBody?.categoryBitMask = PhysicsCategory.obstacle
+            damageZone.physicsBody?.contactTestBitMask = PhysicsCategory.player
+            damageZone.physicsBody?.collisionBitMask = PhysicsCategory.none
+            damageZone.name = "damageZone"
+            stepable.addChild(damageZone)
+        } else {
+            let damageZoneWidth: CGFloat = 15
+            let damageZoneHeight = stepable.size.height - safeZoneHeight
+            
+            let leftDamageZone = SKSpriteNode(color: .clear, size: CGSize(width: damageZoneWidth, height: damageZoneHeight))
+            leftDamageZone.position = CGPoint(x: -stepable.size.width/2 + damageZoneWidth/2, y: -safeZoneHeight/2)
+            leftDamageZone.physicsBody = SKPhysicsBody(rectangleOf: leftDamageZone.size)
+            leftDamageZone.physicsBody?.isDynamic = false
+            leftDamageZone.physicsBody?.categoryBitMask = PhysicsCategory.obstacle
+            leftDamageZone.physicsBody?.contactTestBitMask = PhysicsCategory.player
+            leftDamageZone.physicsBody?.collisionBitMask = PhysicsCategory.none
+            leftDamageZone.name = "damageZone"
+            stepable.addChild(leftDamageZone)
+            
+            let rightDamageZone = SKSpriteNode(color: .clear, size: CGSize(width: damageZoneWidth, height: damageZoneHeight))
+            rightDamageZone.position = CGPoint(x: stepable.size.width/2 - damageZoneWidth/2, y: -safeZoneHeight/2)
+            rightDamageZone.physicsBody = SKPhysicsBody(rectangleOf: rightDamageZone.size)
+            rightDamageZone.physicsBody?.isDynamic = false
+            rightDamageZone.physicsBody?.categoryBitMask = PhysicsCategory.obstacle
+            rightDamageZone.physicsBody?.contactTestBitMask = PhysicsCategory.player
+            rightDamageZone.physicsBody?.collisionBitMask = PhysicsCategory.none
+            rightDamageZone.name = "damageZone"
+            stepable.addChild(rightDamageZone)
+            
+            let bottomZoneHeight: CGFloat = 10
+            let bottomZone = SKSpriteNode(color: .clear, size: CGSize(width: stepable.size.width - 30, height: bottomZoneHeight))
+            bottomZone.position = CGPoint(x: 0, y: -stepable.size.height/2 + bottomZoneHeight/2)
+            bottomZone.physicsBody = SKPhysicsBody(rectangleOf: bottomZone.size)
+            bottomZone.physicsBody?.isDynamic = false
+            bottomZone.physicsBody?.categoryBitMask = PhysicsCategory.ground
+            bottomZone.physicsBody?.contactTestBitMask = PhysicsCategory.player
+            bottomZone.physicsBody?.collisionBitMask = PhysicsCategory.player
+            bottomZone.name = "bottomZone"
+            stepable.addChild(bottomZone)
+        }
         
         stepable.run(createMovementAction(distance: worldMoveDistance, speed: gameSpeed), withKey: MoveKey.obstacle)
         
@@ -393,7 +410,7 @@ class SpawnFactory {
     // MARK: - Projectiles
 
     static func createProjectile(in scene: SKScene) -> (node: SKSpriteNode, startPoint: CGPoint) {
-        guard let texture = textureCache["Sendal"] else { fatalError("Sendal texture not preloaded.") }
+        guard let texture = textureCache["sendal"] else { fatalError("Sendal texture not preloaded.") }
         
         let targetWidth: CGFloat = 30
         let aspectRatio = texture.size().height / texture.size().width
@@ -459,7 +476,7 @@ class SpawnFactory {
     }
     
     static func createTutorialProjectile(in scene: SKScene) -> SKSpriteNode {
-        guard let texture = textureCache["Sendal"] else { fatalError("Sendal texture not preloaded.") }
+        guard let texture = textureCache["sendal"] else { fatalError("Sendal texture not preloaded.") }
 
         let targetWidth: CGFloat = 30
         let aspectRatio = texture.size().height / texture.size().width

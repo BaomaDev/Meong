@@ -124,17 +124,18 @@ class PlayerEntity: SKSpriteNode {
         applyHitInvincibility()
     }
     
-    private func applyHitInvincibility() {
+    private func applyHitInvincibility(bonusDuration: Double = 0.0) {
         // Blink effect
+        let invincibilityDuration = 1.0 + bonusDuration
         let blink = SKAction.sequence([
             SKAction.fadeAlpha(to: 0.2, duration: 0.1),
             SKAction.fadeAlpha(to: 1.0, duration: 0.1)
         ])
-        let repeatBlink = SKAction.repeat(blink, count: 5)
+        let repeatBlink = SKAction.repeat(blink, count: Int(invincibilityDuration / 0.2))
         self.run(repeatBlink)
 
         // Restore physics after invincibility ends
-        let wait = SKAction.wait(forDuration: 1.0)
+        let wait = SKAction.wait(forDuration: invincibilityDuration)
         let reset = SKAction.run { [weak self] in
             guard let self = self else { return }
             self.isInvincible = false
@@ -182,14 +183,14 @@ class PlayerEntity: SKSpriteNode {
 
         let fixedHoverY: CGFloat = 280
 
-        let flyToFixedY = SKAction.moveTo(y: fixedHoverY, duration: 0.6)
+        let flyToFixedY = SKAction.moveTo(y: fixedHoverY, duration: 0.25)
         flyToFixedY.timingMode = .easeOut
 
         let hoverUp = SKAction.moveBy(x: 0, y: 15, duration: 0.3)
         let hoverDown = SKAction.moveBy(x: 0, y: -15, duration: 0.3)
         let singleHoverCycle = SKAction.sequence([hoverUp, hoverDown])
 
-        let catnipDuration: TimeInterval = 5.0
+        let catnipDuration: TimeInterval = 8.0
         let hoverRepetitions = Int(catnipDuration / (hoverUp.duration + hoverDown.duration))
         let remainingWaitTime = catnipDuration.truncatingRemainder(dividingBy: (hoverUp.duration + hoverDown.duration))
 
@@ -214,13 +215,13 @@ class PlayerEntity: SKSpriteNode {
                     EffectsFactory.shared.playBgm(named: mainBgm, isMainTrack: true)
                 }
                 
-                // 🔁 Resume running animation
                 self.startRunningAnimation()
                 if let scene = self.scene as? GameScene {
                     scene.startChaserRunningAnimation()
                     scene.stopCatnipOverlayEffect()
                 }
-                applyHitInvincibility()
+                
+                applyHitInvincibility(bonusDuration: 1.0)
             }
         ])
 
@@ -405,7 +406,7 @@ class PlayerEntity: SKSpriteNode {
         }
 
          // Create animation
-        let animation = SKAction.animate(with: textures, timePerFrame: 0.065, resize: false, restore: false)
+        let animation = SKAction.animate(with: textures, timePerFrame: 0.035, resize: false, restore: false)
         let repeatAnimation = SKAction.repeatForever(animation)
 
         self.run(repeatAnimation, withKey: "jumpAnimation")

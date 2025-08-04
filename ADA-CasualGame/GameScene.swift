@@ -492,12 +492,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             
             guard let self = self, !GameScene.isGamePaused && !self.isPaused, let player = self.player else { return }
             
-            // **THE FIX**: Check both the static flag AND the scene's own isPaused property.
-            // This is immune to the race condition.
-            //            guard let self = self else { return }
-            //            guard !GameScene.isGamePaused && !self.isPaused, let player = self.player else { return }
-            
-            self.internalScore += 1
+            self.internalScore += (player.currentState == .flying) ? 2 : 1
             self.scoreUpdateHandler?(self.internalScore)
             
             if self.internalScore % 50 == 0 && self.internalScore > self.lastDistanceBonusScore {
@@ -695,7 +690,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             }
         }
     }
-    
     
     func restart() {
         self.isPaused = false

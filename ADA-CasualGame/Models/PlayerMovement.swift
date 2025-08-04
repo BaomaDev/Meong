@@ -144,7 +144,7 @@ extension PlayerEntity {
     // MARK: - Jump
     func jump(swipeDistance: Double) {
         if currentState == .airborne || currentState == .diving {
-            if isCloseToGround() {
+            if isCloseToGround() {  // if player is near ground, queue a jump action
                 if swipeDistance < longSwipeTreshold {
                     queuedAction = .normalJump
                 } else {
@@ -168,7 +168,7 @@ extension PlayerEntity {
     }
 
     private func normalJump() {
-        self.removeAction(forKey: "duckAction")
+        cancelDuckAction()
         self.canJump = false
         self.currentSurface = .none
         self.currentState = .airborne
@@ -207,7 +207,7 @@ extension PlayerEntity {
             return
         }
 
-        self.removeAction(forKey: "duckAction")
+        cancelDuckAction()
         canJump = false
         self.currentSurface = .none
         self.currentState = .airborne
@@ -286,6 +286,16 @@ extension PlayerEntity {
         self.currentState = .ducking
         self.canDuck = false
 
+        let duckingHitboxSize = CGSize(width: playerHitboxWidth * 1.34, height: playerHitboxHeight * 0.66)
+        let newPhysicsBody = SKPhysicsBody(rectangleOf: duckingHitboxSize)
+        let adjustY = -playerHitboxHeight / 4
+        
+        self.position.y += adjustY
+        self.physicsBody = newPhysicsBody
+        
+        // Re-apply the standard physics properties to the new body.
+        self.setupPhysics()
+        
         startDuckingAnimation()
         EffectsFactory.shared.playSound(soundKey: "duck.wav")
 
@@ -293,6 +303,8 @@ extension PlayerEntity {
         let wait = SKAction.wait(forDuration: 0.75)
         let restore = SKAction.run { [weak self] in
             guard let self = self else { return }
+            self.restoreOriginalShape(withYAdjustment: adjustY)
+            
             self.currentState = .running
             self.canDuck = true
             self.startRunningAnimation()
@@ -343,21 +355,15 @@ extension PlayerEntity {
         // Start parry animation
         startParryAnimation()
         
-        // Visual feedback with SKAction
-        let scaleUp = SKAction.scale(to: 1.1, duration: 0.2)
-        let scaleDown = SKAction.scale(to: 1.0, duration: 0.2)
-        
-        let endParry = SKAction.run { [weak self] in
-            guard let self = self else { return }
+        let wait = SKAction.wait(forDuration: 0.4)
+        let endParry = SKAction.run {
             self.isParrying = false
-            
-            // ✅ Resume running animation only if player is still in running state
             if self.currentState == .running {
                 self.startRunningAnimation()
             }
         }
         
-        self.run(SKAction.sequence([scaleUp, scaleDown, endParry]))
+        self.run(SKAction.sequence([wait, endParry]))
         
         return true
     }
@@ -411,6 +417,32 @@ extension PlayerEntity {
         let playerFeetY = self.position.y - (self.size.height / 2)
         let distanceToGround = playerFeetY - groundHeight
         
-        return distanceToGround <= (defaultJumpHeight / 3)
+        return distanceToGround <= (defaultJumpHeight / 4)
     }
+    
+    private func restoreOriginalShape(withYAdjustment adjustY: CGFloat = 0) {
+        let originalSize = CGSize(width: playerHitboxWidth, height: playerHitboxHeight)
+
+        let physicsSize = CGSize(width: originalSize.width, height: originalSize.height)
+        self.physicsBody = SKPhysicsBody(rectangleOf: physicsSize)
+        setupPhysics() // Re-apply default physics
+
+        let resizeAction = SKAction.resize(toWidth: originalSize.width,
+                                           height: originalSize.height,
+                                           duration: transformDuration)
+        let moveAction = SKAction.moveBy(x: 0, y: adjustY, duration: transformDuration)
+        
+        self.run(SKAction.group([resizeAction, moveAction]))
+    }
+    
+    private func cancelDuckAction() {
+        // Check if the "duckAction" is currently running.
+        if self.action(forKey: "duckAction") != nil {
+            self.removeAction(forKey: "duckAction")
+            let adjustY = CGFloat(playerHitboxHeight / 4)
+            self.restoreOriginalShape(withYAdjustment: adjustY)
+            self.canDuck = true
+        }
+    }
+
 }

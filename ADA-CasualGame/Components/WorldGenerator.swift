@@ -89,6 +89,8 @@ class WorldGenerator {
                 continue
             }
             
+            print(node.name, actionKey, speed, category, node.hasActions())
+            
             let currentX = node.position.x
             let remainingDistance = currentX - targetX
             guard remainingDistance > 0 else { continue }
@@ -169,7 +171,7 @@ class WorldGenerator {
         stopAllSpawning()
         startSpawningPlatforms()
         startSpawningObstacles()
-        startSpawningProjectiles()
+//        startSpawningProjectiles()
         startSpawningCoinsAndPowerUps()
     }
 
@@ -193,6 +195,7 @@ class WorldGenerator {
         defer { currentStepPlatform += 1 }
 
         let chance = platformNoiseMap.valueAt(atChunk: currentStepPlatform, layer: 0)
+//        print("Platform chance at \(currentStepPlatform):", chance)
         let threshold = adaptiveThreshold(forStep: currentStepPlatform, base: 0.5)
         guard chance > threshold else { return }
 
@@ -237,6 +240,7 @@ class WorldGenerator {
             atChunk: currentStepObstacle,
             layer: 0
         )
+//        print("Obstacle chance at \(currentStepObstacle):", chance)
 
         let threshold = adaptiveThreshold(
             forStep: currentStepObstacle,
@@ -244,7 +248,32 @@ class WorldGenerator {
         )
         guard chance > threshold else { return }
 
+//        let type = noiseMap.typeIndex(
+//            atChunk: currentStepObstacle,
+//            layer: NoiseLayer.obstacleType.rawValue,
+//            maxTypes: 4 // NoTouch, Stepable, Duckable, Moving
+//        )
+
         let position = CGPoint(x: scene.size.width + 50, y: groundHeight + 40)
+
+//        let obstacle: SKSpriteNode?
+//        switch type {
+//        case 0:
+//            obstacle = SpawnFactory.createNoTouch(at: position)
+//        case 1:
+//            obstacle = SpawnFactory.createStepable(at: position)
+//        case 2:
+//            obstacle = SpawnFactory.createDuckable(at: position)
+//        case 3:
+//            let moveY = groundHeight + 30
+//            obstacle = SpawnFactory.createMoving(at: CGPoint(x: position.x, y: moveY))
+//        default:
+//            obstacle = nil
+//        }
+//
+//        if let o = obstacle {
+//            scene.addChild(o)
+//        }
         let randomChoice = Int.random(in: 0...3)
         var obstacle: SKSpriteNode?
 
@@ -287,6 +316,26 @@ class WorldGenerator {
         if let obstacle = obstacle {
             scene.addChild(obstacle)
         }
+        
+        // BAGIAN SENG SINI TAK TAMBAHI
+        
+        let projectileChance = projectileNoiseMap.valueAt(atChunk: currentStepObstacle, layer: 0)
+        
+        let projectileThreshold: Float = 0.4
+        
+        if projectileChance > projectileThreshold {
+            
+            let (projectile, startPoint) = SpawnFactory.createProjectile(in: scene)
+
+            SpawnFactory.createMovingAlert(at: startPoint, in: scene)
+            let delay = SKAction.wait(forDuration: 0.7)
+            let spawn = SKAction.run {
+                scene.addChild(projectile)
+            }
+            scene.run(SKAction.sequence([delay, spawn]))
+        }
+        
+        currentStepProjectile += 1
     }
 
     private func startSpawningProjectiles() {
@@ -361,12 +410,12 @@ class WorldGenerator {
         let coinChance = coinChanceNoiseMap.adjustNoiseValue(Double(coinChanceNoiseMap.valueAt(atChunk: currentStepCollectible, layer: 0)), method: .squared(1))
         let powerUpChance = powerUpChanceNoiseMap.adjustNoiseValue(Double(powerUpChanceNoiseMap.valueAt(atChunk: currentStepCollectible, layer: 0)), method: .squared(2))
         let catnipChance = catnipChanceNoiseMap.adjustNoiseValue(Double(catnipChanceNoiseMap.valueAt(atChunk: currentStepCollectible, layer: 0)), method: .squared(2))
-//        print("Coin chance at \(currentStepCollectible) (squared):", coinChance)
-//        print("PowerUp chance at \(currentStepCollectible) (squared):", powerUpChance)
-//        print("Catnip chance at \(currentStepCollectible) (squared):", catnipChance)
-//        print("Coin chance at \(currentStepCollectible) (raw):", coinChanceNoiseMap.valueAt(atChunk: currentStepCollectible, layer: 0))
-//        print("PowerUp chance at \(currentStepCollectible) (raw):", powerUpChanceNoiseMap.valueAt(atChunk: currentStepCollectible, layer: 0))
-//        print("Catnip chance at \(currentStepCollectible) (raw):", catnipChanceNoiseMap.valueAt(atChunk: currentStepCollectible, layer: 0))
+        print("Coin chance at \(currentStepCollectible) (squared):", coinChance)
+        print("PowerUp chance at \(currentStepCollectible) (squared):", powerUpChance)
+        print("Catnip chance at \(currentStepCollectible) (squared):", catnipChance)
+        print("Coin chance at \(currentStepCollectible) (raw):", coinChanceNoiseMap.valueAt(atChunk: currentStepCollectible, layer: 0))
+        print("PowerUp chance at \(currentStepCollectible) (raw):", powerUpChanceNoiseMap.valueAt(atChunk: currentStepCollectible, layer: 0))
+        print("Catnip chance at \(currentStepCollectible) (raw):", catnipChanceNoiseMap.valueAt(atChunk: currentStepCollectible, layer: 0))
         
         
 

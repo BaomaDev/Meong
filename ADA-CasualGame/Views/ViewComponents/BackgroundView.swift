@@ -46,7 +46,6 @@ class BackgroundView {
         isPaused = true
     }
     
-    // --- MODIFIED METHOD ---
     func updateBackgroundPosition(gameSpeed: CGFloat) {
         guard !isPaused else { return }
         guard gameSpeed > 0 else { return }
@@ -68,34 +67,35 @@ class BackgroundView {
         }
     }
     
-    // --- NEW HELPER METHOD ---
     private func trySpawningEasterEgg(on background: SKSpriteNode) {
         // Use a constant for the spawn chance for clarity
-        let spawnChance = 0.01 // 1% chance
+        let spawnChance = 0.01 // 1% chance * 2 rolls for increased rarity
         
         if Double.random(in: 0...1) <= spawnChance {
-            var easterEggFrames: [SKTexture] = []
-            for i in 0...68 {
-                let textureName = String(format: "easter-egg-%d", i)
-                easterEggFrames.append(SKTexture(imageNamed: textureName))
-            }
+            if Double.random(in: 0...1) <= spawnChance {
+                var easterEggFrames: [SKTexture] = []
+                for i in 0...68 {
+                    let textureName = String(format: "easter-egg-%d", i)
+                    easterEggFrames.append(SKTexture(imageNamed: textureName))
+                }
 
-            let animationAction = SKAction.animate(with: easterEggFrames, timePerFrame: 0.05)
-            
-            let easterEgg = SKSpriteNode(texture: easterEggFrames[0])
-            easterEgg.setScale(0.25)
-            easterEgg.position = CGPoint(x: background.size.width * 0.5,
-                                          y: groundHeight + 55) // Assuming groundHeight is accessible
-            easterEgg.zPosition = 1
-            easterEgg.run(SKAction.repeatForever(animationAction))
-            
-            // Add the new easter egg as a child
-            background.addChild(easterEgg)
-            
-            // Update stats
-            rereAppear += 1
-            let stats = LiveStats(rereAppearances: rereAppear)
-            AchievementManager.shared.updateProgress(stats)
+                let animationAction = SKAction.animate(with: easterEggFrames, timePerFrame: 0.05)
+                
+                let easterEgg = SKSpriteNode(texture: easterEggFrames[0])
+                easterEgg.setScale(0.25)
+                easterEgg.position = CGPoint(x: background.size.width * 0.5,
+                                              y: groundHeight + 55) // Assuming groundHeight is accessible
+                easterEgg.zPosition = 1
+                easterEgg.run(SKAction.repeatForever(animationAction))
+                
+                // Add the new easter egg as a child
+                background.addChild(easterEgg)
+                
+                // Update stats
+                rereAppear += 1
+                let stats = LiveStats(rereAppearances: rereAppear)
+                AchievementManager.shared.updateProgress(stats)
+            }
         }
     }
 }

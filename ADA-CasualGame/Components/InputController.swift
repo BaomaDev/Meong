@@ -86,7 +86,6 @@ extension GameScene {
             
             if distance < parryRadius {
                 EffectsFactory.shared.playSound(soundKey: "parry_success.wav")
-
                 
                 let parrySounds = ["parry1.mp3", "parry2.mp3"]
                 EffectsFactory.shared.playSound(soundKey: parrySounds.randomElement()!)
